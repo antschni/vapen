@@ -30,9 +30,9 @@ class IngestUploader(
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun flush(maxBatch: Int = 100): UploadResult = withContext(Dispatchers.IO) {
-        val creds = credentials.get() ?: return UploadResult.NoCredentials
+        val creds = credentials.get() ?: return@withContext UploadResult.NoCredentials
         val batch = pendingDao.oldest(maxBatch)
-        if (batch.isEmpty()) return UploadResult.NothingToSend
+        if (batch.isEmpty()) return@withContext UploadResult.NothingToSend
 
         val events = buildJsonArray {
             batch.forEach { row ->

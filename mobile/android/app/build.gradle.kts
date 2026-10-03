@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("org.jetbrains.kotlin.kapt")
+    id("com.google.devtools.ksp")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -43,13 +43,15 @@ kotlin {
 }
 
 dependencies {
-    val roomVersion = "2.7.1"
+    val roomVersion = "2.8.5"
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
-    kapt("androidx.room:room-compiler:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    // Room’s processor classpath must read Kotlin 2.4 metadata emitted by the compiler.
+    ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.0")
     implementation("androidx.work:work-runtime-ktx:2.10.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
