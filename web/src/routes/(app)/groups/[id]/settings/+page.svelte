@@ -6,18 +6,12 @@
 	import CardHeader from '$lib/components/ui/card-header.svelte';
 	import CardTitle from '$lib/components/ui/card-title.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import Label from '$lib/components/ui/label.svelte';
 	import Badge from '$lib/components/ui/badge.svelte';
+	import { resolve } from '$app/paths';
 	import { de } from '$lib/i18n/de';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
-
-	let groupName = $state('');
-
-	$effect(() => {
-		groupName = data.group.name;
-	});
 
 	async function copyLink() {
 		if (data.inviteUrl) await navigator.clipboard.writeText(data.inviteUrl);
@@ -35,7 +29,9 @@
 </svelte:head>
 
 <p class="text-sm text-muted-foreground">
-	<a href="/groups/{data.group.id}" class="hover:underline">{de.common.back}</a>
+	<a href={resolve('/(app)/groups/[id]', { id: data.group.id })} class="hover:underline"
+		>{de.common.back}</a
+	>
 </p>
 <h1 class="mt-2 text-2xl font-bold tracking-tight">{de.pages.groups.settingsTitle}</h1>
 
@@ -49,7 +45,7 @@
 	</CardHeader>
 	<CardContent>
 		<form method="POST" action="?/rename" class="flex gap-2" use:enhance>
-			<Input name="name" bind:value={groupName} required />
+			<Input name="name" value={data.group.name} required />
 			<Button type="submit">{de.common.save}</Button>
 		</form>
 	</CardContent>

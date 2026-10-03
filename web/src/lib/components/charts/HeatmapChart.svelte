@@ -9,9 +9,9 @@
 	let { cells, ariaLabel }: { cells: Cell[]; ariaLabel: string } = $props();
 
 	const grid = $derived.by(() => {
-		const map = new Map<string, Cell>();
+		const map: Record<string, Cell> = {};
 		for (const c of cells) {
-			map.set(`${c.iso_weekday}-${c.hour}`, c);
+			map[`${c.iso_weekday}-${c.hour}`] = c;
 		}
 		let max = 1;
 		for (const c of cells) max = Math.max(max, c.puff_count);
@@ -26,13 +26,13 @@
 <div class="overflow-x-auto" role="img" aria-label={ariaLabel}>
 	<div class="inline-grid grid-cols-[auto_repeat(24,minmax(0.75rem,1fr))] gap-px text-[10px]">
 		<div></div>
-		{#each Array.from({ length: 24 }, (_, h) => h) as hour}
+		{#each Array.from({ length: 24 }, (_, h) => h) as hour (hour)}
 			<div class="text-center text-muted-foreground">{hour}</div>
 		{/each}
-		{#each [1, 2, 3, 4, 5, 6, 7] as wd}
+		{#each [1, 2, 3, 4, 5, 6, 7] as wd (wd)}
 			<div class="pr-1 text-muted-foreground">{weekdayLabels[wd - 1]}</div>
-			{#each Array.from({ length: 24 }, (_, h) => h) as hour}
-				{@const cell = grid.map.get(`${wd}-${hour}`)}
+			{#each Array.from({ length: 24 }, (_, h) => h) as hour (hour)}
+				{@const cell = grid.map[`${wd}-${hour}`]}
 				{@const count = cell?.puff_count ?? 0}
 				<div
 					class="aspect-square rounded-sm border border-border/50"

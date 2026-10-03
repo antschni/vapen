@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
+	import type { SessionUser } from '$lib/session-user';
 	import { de } from '$lib/i18n/de';
 	import Button from '$lib/components/ui/button.svelte';
 	import { ModeWatcher, toggleMode } from 'mode-watcher';
@@ -17,12 +19,21 @@
 	} from '@lucide/svelte';
 	import { cn } from '$lib/utils';
 
-	let { children, user }: { children: import('svelte').Snippet; user: NonNullable<App.Locals['user']> } =
-		$props();
+	let { children, user }: { children: import('svelte').Snippet; user: SessionUser } = $props();
 
 	let mobileOpen = $state(false);
 
-	const nav = [
+	const nav: {
+		href:
+			| '/'
+			| '/usage'
+			| '/devices'
+			| '/groups'
+			| '/settings/privacy'
+			| '/settings/account';
+		label: string;
+		icon: typeof LayoutDashboard;
+	}[] = [
 		{ href: '/', label: de.nav.overview, icon: LayoutDashboard },
 		{ href: '/usage', label: de.nav.usage, icon: BarChart3 },
 		{ href: '/devices', label: de.nav.devices, icon: Smartphone },
@@ -66,7 +77,7 @@
 			<nav class="flex flex-1 flex-col gap-1 p-3" aria-label={de.nav.settings}>
 				{#each nav as item (item.href)}
 					<a
-						href={item.href}
+						href={resolve(item.href)}
 						class={cn(
 							'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
 							isActive(item.href, $page.url.pathname)

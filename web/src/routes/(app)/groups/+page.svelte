@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import Button from '$lib/components/ui/button.svelte';
@@ -74,7 +75,7 @@
 		{#each data.groups as group (group.id)}
 			<li>
 				<a
-					href="/groups/{group.id}"
+					href={resolve('/(app)/groups/[id]', { id: group.id })}
 					class="flex items-center justify-between rounded-lg border border-border bg-card p-4 hover:bg-accent/30"
 				>
 					<div>

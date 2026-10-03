@@ -7,6 +7,7 @@
 	import CardTitle from '$lib/components/ui/card-title.svelte';
 	import { formatDurationMs, formatNumber } from '$lib/format';
 	import { de } from '$lib/i18n/de';
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -17,7 +18,9 @@
 		return de.pages.groups.roleMember;
 	}
 
-	function rangeHref(r: string): string {
+	type GroupRangeHref = `/groups/${string}?range=${string}`;
+
+	function rangeHref(r: 'today' | '7d' | '30d'): GroupRangeHref {
 		return `/groups/${data.groupId}?range=${r}`;
 	}
 
@@ -35,13 +38,13 @@
 <div class="flex flex-wrap items-center justify-between gap-3">
 	<div>
 		<p class="text-sm text-muted-foreground">
-			<a href="/groups" class="hover:underline">{de.common.back}</a>
+			<a href={resolve('/groups')} class="hover:underline">{de.common.back}</a>
 		</p>
 		<h1 class="text-2xl font-bold tracking-tight">{data.groupName}</h1>
 	</div>
 	{#if data.role === 'owner' || data.role === 'admin'}
 		<a
-			href="/groups/{data.groupId}/settings"
+			href={resolve('/(app)/groups/[id]/settings', { id: data.groupId })}
 			class="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent"
 		>
 			{de.pages.groups.settings}
@@ -60,7 +63,7 @@
 		<CardTitle>{de.pages.groups.leaderboard}</CardTitle>
 		<div class="flex gap-1">
 			<a
-				href={rangeHref('today')}
+				href={resolve(rangeHref('today'))}
 				class="rounded-md px-2 py-1 text-xs {data.range === 'today'
 					? 'bg-accent'
 					: 'text-muted-foreground hover:bg-accent/50'}"
@@ -68,7 +71,7 @@
 				{de.pages.groups.rangeToday}
 			</a>
 			<a
-				href={rangeHref('7d')}
+				href={resolve(rangeHref('7d'))}
 				class="rounded-md px-2 py-1 text-xs {data.range === '7d'
 					? 'bg-accent'
 					: 'text-muted-foreground hover:bg-accent/50'}"
@@ -76,7 +79,7 @@
 				{de.pages.groups.range7d}
 			</a>
 			<a
-				href={rangeHref('30d')}
+				href={resolve(rangeHref('30d'))}
 				class="rounded-md px-2 py-1 text-xs {data.range === '30d'
 					? 'bg-accent'
 					: 'text-muted-foreground hover:bg-accent/50'}"

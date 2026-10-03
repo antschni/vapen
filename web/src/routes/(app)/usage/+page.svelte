@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { format } from 'date-fns';
 	import { de as dateFnsDe } from 'date-fns/locale';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import BarSeriesChart from '$lib/components/charts/BarSeriesChart.svelte';
 	import HeatmapChart from '$lib/components/charts/HeatmapChart.svelte';
 	import Button from '$lib/components/ui/button.svelte';
@@ -17,7 +19,7 @@
 
 	type Puff = components['schemas']['Puff'];
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data }: { data: PageData; form?: ActionData } = $props();
 
 	let extraPuffs = $state<Puff[]>([]);
 	let nextCursor = $state<string | null>(null);
@@ -41,7 +43,7 @@
 	);
 
 	const exportHref = $derived.by(() => {
-		const q = new URLSearchParams();
+		const q = new SvelteURLSearchParams();
 		q.set('preset', data.filters.preset);
 		q.set('bucket', data.filters.bucket);
 		if (data.filters.deviceId) q.set('device_id', data.filters.deviceId);
@@ -50,7 +52,7 @@
 			q.set('from', data.filters.fromIso);
 			q.set('to', data.filters.toIso);
 		}
-		return `/usage/export.csv?${q}`;
+		return `/usage/export.csv?${q}` as `/usage/export.csv?${string}`;
 	});
 
 	const puffDelta = $derived(
@@ -148,7 +150,7 @@
 			<div class="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2">
 				<Button type="submit">{de.pages.usage.applyFilters}</Button>
 				<a
-					href={exportHref}
+					href={resolve(exportHref)}
 					class="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent"
 				>
 					{de.pages.usage.exportCsv}
@@ -242,7 +244,7 @@
 			{#if histogram.length > 0}
 				<p class="mt-4 text-xs text-muted-foreground">{de.pages.usage.histogramNote}</p>
 				<ul class="mt-2 space-y-1 text-xs">
-					{#each histogram as bin}
+					{#each histogram as bin (bin.lower)}
 						<li>{formatDurationMs(bin.lower)} – {bin.upper ? formatDurationMs(bin.upper) : '∞'}: {bin.count}</li>
 					{/each}
 				</ul>

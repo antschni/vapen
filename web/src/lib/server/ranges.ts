@@ -1,5 +1,5 @@
 import { TZDate } from '@date-fns/tz';
-import { endOfDay, startOfDay, startOfYear, subDays } from 'date-fns';
+import { startOfDay, startOfYear, subDays } from 'date-fns';
 
 export type RangePreset = 'today' | '7d' | '30d' | '90d' | 'year' | 'custom';
 

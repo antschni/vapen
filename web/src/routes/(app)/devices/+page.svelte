@@ -5,6 +5,7 @@
 	import CardContent from '$lib/components/ui/card-content.svelte';
 	import { formatRelativeTime } from '$lib/format';
 	import { de } from '$lib/i18n/de';
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -23,7 +24,7 @@
 {:else}
 	<div class="mt-6 grid gap-4 sm:grid-cols-2">
 		{#each data.devices as device (device.id)}
-			<a href="/devices/{device.id}" class="block">
+			<a href={resolve('/(app)/devices/[id]', { id: device.id })} class="block">
 				<Card class="transition-colors hover:bg-accent/30">
 					<CardContent class="pt-6">
 						<div class="flex items-start justify-between gap-2">

@@ -7,20 +7,15 @@
 	import CardHeader from '$lib/components/ui/card-header.svelte';
 	import CardTitle from '$lib/components/ui/card-title.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import Label from '$lib/components/ui/label.svelte';
 	import Badge from '$lib/components/ui/badge.svelte';
+	import { resolve } from '$app/paths';
 	import { formatDurationMs, formatNumber } from '$lib/format';
 	import { de } from '$lib/i18n/de';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let deviceName = $state('');
 	let tokenPlain = $state<string | null>(null);
-
-	$effect(() => {
-		deviceName = data.device.name;
-	});
 
 	$effect(() => {
 		if (form?.newToken?.token) {
@@ -46,7 +41,7 @@
 </svelte:head>
 
 <p class="text-sm text-muted-foreground">
-	<a href="/devices" class="hover:underline">{de.common.back}</a>
+	<a href={resolve('/devices')} class="hover:underline">{de.common.back}</a>
 </p>
 <h1 class="mt-2 text-2xl font-bold tracking-tight">{data.device.name}</h1>
 
@@ -57,7 +52,7 @@
 		</CardHeader>
 		<CardContent>
 			<form method="POST" action="?/rename" class="flex gap-2" use:enhance>
-				<Input name="name" bind:value={deviceName} required />
+				<Input name="name" value={data.device.name} required />
 				<Button type="submit">{de.common.save}</Button>
 			</form>
 			{#if form?.renameError}

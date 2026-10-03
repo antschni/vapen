@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { de } from '$lib/i18n/de';
 	import Button from '$lib/components/ui/button.svelte';
@@ -55,7 +56,9 @@
 		</form>
 		<p class="mt-4 text-center text-sm text-muted-foreground">
 			{de.auth.noAccount}
-			<a class="text-primary underline-offset-4 hover:underline" href="/register"> {de.auth.register}</a>
+			<a class="text-primary underline-offset-4 hover:underline" href={resolve('/register')}>
+				{de.auth.register}</a
+			>
 		</p>
 	</CardContent>
 </Card>

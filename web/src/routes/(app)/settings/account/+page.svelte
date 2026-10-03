@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/ui/button.svelte';
 	import Card from '$lib/components/ui/card.svelte';
@@ -86,7 +87,7 @@
 		</CardHeader>
 		<CardContent>
 			<a
-				href="/settings/account/export"
+				href={resolve('/settings/account/export')}
 				class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
 			>
 				{de.pages.account.export}

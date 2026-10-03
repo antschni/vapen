@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import { de } from '$lib/i18n/de';
@@ -88,7 +89,9 @@
 		</form>
 		<p class="mt-4 text-center text-sm text-muted-foreground">
 			{de.auth.hasAccount}
-			<a class="text-primary underline-offset-4 hover:underline" href="/login"> {de.auth.login}</a>
+			<a class="text-primary underline-offset-4 hover:underline" href={resolve('/login')}>
+				{de.auth.login}</a
+			>
 		</p>
 	</CardContent>
 </Card>

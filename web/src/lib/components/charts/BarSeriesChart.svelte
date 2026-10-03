@@ -43,7 +43,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each points as point}
+			{#each points as point (point.label)}
 				<tr>
 					<td>{point.label}</td>
 					<td>{formatDurationMs(point.durationMs)}</td>
