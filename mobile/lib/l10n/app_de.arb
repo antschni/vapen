@@ -1,0 +1,47 @@
+{
+  "@@locale": "de",
+  "appTitle": "Vapen",
+  "loginTitle": "Anmelden",
+  "registerTitle": "Registrieren",
+  "emailLabel": "E-Mail",
+  "passwordLabel": "Passwort",
+  "displayNameLabel": "Anzeigename",
+  "serverUrlLabel": "Server-URL",
+  "loginButton": "Anmelden",
+  "registerButton": "Konto erstellen",
+  "logoutButton": "Abmelden",
+  "homeTitle": "Übersicht",
+  "statsTitle": "Statistik",
+  "groupsTitle": "Gruppen",
+  "privacyTitle": "Privatsphäre",
+  "settingsTitle": "Einstellungen",
+  "trackingEnabled": "Tracking aktiv",
+  "trackingDisabled": "Tracking pausiert",
+  "connectionLive": "Verbunden",
+  "connectionWaiting": "Warte auf Gerät",
+  "connectionDisconnected": "Getrennt",
+  "pendingUploads": "{count} ausstehende Uploads",
+  "@pendingUploads": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "todayPuffs": "Heute: {count} Züge",
+  "@todayPuffs": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "permissionsTitle": "Berechtigungen",
+  "permissionsBluetooth": "Bluetooth wird benötigt, um deine Elfbar Master auszulesen.",
+  "permissionsNotifications": "Benachrichtigungen zeigen den Tracking-Status im Hintergrund.",
+  "permissionsBattery": "Ohne Batterie-Optimierung kann Android das Tracking beenden.",
+  "continueButton": "Weiter",
+  "pairDeviceTitle": "Gerät koppeln",
+  "pairDeviceHint": "Wähle deine Elfbar Master in der Systemliste. Schließe InnoGate, falls es läuft.",
+  "bleExplorerTitle": "BLE Explorer",
+  "developerMode": "Entwicklermodus",
+  "simulatedDevice": "Simuliertes Gerät",
+  "invalidCredentials": "E-Mail oder Passwort ist falsch.",
+  "genericError": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+}

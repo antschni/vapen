@@ -1,0 +1,2 @@
+{"ts":"2026-10-03T10:00:00Z","direction":"notify","service_uuid":"0000fff0-0000-1000-8000-00805f9b34fb","char_uuid":"0000fff2-0000-1000-8000-00805f9b34fb","hex":"aa09032a0000002609b2","note":"hypothesis puff index 42 duration 2350ms — anonymized lab capture"}
+{"ts":"2026-10-03T10:00:05Z","direction":"notify","hex":"aa0d014c280000002a0002c7","note":"hypothesis status battery 76 liquid 40"}

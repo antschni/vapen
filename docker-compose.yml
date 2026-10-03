@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: vapen
+      POSTGRES_PASSWORD: vapen
+      POSTGRES_DB: vapen
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vapen -d vapen"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://vapen:vapen@postgres:5432/vapen?sslmode=disable
+      LISTEN_ADDR: ":8080"
+      JWT_ED25519_PRIVATE_KEY: ${JWT_ED25519_PRIVATE_KEY}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8}
+
+  web:
+    profiles: [full]
+    build: ./web
+    depends_on:
+      - api
+    environment:
+      API_INTERNAL_URL: http://api:8080
+      ORIGIN: https://${VAPEN_DOMAIN}
+      PROTOCOL_HEADER: x-forwarded-proto
+      HOST_HEADER: x-forwarded-host
+      ADDRESS_HEADER: x-forwarded-for
+      XFF_DEPTH: "1"
+      COOKIE_SECURE: "true"
+      ANDROID_PACKAGE_NAME: ${ANDROID_PACKAGE_NAME:-dev.vapen.app}
+      ANDROID_CERT_SHA256_FINGERPRINTS: ${ANDROID_CERT_SHA256_FINGERPRINTS:-}
+
+  caddy:
+    profiles: [full]
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      VAPEN_DOMAIN: ${VAPEN_DOMAIN:-localhost}
+    depends_on:
+      - api
+      - web
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,32 @@
+name: web
+
+on:
+  push:
+    paths:
+      - 'web/**'
+      - 'api/openapi.yaml'
+  pull_request:
+    paths:
+      - 'web/**'
+      - 'api/openapi.yaml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run generate:api
+      - run: git diff --exit-code src/lib/api/schema.d.ts
+      - run: npm run check
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

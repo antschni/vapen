@@ -1,0 +1,1938 @@
+openapi: 3.0.3
+info:
+  title: Vapen API
+  version: 1.0.0
+  description: REST API for Vapen vaping tracker (auth, ingest, statistics, groups, live SSE).
+servers:
+  - url: /api/v1
+    description: API v1 base path
+tags:
+  - name: auth
+  - name: me
+  - name: devices
+  - name: ingest
+  - name: puffs
+  - name: stats
+  - name: groups
+paths:
+  /auth/register:
+    post:
+      operationId: authRegister
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/login:
+    post:
+      operationId: authLogin
+      tags: [auth]
+      summary: Log in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/refresh:
+    post:
+      operationId: authRefresh
+      tags: [auth]
+      summary: Rotate refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/logout:
+    post:
+      operationId: authLogout
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      summary: Revoke current session
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me:
+    get:
+      operationId: getMe
+      tags: [me]
+      security:
+        - bearerAuth: []
+      summary: Current user profile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: patchMe
+      tags: [me]
+      security:
+        - bearerAuth: []
+      summary: Update profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchMeRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      operationId: deleteMe
+      tags: [me]
+      security:
+        - bearerAuth: []
+      summary: Delete account and all data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteMeRequest'
+      responses:
+        '204':
+          description: No content
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me/password:
+    post:
+      operationId: changePassword
+      tags: [me]
+      security:
+        - bearerAuth: []
+      summary: Change password and revoke other sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: No content
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me/export:
+    get:
+      operationId: exportMe
+      tags: [me]
+      security:
+        - bearerAuth: []
+      summary: GDPR export of all own data
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserExport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me/privacy-defaults:
+    get:
+      operationId: getPrivacyDefaults
+      tags: [me]
+      security:
+        - bearerAuth: []
+      summary: User privacy defaults
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacySettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: putPrivacyDefaults
+      tags: [me]
+      security:
+        - bearerAuth: []
+      summary: Replace privacy defaults
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacySettings'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacySettings'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /devices:
+    get:
+      operationId: listDevices
+      tags: [devices]
+      security:
+        - bearerAuth: []
+      summary: List own devices
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createDevice
+      tags: [devices]
+      security:
+        - bearerAuth: []
+      summary: Register a device (idempotent by hardware_id)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDeviceRequest'
+      responses:
+        '200':
+          description: Existing device returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /devices/{id}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+    get:
+      operationId: getDevice
+      tags: [devices]
+      security:
+        - bearerAuth: []
+      summary: Get own device
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: patchDevice
+      tags: [devices]
+      security:
+        - bearerAuth: []
+      summary: Rename device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchDeviceRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteDevice
+      tags: [devices]
+      security:
+        - bearerAuth: []
+      summary: Delete device and revoke ingest tokens
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /devices/{id}/ingest-tokens:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+    get:
+      operationId: listIngestTokens
+      tags: [devices]
+      security:
+        - bearerAuth: []
+      summary: List ingest tokens (metadata only)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IngestTokenMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createIngestToken
+      tags: [devices]
+      security:
+        - bearerAuth: []
+      summary: Create ingest token (plain token returned once)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIngestTokenRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestTokenCreated'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /devices/{id}/ingest-tokens/{token_id}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceId'
+      - $ref: '#/components/parameters/TokenId'
+    delete:
+      operationId: revokeIngestToken
+      tags: [devices]
+      security:
+        - bearerAuth: []
+      summary: Revoke ingest token
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /ingest:
+    post:
+      operationId: ingestEvents
+      tags: [ingest]
+      security:
+        - deviceAuth: []
+      summary: Batch ingest from device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /puffs:
+    get:
+      operationId: listPuffs
+      tags: [puffs]
+      security:
+        - bearerAuth: []
+      summary: List puffs with filters
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: device_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: source
+          in: query
+          schema:
+            $ref: '#/components/schemas/PuffSource'
+        - name: min_duration_ms
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: max_duration_ms
+          in: query
+          schema:
+            type: integer
+            maximum: 60000
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PuffPage'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /stats/usage:
+    get:
+      operationId: getUsageStats
+      tags: [stats]
+      security:
+        - bearerAuth: []
+      summary: Usage statistics over time
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - name: bucket
+          in: query
+          schema:
+            $ref: '#/components/schemas/UsageBucket'
+        - name: tz
+          in: query
+          schema:
+            type: string
+            example: Europe/Berlin
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: device_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageStats'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /stats/devices/{id}:
+    get:
+      operationId: getDeviceStats
+      tags: [stats]
+      security:
+        - bearerAuth: []
+      summary: Device statistics
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - name: bucket
+          in: query
+          schema:
+            type: string
+            enum: [hour, day]
+            default: hour
+        - name: tz
+          in: query
+          schema:
+            type: string
+            example: Europe/Berlin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceStats'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups:
+    get:
+      operationId: listGroups
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Groups the user belongs to
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createGroup
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Create a group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /groups/join:
+    post:
+      operationId: joinGroup
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Join group by invite code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinGroupRequest'
+      responses:
+        '200':
+          description: OK (idempotent if already member)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{id}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      operationId: getGroup
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Group detail with members
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: patchGroup
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Rename group (admin+)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchGroupRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteGroup
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Delete group (owner only)
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{id}/invite/rotate:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    post:
+      operationId: rotateGroupInvite
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Rotate invite code (admin+)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteCodeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{id}/leave:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    post:
+      operationId: leaveGroup
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Leave group
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /groups/{id}/members/{user_id}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+      - $ref: '#/components/parameters/UserId'
+    patch:
+      operationId: patchGroupMember
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Change role or transfer ownership (owner)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchGroupMemberRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: removeGroupMember
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Remove member (admin+, rules apply)
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{id}/privacy:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      operationId: getGroupPrivacy
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Privacy defaults, overrides and effective flags in this group
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPrivacy'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: putGroupPrivacy
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Set per-group privacy overrides
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutGroupPrivacyRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPrivacy'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{id}/overview:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      operationId: getGroupOverview
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Member-visible aggregated data
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - name: tz
+          in: query
+          schema:
+            type: string
+            example: Europe/Berlin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupOverview'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{id}/live:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      operationId: getGroupLive
+      tags: [groups]
+      security:
+        - bearerAuth: []
+      summary: Server-Sent Events live presence stream
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: User access token (EdDSA JWT)
+    deviceAuth:
+      type: http
+      scheme: bearer
+      description: Device ingest token (vpd_ prefix)
+  parameters:
+    DeviceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    GroupId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TokenId:
+      name: token_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    From:
+      name: from
+      in: query
+      schema:
+        type: string
+        format: date-time
+    To:
+      name: to
+      in: query
+      schema:
+        type: string
+        format: date-time
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 100
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+  schemas:
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password, display_name, timezone]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 12
+          maxLength: 128
+        display_name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        timezone:
+          type: string
+          example: Europe/Berlin
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+    TokenPair:
+      type: object
+      required:
+        - access_token
+        - access_token_expires_at
+        - refresh_token
+        - refresh_token_expires_at
+        - user
+      properties:
+        access_token:
+          type: string
+        access_token_expires_at:
+          type: string
+          format: date-time
+        refresh_token:
+          type: string
+        refresh_token_expires_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+    User:
+      type: object
+      required: [id, email, display_name, timezone, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+        timezone:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    PatchMeRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        display_name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        timezone:
+          type: string
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [current_password, new_password]
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+          minLength: 12
+          maxLength: 128
+    DeleteMeRequest:
+      type: object
+      additionalProperties: false
+      required: [password]
+      properties:
+        password:
+          type: string
+    PrivacySettings:
+      type: object
+      additionalProperties: false
+      required:
+        - share_live_status
+        - share_usage_summary
+        - share_usage_detail
+        - share_device_stats
+        - show_in_leaderboard
+      properties:
+        share_live_status:
+          type: boolean
+        share_usage_summary:
+          type: boolean
+        share_usage_detail:
+          type: boolean
+        share_device_stats:
+          type: boolean
+        show_in_leaderboard:
+          type: boolean
+    PrivacyOverrides:
+      type: object
+      additionalProperties: false
+      properties:
+        share_live_status:
+          type: boolean
+          nullable: true
+        share_usage_summary:
+          type: boolean
+          nullable: true
+        share_usage_detail:
+          type: boolean
+          nullable: true
+        share_device_stats:
+          type: boolean
+          nullable: true
+        show_in_leaderboard:
+          type: boolean
+          nullable: true
+    GroupPrivacy:
+      type: object
+      required: [defaults, overrides, effective]
+      properties:
+        defaults:
+          $ref: '#/components/schemas/PrivacySettings'
+        overrides:
+          $ref: '#/components/schemas/PrivacyOverrides'
+        effective:
+          $ref: '#/components/schemas/PrivacySettings'
+    PutGroupPrivacyRequest:
+      type: object
+      additionalProperties: false
+      required: [overrides]
+      properties:
+        overrides:
+          $ref: '#/components/schemas/PrivacyOverrides'
+    DeviceModel:
+      type: string
+      enum: [elfbar_master]
+    DeviceStatus:
+      type: object
+      properties:
+        recorded_at:
+          type: string
+          format: date-time
+        battery_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        is_charging:
+          type: boolean
+        liquid_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        puff_counter_total:
+          type: integer
+        power_mode:
+          type: string
+        child_lock:
+          type: boolean
+        firmware_version:
+          type: string
+    Device:
+      type: object
+      required: [id, user_id, model, name, hardware_id, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        model:
+          $ref: '#/components/schemas/DeviceModel'
+        name:
+          type: string
+        hardware_id:
+          type: string
+          description: Lowercase SHA-256 hex
+        firmware_version:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        last_seen_at:
+          type: string
+          format: date-time
+        latest_status:
+          $ref: '#/components/schemas/DeviceStatus'
+    CreateDeviceRequest:
+      type: object
+      additionalProperties: false
+      required: [model, name, hardware_id]
+      properties:
+        model:
+          $ref: '#/components/schemas/DeviceModel'
+        name:
+          type: string
+        hardware_id:
+          type: string
+        firmware_version:
+          type: string
+    PatchDeviceRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+    IngestTokenMeta:
+      type: object
+      required: [id, name, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+    IngestTokenCreated:
+      type: object
+      required: [id, name, token, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        token:
+          type: string
+          description: Shown only once (vpd_ prefix)
+        created_at:
+          type: string
+          format: date-time
+    CreateIngestTokenRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+    PuffSource:
+      type: string
+      enum: [live, history]
+    Puff:
+      type: object
+      required:
+        - id
+        - user_id
+        - device_id
+        - client_event_id
+        - started_at
+        - duration_ms
+        - source
+        - received_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+          format: uuid
+        client_event_id:
+          type: string
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        duration_ms:
+          type: integer
+          minimum: 1
+          maximum: 60000
+        source:
+          $ref: '#/components/schemas/PuffSource'
+        received_at:
+          type: string
+          format: date-time
+    PuffPage:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Puff'
+        next_cursor:
+          type: string
+          nullable: true
+    UsageBucket:
+      type: string
+      enum: [hour, day, week, month]
+      default: day
+    UsageTotals:
+      type: object
+      required: [puff_count, total_duration_ms, avg_duration_ms, max_duration_ms, active_days]
+      properties:
+        puff_count:
+          type: integer
+        total_duration_ms:
+          type: integer
+        avg_duration_ms:
+          type: integer
+        max_duration_ms:
+          type: integer
+        active_days:
+          type: integer
+    UsagePeriodTotals:
+      type: object
+      required: [puff_count, total_duration_ms]
+      properties:
+        puff_count:
+          type: integer
+        total_duration_ms:
+          type: integer
+    UsageSeriesPoint:
+      type: object
+      required: [bucket_start, puff_count, total_duration_ms, avg_duration_ms, max_duration_ms]
+      properties:
+        bucket_start:
+          type: string
+          format: date-time
+        puff_count:
+          type: integer
+        total_duration_ms:
+          type: integer
+        avg_duration_ms:
+          type: integer
+        max_duration_ms:
+          type: integer
+    HeatmapPoint:
+      type: object
+      required: [iso_weekday, hour, puff_count, total_duration_ms]
+      properties:
+        iso_weekday:
+          type: integer
+          minimum: 1
+          maximum: 7
+        hour:
+          type: integer
+          minimum: 0
+          maximum: 23
+        puff_count:
+          type: integer
+        total_duration_ms:
+          type: integer
+    UsageStats:
+      type: object
+      required:
+        - user_id
+        - from
+        - to
+        - bucket
+        - tz
+        - totals
+        - previous_period
+        - series
+        - heatmap
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+          format: uuid
+          nullable: true
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        bucket:
+          $ref: '#/components/schemas/UsageBucket'
+        tz:
+          type: string
+        totals:
+          $ref: '#/components/schemas/UsageTotals'
+        previous_period:
+          $ref: '#/components/schemas/UsagePeriodTotals'
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsageSeriesPoint'
+        heatmap:
+          type: array
+          items:
+            $ref: '#/components/schemas/HeatmapPoint'
+    HistogramBin:
+      type: object
+      required: [lower_ms, count]
+      properties:
+        lower_ms:
+          type: integer
+        upper_ms:
+          type: integer
+          nullable: true
+        count:
+          type: integer
+    PuffDurationStats:
+      type: object
+      required: [count, avg_ms, median_ms, p90_ms, max_ms, histogram]
+      properties:
+        count:
+          type: integer
+        avg_ms:
+          type: integer
+        median_ms:
+          type: integer
+        p90_ms:
+          type: integer
+        max_ms:
+          type: integer
+        histogram:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistogramBin'
+    BatterySeriesPoint:
+      type: object
+      required: [bucket_start]
+      properties:
+        bucket_start:
+          type: string
+          format: date-time
+        battery_percent:
+          type: integer
+        is_charging:
+          type: boolean
+    LiquidSeriesPoint:
+      type: object
+      required: [bucket_start]
+      properties:
+        bucket_start:
+          type: string
+          format: date-time
+        liquid_percent:
+          type: integer
+    DeviceStats:
+      type: object
+      required:
+        - device
+        - from
+        - to
+        - bucket
+        - tz
+        - latest_status
+        - battery_series
+        - liquid_series
+        - puff_duration
+        - puffs_since_last_charge
+      properties:
+        device:
+          type: object
+          required: [id, model, name]
+          properties:
+            id:
+              type: string
+              format: uuid
+            model:
+              $ref: '#/components/schemas/DeviceModel'
+            name:
+              type: string
+            last_seen_at:
+              type: string
+              format: date-time
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        bucket:
+          type: string
+          enum: [hour, day]
+        tz:
+          type: string
+        latest_status:
+          $ref: '#/components/schemas/DeviceStatus'
+        battery_series:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatterySeriesPoint'
+        liquid_series:
+          type: array
+          items:
+            $ref: '#/components/schemas/LiquidSeriesPoint'
+        puff_duration:
+          $ref: '#/components/schemas/PuffDurationStats'
+        puffs_since_last_charge:
+          type: integer
+    GroupRole:
+      type: string
+      enum: [owner, admin, member]
+    GroupSummary:
+      type: object
+      required: [id, name, role, member_count, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/GroupRole'
+        member_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+    GroupMember:
+      type: object
+      required: [group_id, user_id, display_name, role, joined_at]
+      properties:
+        group_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/GroupRole'
+        joined_at:
+          type: string
+          format: date-time
+    Group:
+      type: object
+      required: [id, name, owner_id, member_count, created_at, members]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+        invite_code:
+          type: string
+          description: Only for owner and admin
+        member_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMember'
+    CreateGroupRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+    PatchGroupRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+    JoinGroupRequest:
+      type: object
+      additionalProperties: false
+      required: [invite_code]
+      properties:
+        invite_code:
+          type: string
+          minLength: 10
+          maxLength: 10
+    PatchGroupMemberRequest:
+      type: object
+      additionalProperties: false
+      required: [role]
+      properties:
+        role:
+          $ref: '#/components/schemas/GroupRole'
+    InviteCodeResponse:
+      type: object
+      required: [invite_code]
+      properties:
+        invite_code:
+          type: string
+    MemberVisibility:
+      type: object
+      required:
+        - live_status
+        - usage_summary
+        - usage_detail
+        - device_stats
+        - leaderboard
+      properties:
+        live_status:
+          type: boolean
+        usage_summary:
+          type: boolean
+        usage_detail:
+          type: boolean
+        device_stats:
+          type: boolean
+        leaderboard:
+          type: boolean
+    MemberLive:
+      type: object
+      properties:
+        vaping_since:
+          type: string
+          format: date-time
+          nullable: true
+        last_puff_at:
+          type: string
+          format: date-time
+        last_puff_duration_ms:
+          type: integer
+    MemberUsageDaily:
+      type: object
+      required: [date, puff_count, total_duration_ms]
+      properties:
+        date:
+          type: string
+          format: date
+        puff_count:
+          type: integer
+        total_duration_ms:
+          type: integer
+    MemberUsage:
+      type: object
+      required: [puff_count, total_duration_ms, avg_duration_ms, daily]
+      properties:
+        puff_count:
+          type: integer
+        total_duration_ms:
+          type: integer
+        avg_duration_ms:
+          type: integer
+        daily:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberUsageDaily'
+    MemberDeviceSummary:
+      type: object
+      required: [model]
+      properties:
+        model:
+          $ref: '#/components/schemas/DeviceModel'
+        battery_percent:
+          type: integer
+        is_charging:
+          type: boolean
+        liquid_percent:
+          type: integer
+        last_seen_at:
+          type: string
+          format: date-time
+    GroupOverviewMember:
+      type: object
+      required: [user_id, display_name, role, visibility]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/GroupRole'
+        visibility:
+          $ref: '#/components/schemas/MemberVisibility'
+        live:
+          oneOf:
+            - $ref: '#/components/schemas/MemberLive'
+            - type: null
+        usage:
+          oneOf:
+            - $ref: '#/components/schemas/MemberUsage'
+            - type: null
+        device:
+          oneOf:
+            - $ref: '#/components/schemas/MemberDeviceSummary'
+            - type: null
+    LeaderboardEntry:
+      type: object
+      required: [rank, user_id, display_name, puff_count, total_duration_ms]
+      properties:
+        rank:
+          type: integer
+        user_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        puff_count:
+          type: integer
+        total_duration_ms:
+          type: integer
+    GroupOverview:
+      type: object
+      required: [group, from, to, tz, members, leaderboard]
+      properties:
+        group:
+          type: object
+          required: [id, name, member_count]
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            member_count:
+              type: integer
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        tz:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupOverviewMember'
+        leaderboard:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+    RawPayload:
+      type: object
+      additionalProperties: false
+      required: [hex]
+      properties:
+        hex:
+          type: string
+    IngestEvent:
+      oneOf:
+        - $ref: '#/components/schemas/IngestPuffStartedEvent'
+        - $ref: '#/components/schemas/IngestPuffEvent'
+        - $ref: '#/components/schemas/IngestStatusEvent'
+      discriminator:
+        propertyName: type
+        mapping:
+          puff_started: '#/components/schemas/IngestPuffStartedEvent'
+          puff: '#/components/schemas/IngestPuffEvent'
+          status: '#/components/schemas/IngestStatusEvent'
+    IngestEventBase:
+      type: object
+      required: [type, client_event_id]
+      properties:
+        type:
+          type: string
+        client_event_id:
+          type: string
+          format: uuid
+    IngestPuffStartedEvent:
+      allOf:
+        - $ref: '#/components/schemas/IngestEventBase'
+        - type: object
+          additionalProperties: false
+          required: [occurred_at]
+          properties:
+            type:
+              type: string
+              enum: [puff_started]
+            occurred_at:
+              type: string
+              format: date-time
+    IngestPuffEvent:
+      allOf:
+        - $ref: '#/components/schemas/IngestEventBase'
+        - type: object
+          additionalProperties: false
+          required: [started_at, duration_ms, source]
+          properties:
+            type:
+              type: string
+              enum: [puff]
+            started_at:
+              type: string
+              format: date-time
+            duration_ms:
+              type: integer
+              minimum: 1
+              maximum: 60000
+            source:
+              $ref: '#/components/schemas/PuffSource'
+            raw:
+              $ref: '#/components/schemas/RawPayload'
+    IngestStatusEvent:
+      allOf:
+        - $ref: '#/components/schemas/IngestEventBase'
+        - type: object
+          additionalProperties: false
+          required: [recorded_at]
+          properties:
+            type:
+              type: string
+              enum: [status]
+            recorded_at:
+              type: string
+              format: date-time
+            battery_percent:
+              type: integer
+              minimum: 0
+              maximum: 100
+            is_charging:
+              type: boolean
+            liquid_percent:
+              type: integer
+              minimum: 0
+              maximum: 100
+            puff_counter_total:
+              type: integer
+            power_mode:
+              type: string
+            child_lock:
+              type: boolean
+            firmware_version:
+              type: string
+    IngestRequest:
+      type: object
+      additionalProperties: false
+      required: [device_id, sent_at, events]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        sent_at:
+          type: string
+          format: date-time
+        events:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/IngestEvent'
+    IngestRejectedEvent:
+      type: object
+      required: [client_event_id, code, message]
+      properties:
+        client_event_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        message:
+          type: string
+    IngestResponse:
+      type: object
+      required: [accepted, duplicates, rejected]
+      properties:
+        accepted:
+          type: integer
+        duplicates:
+          type: integer
+        rejected:
+          type: array
+          items:
+            $ref: '#/components/schemas/IngestRejectedEvent'
+    UserExport:
+      type: object
+      description: Full GDPR export payload (structure implementation-defined)
+      additionalProperties: true
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+  responses:
+    ValidationFailed:
+      description: Validation failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    InvalidCredentials:
+      description: Invalid credentials
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    RateLimited:
+      description: Rate limited
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PayloadTooLarge:
+      description: Payload too large
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
