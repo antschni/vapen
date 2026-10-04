@@ -4,1967 +4,1971 @@
  */
 
 export interface paths {
-    "/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Register a new user */
-        post: operations["authRegister"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  "/auth/register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Log in with email and password */
-        post: operations["authLogin"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Register a new user */
+    post: operations["authRegister"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Rotate refresh token */
-        post: operations["authRefresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Log in with email and password */
+    post: operations["authLogin"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/refresh": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Revoke current session */
-        post: operations["authLogout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Rotate refresh token */
+    post: operations["authRefresh"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/logout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Current user profile */
-        get: operations["getMe"];
-        put?: never;
-        post?: never;
-        /** Delete account and all data */
-        delete: operations["deleteMe"];
-        options?: never;
-        head?: never;
-        /** Update profile */
-        patch: operations["patchMe"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Revoke current session */
+    post: operations["authLogout"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/me/password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Change password and revoke other sessions */
-        post: operations["changePassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Current user profile */
+    get: operations["getMe"];
+    put?: never;
+    post?: never;
+    /** Delete account and all data */
+    delete: operations["deleteMe"];
+    options?: never;
+    head?: never;
+    /** Update profile */
+    patch: operations["patchMe"];
+    trace?: never;
+  };
+  "/me/password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/me/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GDPR export of all own data */
-        get: operations["exportMe"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Change password and revoke other sessions */
+    post: operations["changePassword"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/me/privacy-defaults": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** User privacy defaults */
-        get: operations["getPrivacyDefaults"];
-        /** Replace privacy defaults */
-        put: operations["putPrivacyDefaults"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** GDPR export of all own data */
+    get: operations["exportMe"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/privacy-defaults": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/devices": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List own devices */
-        get: operations["listDevices"];
-        put?: never;
-        /** Register a device (idempotent by hardware_id) */
-        post: operations["createDevice"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** User privacy defaults */
+    get: operations["getPrivacyDefaults"];
+    /** Replace privacy defaults */
+    put: operations["putPrivacyDefaults"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/devices": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/devices/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-            };
-            cookie?: never;
-        };
-        /** Get own device */
-        get: operations["getDevice"];
-        put?: never;
-        post?: never;
-        /** Delete device and revoke ingest tokens */
-        delete: operations["deleteDevice"];
-        options?: never;
-        head?: never;
-        /** Rename device */
-        patch: operations["patchDevice"];
-        trace?: never;
+    /** List own devices */
+    get: operations["listDevices"];
+    put?: never;
+    /** Register a device (idempotent by hardware_id) */
+    post: operations["createDevice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/devices/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+      };
+      cookie?: never;
     };
-    "/devices/{id}/ingest-tokens": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-            };
-            cookie?: never;
-        };
-        /** List ingest tokens (metadata only) */
-        get: operations["listIngestTokens"];
-        put?: never;
-        /** Create ingest token (plain token returned once) */
-        post: operations["createIngestToken"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get own device */
+    get: operations["getDevice"];
+    put?: never;
+    post?: never;
+    /** Delete device and revoke ingest tokens */
+    delete: operations["deleteDevice"];
+    options?: never;
+    head?: never;
+    /** Rename device */
+    patch: operations["patchDevice"];
+    trace?: never;
+  };
+  "/devices/{id}/ingest-tokens": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+      };
+      cookie?: never;
     };
-    "/devices/{id}/ingest-tokens/{token_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-                token_id: components["parameters"]["TokenId"];
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Revoke ingest token */
-        delete: operations["revokeIngestToken"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List ingest tokens (metadata only) */
+    get: operations["listIngestTokens"];
+    put?: never;
+    /** Create ingest token (plain token returned once) */
+    post: operations["createIngestToken"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/devices/{id}/ingest-tokens/{token_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+        token_id: components["parameters"]["TokenId"];
+      };
+      cookie?: never;
     };
-    "/ingest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Batch ingest from device */
-        post: operations["ingestEvents"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revoke ingest token */
+    delete: operations["revokeIngestToken"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/ingest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/puffs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List puffs with filters */
-        get: operations["listPuffs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Batch ingest from device */
+    post: operations["ingestEvents"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/puffs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/stats/usage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Usage statistics over time */
-        get: operations["getUsageStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List puffs with filters */
+    get: operations["listPuffs"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/stats/usage": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/stats/devices/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Device statistics */
-        get: operations["getDeviceStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Usage statistics over time */
+    get: operations["getUsageStats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/stats/devices/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Groups the user belongs to */
-        get: operations["listGroups"];
-        put?: never;
-        /** Create a group */
-        post: operations["createGroup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Device statistics */
+    get: operations["getDeviceStats"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/groups": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/groups/join": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Join group by invite code */
-        post: operations["joinGroup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Groups the user belongs to */
+    get: operations["listGroups"];
+    put?: never;
+    /** Create a group */
+    post: operations["createGroup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/groups/join": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/groups/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        /** Group detail with members */
-        get: operations["getGroup"];
-        put?: never;
-        post?: never;
-        /** Delete group (owner only) */
-        delete: operations["deleteGroup"];
-        options?: never;
-        head?: never;
-        /** Rename group (admin+) */
-        patch: operations["patchGroup"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Join group by invite code */
+    post: operations["joinGroup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/groups/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
     };
-    "/groups/{id}/invite/rotate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Rotate invite code (admin+) */
-        post: operations["rotateGroupInvite"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Group detail with members */
+    get: operations["getGroup"];
+    put?: never;
+    post?: never;
+    /** Delete group (owner only) */
+    delete: operations["deleteGroup"];
+    options?: never;
+    head?: never;
+    /** Rename group (admin+) */
+    patch: operations["patchGroup"];
+    trace?: never;
+  };
+  "/groups/{id}/invite/rotate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
     };
-    "/groups/{id}/leave": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Leave group */
-        post: operations["leaveGroup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Rotate invite code (admin+) */
+    post: operations["rotateGroupInvite"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/groups/{id}/leave": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
     };
-    "/groups/{id}/members/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove member (admin+, rules apply) */
-        delete: operations["removeGroupMember"];
-        options?: never;
-        head?: never;
-        /** Change role or transfer ownership (owner) */
-        patch: operations["patchGroupMember"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Leave group */
+    post: operations["leaveGroup"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/groups/{id}/members/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+        user_id: components["parameters"]["UserId"];
+      };
+      cookie?: never;
     };
-    "/groups/{id}/privacy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        /** Privacy defaults, overrides and effective flags in this group */
-        get: operations["getGroupPrivacy"];
-        /** Set per-group privacy overrides */
-        put: operations["putGroupPrivacy"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove member (admin+, rules apply) */
+    delete: operations["removeGroupMember"];
+    options?: never;
+    head?: never;
+    /** Change role or transfer ownership (owner) */
+    patch: operations["patchGroupMember"];
+    trace?: never;
+  };
+  "/groups/{id}/privacy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
     };
-    "/groups/{id}/overview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        /** Member-visible aggregated data */
-        get: operations["getGroupOverview"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Privacy defaults, overrides and effective flags in this group */
+    get: operations["getGroupPrivacy"];
+    /** Set per-group privacy overrides */
+    put: operations["putGroupPrivacy"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/groups/{id}/overview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
     };
-    "/groups/{id}/live": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        /** Server-Sent Events live presence stream */
-        get: operations["getGroupLive"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Member-visible aggregated data */
+    get: operations["getGroupOverview"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/groups/{id}/live": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
     };
+    /** Server-Sent Events live presence stream */
+    get: operations["getGroupLive"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        RegisterRequest: {
-            /** Format: email */
-            email: string;
-            password: string;
-            display_name: string;
-            /** @example Europe/Berlin */
-            timezone: string;
-        };
-        LoginRequest: {
-            /** Format: email */
-            email: string;
-            password: string;
-        };
-        RefreshRequest: {
-            refresh_token: string;
-        };
-        TokenPair: {
-            access_token: string;
-            /** Format: date-time */
-            access_token_expires_at: string;
-            refresh_token: string;
-            /** Format: date-time */
-            refresh_token_expires_at: string;
-            user: components["schemas"]["User"];
-        };
-        User: {
-            /** Format: uuid */
-            id: string;
-            /** Format: email */
-            email: string;
-            display_name: string;
-            timezone: string;
-            /** Format: date-time */
-            created_at: string;
-        };
-        PatchMeRequest: {
-            display_name?: string;
-            timezone?: string;
-        };
-        ChangePasswordRequest: {
-            current_password: string;
-            new_password: string;
-        };
-        DeleteMeRequest: {
-            password: string;
-        };
-        PrivacySettings: {
-            share_live_status: boolean;
-            share_usage_summary: boolean;
-            share_usage_detail: boolean;
-            share_device_stats: boolean;
-            show_in_leaderboard: boolean;
-        };
-        PrivacyOverrides: {
-            share_live_status?: boolean | null;
-            share_usage_summary?: boolean | null;
-            share_usage_detail?: boolean | null;
-            share_device_stats?: boolean | null;
-            show_in_leaderboard?: boolean | null;
-        };
-        GroupPrivacy: {
-            defaults: components["schemas"]["PrivacySettings"];
-            overrides: components["schemas"]["PrivacyOverrides"];
-            effective: components["schemas"]["PrivacySettings"];
-        };
-        PutGroupPrivacyRequest: {
-            overrides: components["schemas"]["PrivacyOverrides"];
-        };
-        /** @enum {string} */
-        DeviceModel: "elfbar_master";
-        DeviceStatus: {
-            /** Format: date-time */
-            recorded_at?: string;
-            battery_percent?: number;
-            is_charging?: boolean;
-            liquid_percent?: number;
-            puff_counter_total?: number;
-            power_mode?: string;
-            child_lock?: boolean;
-            firmware_version?: string;
-        };
-        Device: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            user_id: string;
-            model: components["schemas"]["DeviceModel"];
-            name: string;
-            /** @description Lowercase SHA-256 hex */
-            hardware_id: string;
-            firmware_version?: string;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            last_seen_at?: string;
-            latest_status?: components["schemas"]["DeviceStatus"];
-        };
-        CreateDeviceRequest: {
-            model: components["schemas"]["DeviceModel"];
-            name: string;
-            hardware_id: string;
-            firmware_version?: string;
-        };
-        PatchDeviceRequest: {
-            name: string;
-        };
-        IngestTokenMeta: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            last_used_at?: string;
-            /** Format: date-time */
-            revoked_at?: string;
-        };
-        IngestTokenCreated: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** @description Shown only once (vpd_ prefix) */
-            token: string;
-            /** Format: date-time */
-            created_at: string;
-        };
-        CreateIngestTokenRequest: {
-            name: string;
-        };
-        /** @enum {string} */
-        PuffSource: "live" | "history";
-        Puff: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            user_id: string;
-            /** Format: uuid */
-            device_id: string;
-            /** Format: uuid */
-            client_event_id: string;
-            /** Format: date-time */
-            started_at: string;
-            duration_ms: number;
-            source: components["schemas"]["PuffSource"];
-            /** Format: date-time */
-            received_at: string;
-        };
-        PuffPage: {
-            items: components["schemas"]["Puff"][];
-            next_cursor: string | null;
-        };
-        /**
-         * @default day
-         * @enum {string}
-         */
-        UsageBucket: "hour" | "day" | "week" | "month";
-        UsageTotals: {
-            puff_count: number;
-            total_duration_ms: number;
-            avg_duration_ms: number;
-            max_duration_ms: number;
-            active_days: number;
-        };
-        UsagePeriodTotals: {
-            puff_count: number;
-            total_duration_ms: number;
-        };
-        UsageSeriesPoint: {
-            /** Format: date-time */
-            bucket_start: string;
-            puff_count: number;
-            total_duration_ms: number;
-            avg_duration_ms: number;
-            max_duration_ms: number;
-        };
-        HeatmapPoint: {
-            iso_weekday: number;
-            hour: number;
-            puff_count: number;
-            total_duration_ms: number;
-        };
-        UsageStats: {
-            /** Format: uuid */
-            user_id: string;
-            /** Format: uuid */
-            device_id?: string | null;
-            /** Format: date-time */
-            from: string;
-            /** Format: date-time */
-            to: string;
-            bucket: components["schemas"]["UsageBucket"];
-            tz: string;
-            totals: components["schemas"]["UsageTotals"];
-            previous_period: components["schemas"]["UsagePeriodTotals"];
-            series: components["schemas"]["UsageSeriesPoint"][];
-            heatmap: components["schemas"]["HeatmapPoint"][];
-        };
-        HistogramBin: {
-            lower_ms: number;
-            upper_ms?: number | null;
-            count: number;
-        };
-        PuffDurationStats: {
-            count: number;
-            avg_ms: number;
-            median_ms: number;
-            p90_ms: number;
-            max_ms: number;
-            histogram: components["schemas"]["HistogramBin"][];
-        };
-        BatterySeriesPoint: {
-            /** Format: date-time */
-            bucket_start: string;
-            battery_percent?: number;
-            is_charging?: boolean;
-        };
-        LiquidSeriesPoint: {
-            /** Format: date-time */
-            bucket_start: string;
-            liquid_percent?: number;
-        };
-        DeviceStats: {
-            device: {
-                /** Format: uuid */
-                id: string;
-                model: components["schemas"]["DeviceModel"];
-                name: string;
-                /** Format: date-time */
-                last_seen_at?: string;
-            };
-            /** Format: date-time */
-            from: string;
-            /** Format: date-time */
-            to: string;
-            /** @enum {string} */
-            bucket: "hour" | "day";
-            tz: string;
-            latest_status: components["schemas"]["DeviceStatus"];
-            battery_series: components["schemas"]["BatterySeriesPoint"][];
-            liquid_series: components["schemas"]["LiquidSeriesPoint"][];
-            puff_duration: components["schemas"]["PuffDurationStats"];
-            puffs_since_last_charge: number;
-        };
-        /** @enum {string} */
-        GroupRole: "owner" | "admin" | "member";
-        GroupSummary: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            role: components["schemas"]["GroupRole"];
-            member_count: number;
-            /** Format: date-time */
-            created_at: string;
-        };
-        GroupMember: {
-            /** Format: uuid */
-            group_id: string;
-            /** Format: uuid */
-            user_id: string;
-            display_name: string;
-            role: components["schemas"]["GroupRole"];
-            /** Format: date-time */
-            joined_at: string;
-        };
-        Group: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** Format: uuid */
-            owner_id: string;
-            /** @description Only for owner and admin */
-            invite_code?: string;
-            member_count: number;
-            /** Format: date-time */
-            created_at: string;
-            members: components["schemas"]["GroupMember"][];
-        };
-        CreateGroupRequest: {
-            name: string;
-        };
-        PatchGroupRequest: {
-            name: string;
-        };
-        JoinGroupRequest: {
-            invite_code: string;
-        };
-        PatchGroupMemberRequest: {
-            role: components["schemas"]["GroupRole"];
-        };
-        InviteCodeResponse: {
-            invite_code: string;
-        };
-        MemberVisibility: {
-            live_status: boolean;
-            usage_summary: boolean;
-            usage_detail: boolean;
-            device_stats: boolean;
-            leaderboard: boolean;
-        };
-        MemberLive: {
-            /** Format: date-time */
-            vaping_since?: string | null;
-            /** Format: date-time */
-            last_puff_at?: string;
-            last_puff_duration_ms?: number;
-        };
-        MemberUsageDaily: {
-            /** Format: date */
-            date: string;
-            puff_count: number;
-            total_duration_ms: number;
-        };
-        MemberUsage: {
-            puff_count: number;
-            total_duration_ms: number;
-            avg_duration_ms: number;
-            daily: components["schemas"]["MemberUsageDaily"][];
-        };
-        MemberDeviceSummary: {
-            model: components["schemas"]["DeviceModel"];
-            battery_percent?: number;
-            is_charging?: boolean;
-            liquid_percent?: number;
-            /** Format: date-time */
-            last_seen_at?: string;
-        };
-        GroupOverviewMember: {
-            /** Format: uuid */
-            user_id: string;
-            display_name: string;
-            role: components["schemas"]["GroupRole"];
-            visibility: components["schemas"]["MemberVisibility"];
-            live?: components["schemas"]["MemberLive"] | Record<string, never>;
-            usage?: components["schemas"]["MemberUsage"] | Record<string, never>;
-            device?: components["schemas"]["MemberDeviceSummary"] | Record<string, never>;
-        };
-        LeaderboardEntry: {
-            rank: number;
-            /** Format: uuid */
-            user_id: string;
-            display_name: string;
-            puff_count: number;
-            total_duration_ms: number;
-        };
-        GroupOverview: {
-            group: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                member_count: number;
-            };
-            /** Format: date-time */
-            from: string;
-            /** Format: date-time */
-            to: string;
-            tz: string;
-            members: components["schemas"]["GroupOverviewMember"][];
-            leaderboard: components["schemas"]["LeaderboardEntry"][];
-        };
-        RawPayload: {
-            hex: string;
-        };
-        IngestEvent: components["schemas"]["IngestPuffStartedEvent"] | components["schemas"]["IngestPuffEvent"] | components["schemas"]["IngestStatusEvent"];
-        IngestEventBase: {
-            type: string;
-            /** Format: uuid */
-            client_event_id: string;
-        };
-        IngestPuffStartedEvent: components["schemas"]["IngestEventBase"] & {
-            /** @enum {string} */
-            type?: "puff_started";
-            /** Format: date-time */
-            occurred_at: string;
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "puff_started";
-        };
-        IngestPuffEvent: components["schemas"]["IngestEventBase"] & {
-            /** @enum {string} */
-            type?: "puff";
-            /** Format: date-time */
-            started_at: string;
-            duration_ms: number;
-            source: components["schemas"]["PuffSource"];
-            raw?: components["schemas"]["RawPayload"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "puff";
-        };
-        IngestStatusEvent: components["schemas"]["IngestEventBase"] & {
-            /** @enum {string} */
-            type?: "status";
-            /** Format: date-time */
-            recorded_at: string;
-            battery_percent?: number;
-            is_charging?: boolean;
-            liquid_percent?: number;
-            puff_counter_total?: number;
-            power_mode?: string;
-            child_lock?: boolean;
-            firmware_version?: string;
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "status";
-        };
-        IngestRequest: {
-            /** Format: uuid */
-            device_id: string;
-            /** Format: date-time */
-            sent_at: string;
-            events: components["schemas"]["IngestEvent"][];
-        };
-        IngestRejectedEvent: {
-            /** Format: uuid */
-            client_event_id: string;
-            code: string;
-            message: string;
-        };
-        IngestResponse: {
-            accepted: number;
-            duplicates: number;
-            rejected: components["schemas"]["IngestRejectedEvent"][];
-        };
-        /** @description Full GDPR export payload (structure implementation-defined) */
-        UserExport: {
-            [key: string]: unknown;
-        };
-        Problem: {
-            /** Format: uri */
-            type: string;
-            title: string;
-            status: number;
-            code: string;
-            detail?: string;
-            errors?: {
-                field: string;
-                message: string;
-            }[];
-        };
+  schemas: {
+    RegisterRequest: {
+      /** Format: email */
+      email: string;
+      password: string;
+      display_name: string;
+      /** @example Europe/Berlin */
+      timezone: string;
     };
-    responses: {
-        /** @description Validation failed */
-        ValidationFailed: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Invalid credentials */
-        InvalidCredentials: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Unauthorized */
-        Unauthorized: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Forbidden */
-        Forbidden: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Not found */
-        NotFound: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Conflict */
-        Conflict: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Rate limited */
-        RateLimited: {
-            headers: {
-                "Retry-After"?: number;
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Payload too large */
-        PayloadTooLarge: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
+    LoginRequest: {
+      /** Format: email */
+      email: string;
+      password: string;
     };
-    parameters: {
-        DeviceId: string;
-        GroupId: string;
-        UserId: string;
-        TokenId: string;
-        From: string;
-        To: string;
-        Limit: number;
-        Cursor: string;
+    RefreshRequest: {
+      refresh_token: string;
     };
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    TokenPair: {
+      access_token: string;
+      /** Format: date-time */
+      access_token_expires_at: string;
+      refresh_token: string;
+      /** Format: date-time */
+      refresh_token_expires_at: string;
+      user: components["schemas"]["User"];
+    };
+    User: {
+      /** Format: uuid */
+      id: string;
+      /** Format: email */
+      email: string;
+      display_name: string;
+      timezone: string;
+      /** Format: date-time */
+      created_at: string;
+    };
+    PatchMeRequest: {
+      display_name?: string;
+      timezone?: string;
+    };
+    ChangePasswordRequest: {
+      current_password: string;
+      new_password: string;
+    };
+    DeleteMeRequest: {
+      password: string;
+    };
+    PrivacySettings: {
+      share_live_status: boolean;
+      share_usage_summary: boolean;
+      share_usage_detail: boolean;
+      share_device_stats: boolean;
+      show_in_leaderboard: boolean;
+    };
+    PrivacyOverrides: {
+      share_live_status?: boolean | null;
+      share_usage_summary?: boolean | null;
+      share_usage_detail?: boolean | null;
+      share_device_stats?: boolean | null;
+      show_in_leaderboard?: boolean | null;
+    };
+    GroupPrivacy: {
+      defaults: components["schemas"]["PrivacySettings"];
+      overrides: components["schemas"]["PrivacyOverrides"];
+      effective: components["schemas"]["PrivacySettings"];
+    };
+    PutGroupPrivacyRequest: {
+      overrides: components["schemas"]["PrivacyOverrides"];
+    };
+    /** @enum {string} */
+    DeviceModel: "elfbar_master";
+    DeviceStatus: {
+      /** Format: date-time */
+      recorded_at?: string;
+      battery_percent?: number;
+      is_charging?: boolean;
+      liquid_percent?: number;
+      puff_counter_total?: number;
+      power_mode?: string;
+      child_lock?: boolean;
+      firmware_version?: string;
+    };
+    Device: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      user_id: string;
+      model: components["schemas"]["DeviceModel"];
+      name: string;
+      /** @description Lowercase SHA-256 hex */
+      hardware_id: string;
+      firmware_version?: string;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      last_seen_at?: string;
+      latest_status?: components["schemas"]["DeviceStatus"];
+    };
+    CreateDeviceRequest: {
+      model: components["schemas"]["DeviceModel"];
+      name: string;
+      hardware_id: string;
+      firmware_version?: string;
+    };
+    PatchDeviceRequest: {
+      name: string;
+    };
+    IngestTokenMeta: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      last_used_at?: string;
+      /** Format: date-time */
+      revoked_at?: string;
+    };
+    IngestTokenCreated: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      /** @description Shown only once (vpd_ prefix) */
+      token: string;
+      /** Format: date-time */
+      created_at: string;
+    };
+    CreateIngestTokenRequest: {
+      name: string;
+    };
+    /** @enum {string} */
+    PuffSource: "live" | "history";
+    Puff: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      user_id: string;
+      /** Format: uuid */
+      device_id: string;
+      /** Format: uuid */
+      client_event_id: string;
+      /** Format: date-time */
+      started_at: string;
+      duration_ms: number;
+      source: components["schemas"]["PuffSource"];
+      /** Format: date-time */
+      received_at: string;
+    };
+    PuffPage: {
+      items: components["schemas"]["Puff"][];
+      next_cursor: string | null;
+    };
+    /**
+     * @default day
+     * @enum {string}
+     */
+    UsageBucket: "hour" | "day" | "week" | "month";
+    UsageTotals: {
+      puff_count: number;
+      total_duration_ms: number;
+      avg_duration_ms: number;
+      max_duration_ms: number;
+      active_days: number;
+    };
+    UsagePeriodTotals: {
+      puff_count: number;
+      total_duration_ms: number;
+    };
+    UsageSeriesPoint: {
+      /** Format: date-time */
+      bucket_start: string;
+      puff_count: number;
+      total_duration_ms: number;
+      avg_duration_ms: number;
+      max_duration_ms: number;
+    };
+    HeatmapPoint: {
+      iso_weekday: number;
+      hour: number;
+      puff_count: number;
+      total_duration_ms: number;
+    };
+    UsageStats: {
+      /** Format: uuid */
+      user_id: string;
+      /** Format: uuid */
+      device_id?: string | null;
+      /** Format: date-time */
+      from: string;
+      /** Format: date-time */
+      to: string;
+      bucket: components["schemas"]["UsageBucket"];
+      tz: string;
+      totals: components["schemas"]["UsageTotals"];
+      previous_period: components["schemas"]["UsagePeriodTotals"];
+      series: components["schemas"]["UsageSeriesPoint"][];
+      heatmap: components["schemas"]["HeatmapPoint"][];
+    };
+    HistogramBin: {
+      lower_ms: number;
+      upper_ms?: number | null;
+      count: number;
+    };
+    PuffDurationStats: {
+      count: number;
+      avg_ms: number;
+      median_ms: number;
+      p90_ms: number;
+      max_ms: number;
+      histogram: components["schemas"]["HistogramBin"][];
+    };
+    BatterySeriesPoint: {
+      /** Format: date-time */
+      bucket_start: string;
+      battery_percent?: number;
+      is_charging?: boolean;
+    };
+    LiquidSeriesPoint: {
+      /** Format: date-time */
+      bucket_start: string;
+      liquid_percent?: number;
+    };
+    DeviceStats: {
+      device: {
+        /** Format: uuid */
+        id: string;
+        model: components["schemas"]["DeviceModel"];
+        name: string;
+        /** Format: date-time */
+        last_seen_at?: string;
+      };
+      /** Format: date-time */
+      from: string;
+      /** Format: date-time */
+      to: string;
+      /** @enum {string} */
+      bucket: "hour" | "day";
+      tz: string;
+      latest_status: components["schemas"]["DeviceStatus"];
+      battery_series: components["schemas"]["BatterySeriesPoint"][];
+      liquid_series: components["schemas"]["LiquidSeriesPoint"][];
+      puff_duration: components["schemas"]["PuffDurationStats"];
+      puffs_since_last_charge: number;
+    };
+    /** @enum {string} */
+    GroupRole: "owner" | "admin" | "member";
+    GroupSummary: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      role: components["schemas"]["GroupRole"];
+      member_count: number;
+      /** Format: date-time */
+      created_at: string;
+    };
+    GroupMember: {
+      /** Format: uuid */
+      group_id: string;
+      /** Format: uuid */
+      user_id: string;
+      display_name: string;
+      role: components["schemas"]["GroupRole"];
+      /** Format: date-time */
+      joined_at: string;
+    };
+    Group: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      /** Format: uuid */
+      owner_id: string;
+      /** @description Only for owner and admin */
+      invite_code?: string;
+      member_count: number;
+      /** Format: date-time */
+      created_at: string;
+      members: components["schemas"]["GroupMember"][];
+    };
+    CreateGroupRequest: {
+      name: string;
+    };
+    PatchGroupRequest: {
+      name: string;
+    };
+    JoinGroupRequest: {
+      invite_code: string;
+    };
+    PatchGroupMemberRequest: {
+      role: components["schemas"]["GroupRole"];
+    };
+    InviteCodeResponse: {
+      invite_code: string;
+    };
+    MemberVisibility: {
+      live_status: boolean;
+      usage_summary: boolean;
+      usage_detail: boolean;
+      device_stats: boolean;
+      leaderboard: boolean;
+    };
+    MemberLive: {
+      /** Format: date-time */
+      vaping_since?: string | null;
+      /** Format: date-time */
+      last_puff_at?: string;
+      last_puff_duration_ms?: number;
+    };
+    MemberUsageDaily: {
+      /** Format: date */
+      date: string;
+      puff_count: number;
+      total_duration_ms: number;
+    };
+    MemberUsage: {
+      puff_count: number;
+      total_duration_ms: number;
+      avg_duration_ms: number;
+      daily: components["schemas"]["MemberUsageDaily"][];
+    };
+    MemberDeviceSummary: {
+      model: components["schemas"]["DeviceModel"];
+      battery_percent?: number;
+      is_charging?: boolean;
+      liquid_percent?: number;
+      /** Format: date-time */
+      last_seen_at?: string;
+    };
+    GroupOverviewMember: {
+      /** Format: uuid */
+      user_id: string;
+      display_name: string;
+      role: components["schemas"]["GroupRole"];
+      visibility: components["schemas"]["MemberVisibility"];
+      live?: components["schemas"]["MemberLive"] | Record<string, never>;
+      usage?: components["schemas"]["MemberUsage"] | Record<string, never>;
+      device?:
+        components["schemas"]["MemberDeviceSummary"] | Record<string, never>;
+    };
+    LeaderboardEntry: {
+      rank: number;
+      /** Format: uuid */
+      user_id: string;
+      display_name: string;
+      puff_count: number;
+      total_duration_ms: number;
+    };
+    GroupOverview: {
+      group: {
+        /** Format: uuid */
+        id: string;
+        name: string;
+        member_count: number;
+      };
+      /** Format: date-time */
+      from: string;
+      /** Format: date-time */
+      to: string;
+      tz: string;
+      members: components["schemas"]["GroupOverviewMember"][];
+      leaderboard: components["schemas"]["LeaderboardEntry"][];
+    };
+    RawPayload: {
+      hex: string;
+    };
+    IngestEvent:
+      | components["schemas"]["IngestPuffStartedEvent"]
+      | components["schemas"]["IngestPuffEvent"]
+      | components["schemas"]["IngestStatusEvent"];
+    IngestEventBase: {
+      type: string;
+      /** Format: uuid */
+      client_event_id: string;
+    };
+    IngestPuffStartedEvent: components["schemas"]["IngestEventBase"] & {
+      /** @enum {string} */
+      type?: "puff_started";
+      /** Format: date-time */
+      occurred_at: string;
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "puff_started";
+    };
+    IngestPuffEvent: components["schemas"]["IngestEventBase"] & {
+      /** @enum {string} */
+      type?: "puff";
+      /** Format: date-time */
+      started_at: string;
+      duration_ms: number;
+      source: components["schemas"]["PuffSource"];
+      raw?: components["schemas"]["RawPayload"];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "puff";
+    };
+    IngestStatusEvent: components["schemas"]["IngestEventBase"] & {
+      /** @enum {string} */
+      type?: "status";
+      /** Format: date-time */
+      recorded_at: string;
+      battery_percent?: number;
+      is_charging?: boolean;
+      liquid_percent?: number;
+      puff_counter_total?: number;
+      power_mode?: string;
+      child_lock?: boolean;
+      firmware_version?: string;
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "status";
+    };
+    IngestRequest: {
+      /** Format: uuid */
+      device_id: string;
+      /** Format: date-time */
+      sent_at: string;
+      events: components["schemas"]["IngestEvent"][];
+    };
+    IngestRejectedEvent: {
+      /** Format: uuid */
+      client_event_id: string;
+      code: string;
+      message: string;
+    };
+    IngestResponse: {
+      accepted: number;
+      duplicates: number;
+      rejected: components["schemas"]["IngestRejectedEvent"][];
+    };
+    /** @description Full GDPR export payload (structure implementation-defined) */
+    UserExport: {
+      [key: string]: unknown;
+    };
+    Problem: {
+      /** Format: uri */
+      type: string;
+      title: string;
+      status: number;
+      code: string;
+      detail?: string;
+      errors?: {
+        field: string;
+        message: string;
+      }[];
+    };
+  };
+  responses: {
+    /** @description Validation failed */
+    ValidationFailed: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description Invalid credentials */
+    InvalidCredentials: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description Unauthorized */
+    Unauthorized: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description Forbidden */
+    Forbidden: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description Not found */
+    NotFound: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description Conflict */
+    Conflict: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description Rate limited */
+    RateLimited: {
+      headers: {
+        "Retry-After"?: number;
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+    /** @description Payload too large */
+    PayloadTooLarge: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problem"];
+      };
+    };
+  };
+  parameters: {
+    DeviceId: string;
+    GroupId: string;
+    UserId: string;
+    TokenId: string;
+    From: string;
+    To: string;
+    Limit: number;
+    Cursor: string;
+  };
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    authRegister: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenPair"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            409: components["responses"]["Conflict"];
-            429: components["responses"]["RateLimited"];
-        };
+  authRegister: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    authLogin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenPair"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["InvalidCredentials"];
-            429: components["responses"]["RateLimited"];
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RegisterRequest"];
+      };
     };
-    authRefresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefreshRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["TokenPair"];
         };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenPair"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            429: components["responses"]["RateLimited"];
-        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      409: components["responses"]["Conflict"];
+      429: components["responses"]["RateLimited"];
     };
-    authLogout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-        };
+  };
+  authLogin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    getMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LoginRequest"];
+      };
     };
-    deleteMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DeleteMeRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["TokenPair"];
         };
-        responses: {
-            /** @description No content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["InvalidCredentials"];
+      429: components["responses"]["RateLimited"];
     };
-    patchMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PatchMeRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-        };
+  };
+  authRefresh: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    changePassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangePasswordRequest"];
-            };
-        };
-        responses: {
-            /** @description No content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RefreshRequest"];
+      };
     };
-    exportMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserExport"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
+        content: {
+          "application/json": components["schemas"]["TokenPair"];
         };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["RateLimited"];
     };
-    getPrivacyDefaults: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PrivacySettings"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-        };
+  };
+  authLogout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    putPrivacyDefaults: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description No content */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PrivacySettings"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PrivacySettings"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
     };
-    listDevices: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Device"][];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-        };
+  };
+  getMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    createDevice: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateDeviceRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["User"];
         };
-        responses: {
-            /** @description Existing device returned */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Device"];
-                };
-            };
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Device"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-        };
+      };
+      401: components["responses"]["Unauthorized"];
     };
-    getDevice: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Device"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+  };
+  deleteMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    deleteDevice: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeleteMeRequest"];
+      };
     };
-    patchDevice: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description No content */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PatchDeviceRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Device"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+        content?: never;
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
     };
-    listIngestTokens: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestTokenMeta"][];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+  };
+  patchMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    createIngestToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateIngestTokenRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestTokenCreated"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PatchMeRequest"];
+      };
     };
-    revokeIngestToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-                token_id: components["parameters"]["TokenId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
+        content: {
+          "application/json": components["schemas"]["User"];
         };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
     };
-    ingestEvents: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IngestRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestResponse"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            413: components["responses"]["PayloadTooLarge"];
-            429: components["responses"]["RateLimited"];
-        };
+  };
+  changePassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    listPuffs: {
-        parameters: {
-            query?: {
-                from?: components["parameters"]["From"];
-                to?: components["parameters"]["To"];
-                user_id?: string;
-                device_id?: string;
-                source?: components["schemas"]["PuffSource"];
-                min_duration_ms?: number;
-                max_duration_ms?: number;
-                order?: "asc" | "desc";
-                limit?: components["parameters"]["Limit"];
-                cursor?: components["parameters"]["Cursor"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PuffPage"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangePasswordRequest"];
+      };
     };
-    getUsageStats: {
-        parameters: {
-            query?: {
-                from?: components["parameters"]["From"];
-                to?: components["parameters"]["To"];
-                bucket?: components["schemas"]["UsageBucket"];
-                tz?: string;
-                user_id?: string;
-                device_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description No content */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UsageStats"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+        content?: never;
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
     };
-    getDeviceStats: {
-        parameters: {
-            query?: {
-                from?: components["parameters"]["From"];
-                to?: components["parameters"]["To"];
-                bucket?: "hour" | "day";
-                tz?: string;
-            };
-            header?: never;
-            path: {
-                id: components["parameters"]["DeviceId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeviceStats"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+  };
+  exportMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    listGroups: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupSummary"][];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
+        content: {
+          "application/json": components["schemas"]["UserExport"];
         };
+      };
+      401: components["responses"]["Unauthorized"];
     };
-    createGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateGroupRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Group"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-        };
+  };
+  getPrivacyDefaults: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    joinGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinGroupRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["PrivacySettings"];
         };
-        responses: {
-            /** @description OK (idempotent if already member) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Group"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
+      };
+      401: components["responses"]["Unauthorized"];
     };
-    getGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Group"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
+  };
+  putPrivacyDefaults: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    deleteGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PrivacySettings"];
+      };
     };
-    patchGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PatchGroupRequest"];
-            };
+        content: {
+          "application/json": components["schemas"]["PrivacySettings"];
         };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Group"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
     };
-    rotateGroupInvite: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InviteCodeResponse"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
+  };
+  listDevices: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    leaveGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["Conflict"];
+        content: {
+          "application/json": components["schemas"]["Device"][];
         };
+      };
+      401: components["responses"]["Unauthorized"];
     };
-    removeGroupMember: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
+  };
+  createDevice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    patchGroupMember: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PatchGroupMemberRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupMember"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDeviceRequest"];
+      };
     };
-    getGroupPrivacy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description Existing device returned */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupPrivacy"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
+        content: {
+          "application/json": components["schemas"]["Device"];
         };
+      };
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Device"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
     };
-    putGroupPrivacy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PutGroupPrivacyRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupPrivacy"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-        };
+  };
+  getDevice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+      };
+      cookie?: never;
     };
-    getGroupOverview: {
-        parameters: {
-            query?: {
-                from?: components["parameters"]["From"];
-                to?: components["parameters"]["To"];
-                tz?: string;
-            };
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GroupOverview"];
-                };
-            };
-            400: components["responses"]["ValidationFailed"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
+        content: {
+          "application/json": components["schemas"]["Device"];
         };
+      };
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
     };
-    getGroupLive: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: components["parameters"]["GroupId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description SSE stream */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/event-stream": string;
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["RateLimited"];
-        };
+  };
+  deleteDevice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+      };
+      cookie?: never;
     };
+    requestBody?: never;
+    responses: {
+      /** @description No content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  patchDevice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PatchDeviceRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Device"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  listIngestTokens: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IngestTokenMeta"][];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  createIngestToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateIngestTokenRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IngestTokenCreated"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  revokeIngestToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+        token_id: components["parameters"]["TokenId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  ingestEvents: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["IngestRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["IngestResponse"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      413: components["responses"]["PayloadTooLarge"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
+  listPuffs: {
+    parameters: {
+      query?: {
+        from?: components["parameters"]["From"];
+        to?: components["parameters"]["To"];
+        user_id?: string;
+        device_id?: string;
+        source?: components["schemas"]["PuffSource"];
+        min_duration_ms?: number;
+        max_duration_ms?: number;
+        order?: "asc" | "desc";
+        limit?: components["parameters"]["Limit"];
+        cursor?: components["parameters"]["Cursor"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PuffPage"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  getUsageStats: {
+    parameters: {
+      query?: {
+        from?: components["parameters"]["From"];
+        to?: components["parameters"]["To"];
+        bucket?: components["schemas"]["UsageBucket"];
+        tz?: string;
+        user_id?: string;
+        device_id?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UsageStats"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  getDeviceStats: {
+    parameters: {
+      query?: {
+        from?: components["parameters"]["From"];
+        to?: components["parameters"]["To"];
+        bucket?: "hour" | "day";
+        tz?: string;
+      };
+      header?: never;
+      path: {
+        id: components["parameters"]["DeviceId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeviceStats"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  listGroups: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroupSummary"][];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+    };
+  };
+  createGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateGroupRequest"];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Group"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+    };
+  };
+  joinGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["JoinGroupRequest"];
+      };
+    };
+    responses: {
+      /** @description OK (idempotent if already member) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Group"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  getGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Group"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  deleteGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  patchGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PatchGroupRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Group"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  rotateGroupInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InviteCodeResponse"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  leaveGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+      409: components["responses"]["Conflict"];
+    };
+  };
+  removeGroupMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+        user_id: components["parameters"]["UserId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No content */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  patchGroupMember: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+        user_id: components["parameters"]["UserId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PatchGroupMemberRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroupMember"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  getGroupPrivacy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroupPrivacy"];
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  putGroupPrivacy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PutGroupPrivacyRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroupPrivacy"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  getGroupOverview: {
+    parameters: {
+      query?: {
+        from?: components["parameters"]["From"];
+        to?: components["parameters"]["To"];
+        tz?: string;
+      };
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GroupOverview"];
+        };
+      };
+      400: components["responses"]["ValidationFailed"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  getGroupLive: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: components["parameters"]["GroupId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description SSE stream */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/event-stream": string;
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
+      429: components["responses"]["RateLimited"];
+    };
+  };
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Label from '$lib/components/ui/label.svelte';
-	import type { PrivacyFlag } from '$lib/privacy';
-	import { de } from '$lib/i18n/de';
+	import Label from '#lib/components/ui/label.svelte';
+	import type { PrivacyFlag } from '#lib/privacy.js';
+	import { de } from '#lib/i18n/de.js';
 
 	let {
 		flag,

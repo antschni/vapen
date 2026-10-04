@@ -1,13 +1,13 @@
 <script lang="ts">
-	import KpiCard from '$lib/components/KpiCard.svelte';
-	import BarSeriesChart from '$lib/components/charts/BarSeriesChart.svelte';
-	import MiniLiveWidget from '$lib/components/MiniLiveWidget.svelte';
-	import Card from '$lib/components/ui/card.svelte';
-	import CardContent from '$lib/components/ui/card-content.svelte';
-	import CardHeader from '$lib/components/ui/card-header.svelte';
-	import CardTitle from '$lib/components/ui/card-title.svelte';
-	import { formatDurationMs, formatNumber } from '$lib/format';
-	import { de } from '$lib/i18n/de';
+	import KpiCard from '#lib/components/KpiCard.svelte';
+	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
+	import MiniLiveWidget from '#lib/components/MiniLiveWidget.svelte';
+	import Card from '#lib/components/ui/card.svelte';
+	import CardContent from '#lib/components/ui/card-content.svelte';
+	import CardHeader from '#lib/components/ui/card-header.svelte';
+	import CardTitle from '#lib/components/ui/card-title.svelte';
+	import { formatDurationMs, formatNumber } from '#lib/format.js';
+	import { de } from '#lib/i18n/de.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

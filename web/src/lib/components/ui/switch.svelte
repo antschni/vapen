@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Switch } from 'bits-ui';
-	import { cn } from '$lib/utils';
+	import { cn } from '#lib/utils.js';
 
 	type Props = Switch.RootProps & {
 		class?: string;

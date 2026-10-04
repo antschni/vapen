@@ -2,16 +2,16 @@
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
-	import { de } from '$lib/i18n/de';
-	import Button from '$lib/components/ui/button.svelte';
-	import Input from '$lib/components/ui/input.svelte';
-	import Label from '$lib/components/ui/label.svelte';
-	import Card from '$lib/components/ui/card.svelte';
-	import CardHeader from '$lib/components/ui/card-header.svelte';
-	import CardTitle from '$lib/components/ui/card-title.svelte';
-	import CardContent from '$lib/components/ui/card-content.svelte';
+	import { de } from '#lib/i18n/de.js';
+	import Button from '#lib/components/ui/button.svelte';
+	import Input from '#lib/components/ui/input.svelte';
+	import Label from '#lib/components/ui/label.svelte';
+	import Card from '#lib/components/ui/card.svelte';
+	import CardHeader from '#lib/components/ui/card-header.svelte';
+	import CardTitle from '#lib/components/ui/card-title.svelte';
+	import CardContent from '#lib/components/ui/card-content.svelte';
 	import type { PageData } from './$types';
-	import type { AuthFormState } from '$lib/types/form';
+	import type { AuthFormState } from '#lib/types/form.js';
 
 	let { data, form }: { data: PageData; form?: AuthFormState } = $props();
 
@@ -87,11 +87,16 @@
 			</div>
 			<Button type="submit" class="w-full">{de.auth.submitRegister}</Button>
 		</form>
-		<p class="mt-4 text-center text-sm text-muted-foreground">
-			{de.auth.hasAccount}
-			<a class="text-primary underline-offset-4 hover:underline" href={resolve('/login')}>
-				{de.auth.login}</a
-			>
+
+		<p
+			class="mt-4 text-center text-sm text-muted-foreground"
+		>
+			{de.auth.hasAccount} 
+
+			<a
+				class="text-primary underline-offset-4 hover:underline"
+				href={resolve('login')}
+			>{de.auth.login}</a>
 		</p>
 	</CardContent>
 </Card>

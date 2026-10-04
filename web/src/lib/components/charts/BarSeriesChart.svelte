@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDurationMs } from '$lib/format';
+	import { formatDurationMs } from '#lib/format.js';
 
 	export type BarPoint = {
 		label: string;

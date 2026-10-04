@@ -1,10 +1,10 @@
 # Vapen Web Dashboard
 
-SvelteKit 2 + Svelte 5 BFF dashboard for [Vapen](../README.md). The browser talks only to this app; tokens stay in `httpOnly` cookies.
+SvelteKit 3 + Svelte 5 BFF dashboard for [Vapen](../README.md). The browser talks only to this app; tokens stay in `httpOnly` cookies.
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 22.17+ (required by SvelteKit 3)
 - Running API (`docker compose up -d postgres api` from repo root, or `API_INTERNAL_URL`)
 
 ## Setup
@@ -21,25 +21,25 @@ Open [http://localhost:5173](http://localhost:5173). Demo users: `alice@example.
 
 ## Environment
 
-| Variable | Purpose |
-|----------|---------|
-| `API_INTERNAL_URL` | Go API base (no `/api/v1` suffix) |
-| `ORIGIN` | Public origin for CSRF and invite links |
-| `COOKIE_SECURE` | `false` for local HTTP |
-| `ANDROID_*` | `assetlinks.json` for Android App Links |
+| Variable           | Purpose                                 |
+| ------------------ | --------------------------------------- |
+| `API_INTERNAL_URL` | Go API base (no `/api/v1` suffix)       |
+| `ORIGIN`           | Public origin (CSRF via `paths.origin` at build time in Docker; also invite links at runtime) |
+| `COOKIE_SECURE`    | `false` for local HTTP                  |
+| `ANDROID_*`        | `assetlinks.json` for Android App Links |
 
 See `.env.example`. Root `docker-compose.yml` and `.env.example` should mirror these for the `web` service (maintained by the API/deploy agent).
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Dev server |
-| `npm run build` | Production build (adapter-node) |
-| `npm run check` | `svelte-check` |
+| Command                | Description                          |
+| ---------------------- | ------------------------------------ |
+| `npm run dev`          | Dev server                           |
+| `npm run build`        | Production build (adapter-node)      |
+| `npm run check`        | `svelte-check`                       |
 | `npm run generate:api` | Regenerate `src/lib/api/schema.d.ts` |
-| `npm test` | Vitest unit tests |
-| `npm run test:e2e` | Playwright |
+| `npm test`             | Vitest unit tests                    |
+| `npm run test:e2e`     | Playwright                           |
 
 ## Progressive Web App (PWA)
 

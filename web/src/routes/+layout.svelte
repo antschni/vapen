@@ -1,13 +1,14 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
-	import PwaReloadPrompt from '$lib/components/PwaReloadPrompt.svelte';
+	import favicon from '#lib/assets/favicon.svg';
+	import PwaReloadPrompt from '#lib/components/PwaReloadPrompt.svelte';
 	import { afterNavigate } from '$app/navigation';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
 	let { children } = $props();
 
-	afterNavigate(async () => {
+	afterNavigate(async ({ shallow }) => {
+		if (shallow) return;
 		if (!browser || !('serviceWorker' in navigator)) return;
 		const registration = await navigator.serviceWorker.getRegistration();
 		await registration?.update();

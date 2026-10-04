@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { components } from '$lib/api/schema.d.ts';
-	import { formatDurationMs } from '$lib/format';
+	import type { components } from '#lib/api/schema.d.ts';
+	import { formatDurationMs } from '#lib/format.js';
 
 	type Cell = components['schemas']['HeatmapPoint'];
 

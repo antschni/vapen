@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { page } from '$app/stores';
-	import type { SessionUser } from '$lib/session-user';
-	import { de } from '$lib/i18n/de';
-	import Button from '$lib/components/ui/button.svelte';
+	import { page } from '$app/state';
+	import type { SessionUser } from '#lib/session-user.js';
+	import { de } from '#lib/i18n/de.js';
+	import Button from '#lib/components/ui/button.svelte';
 	import { ModeWatcher, toggleMode } from 'mode-watcher';
 	import {
 		LayoutDashboard,
@@ -17,34 +17,38 @@
 		Moon,
 		Sun
 	} from '@lucide/svelte';
-	import { cn } from '$lib/utils';
+	import { cn } from '#lib/utils.js';
 
 	let { children, user }: { children: import('svelte').Snippet; user: SessionUser } = $props();
 
 	let mobileOpen = $state(false);
 
-	const nav: {
-		href:
-			| '/'
-			| '/usage'
-			| '/devices'
-			| '/groups'
-			| '/settings/privacy'
-			| '/settings/account';
-		label: string;
-		icon: typeof LayoutDashboard;
-	}[] = [
-		{ href: '/', label: de.nav.overview, icon: LayoutDashboard },
-		{ href: '/usage', label: de.nav.usage, icon: BarChart3 },
-		{ href: '/devices', label: de.nav.devices, icon: Smartphone },
-		{ href: '/groups', label: de.nav.groups, icon: Users },
-		{ href: '/settings/privacy', label: de.nav.privacy, icon: Shield },
-		{ href: '/settings/account', label: de.nav.account, icon: UserCircle }
+	type NavItem =
+		| { kind: 'route'; route: '/(app)'; label: string; icon: typeof LayoutDashboard }
+		| {
+				kind: 'path';
+				path: 'usage' | 'devices' | 'groups' | 'settings/privacy' | 'settings/account';
+				label: string;
+				icon: typeof LayoutDashboard;
+		  };
+
+	const nav: NavItem[] = [
+		{ kind: 'route', route: '/(app)', label: de.nav.overview, icon: LayoutDashboard },
+		{ kind: 'path', path: 'usage', label: de.nav.usage, icon: BarChart3 },
+		{ kind: 'path', path: 'devices', label: de.nav.devices, icon: Smartphone },
+		{ kind: 'path', path: 'groups', label: de.nav.groups, icon: Users },
+		{ kind: 'path', path: 'settings/privacy', label: de.nav.privacy, icon: Shield },
+		{ kind: 'path', path: 'settings/account', label: de.nav.account, icon: UserCircle }
 	];
 
-	function isActive(href: string, pathname: string): boolean {
-		if (href === '/') return pathname === '/';
-		return pathname === href || pathname.startsWith(href + '/');
+	function navHref(item: NavItem): string {
+		return item.kind === 'route' ? resolve(item.route) : resolve(item.path);
+	}
+
+	function isActive(item: NavItem, pathname: string): boolean {
+		if (item.kind === 'route') return pathname === '/';
+		const href = `/${item.path}`;
+		return pathname === href || pathname.startsWith(`${href}/`);
 	}
 </script>
 
@@ -54,9 +58,14 @@
 	<header
 		class="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:hidden"
 	>
-		<Button variant="ghost" size="icon" type="button" aria-label={de.nav.menu} onclick={() => (mobileOpen = !mobileOpen)}>
-			<Menu class="h-5 w-5" />
-		</Button>
+		<Button
+			variant="ghost"
+			size="icon"
+			type="button"
+			aria-label={de.nav.menu}
+			onclick={() => mobileOpen = !mobileOpen}
+		><Menu class="h-5 w-5" /></Button>
+
 		<span class="font-semibold">{de.app.name}</span>
 		<div class="ml-auto flex items-center gap-2">
 			<Button variant="ghost" size="icon" type="button" aria-label={de.nav.toggleTheme} onclick={toggleMode}>
@@ -75,20 +84,14 @@
 		>
 			<div class="hidden h-14 items-center border-b px-6 font-semibold lg:flex">{de.app.name}</div>
 			<nav class="flex flex-1 flex-col gap-1 p-3" aria-label={de.nav.settings}>
-				{#each nav as item (item.href)}
+				{#each nav as item (item.kind === 'route' ? item.route : item.path)}
 					<a
-						href={resolve(item.href)}
-						class={cn(
-							'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-							isActive(item.href, $page.url.pathname)
-								? 'bg-accent text-accent-foreground'
-								: 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-						)}
-						onclick={() => (mobileOpen = false)}
-					>
-						<item.icon class="h-4 w-4 shrink-0" />
-						{item.label}
-					</a>
+						href={navHref(item)}
+						class={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors', isActive(item, page.url.pathname)
+							? 'bg-accent text-accent-foreground'
+							: 'text-muted-foreground hover:bg-accent/50 hover:text-foreground')}
+						onclick={() => mobileOpen = false}
+					><item.icon class="h-4 w-4 shrink-0" />{item.label}</a>
 				{/each}
 			</nav>
 			<div class="border-t p-3">
@@ -116,7 +119,7 @@
 				type="button"
 				class="fixed inset-0 z-40 bg-black/40 lg:hidden"
 				aria-label={de.common.close}
-				onclick={() => (mobileOpen = false)}
+				onclick={() => mobileOpen = false}
 			></button>
 		{/if}
 

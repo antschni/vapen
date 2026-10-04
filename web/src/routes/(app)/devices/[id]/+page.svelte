@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import BarSeriesChart from '$lib/components/charts/BarSeriesChart.svelte';
-	import Button from '$lib/components/ui/button.svelte';
-	import Card from '$lib/components/ui/card.svelte';
-	import CardContent from '$lib/components/ui/card-content.svelte';
-	import CardHeader from '$lib/components/ui/card-header.svelte';
-	import CardTitle from '$lib/components/ui/card-title.svelte';
-	import Input from '$lib/components/ui/input.svelte';
-	import Badge from '$lib/components/ui/badge.svelte';
+	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
+	import Button from '#lib/components/ui/button.svelte';
+	import Card from '#lib/components/ui/card.svelte';
+	import CardContent from '#lib/components/ui/card-content.svelte';
+	import CardHeader from '#lib/components/ui/card-header.svelte';
+	import CardTitle from '#lib/components/ui/card-title.svelte';
+	import Input from '#lib/components/ui/input.svelte';
+	import Badge from '#lib/components/ui/badge.svelte';
 	import { resolve } from '$app/paths';
-	import { formatDurationMs, formatNumber } from '$lib/format';
-	import { de } from '$lib/i18n/de';
+	import { formatDurationMs, formatNumber } from '#lib/format.js';
+	import { de } from '#lib/i18n/de.js';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -36,13 +36,8 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{data.device.name} · {de.pages.devices.title}</title>
-</svelte:head>
-
-<p class="text-sm text-muted-foreground">
-	<a href={resolve('/devices')} class="hover:underline">{de.common.back}</a>
-</p>
+<svelte:head><title>{data.device.name} · {de.pages.devices.title}</title></svelte:head>
+<p class="text-sm text-muted-foreground"><a href={resolve('devices')} class="hover:underline">{de.common.back}</a></p>
 <h1 class="mt-2 text-2xl font-bold tracking-tight">{data.device.name}</h1>
 
 <div class="mt-6 grid gap-6 lg:grid-cols-2">

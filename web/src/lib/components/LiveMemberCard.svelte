@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Badge from '$lib/components/ui/badge.svelte';
-	import { formatRelativeTime } from '$lib/format';
-	import { derivePresenceStatus, type PresenceStatus } from '$lib/live/status';
-	import { de } from '$lib/i18n/de';
+	import Badge from '#lib/components/ui/badge.svelte';
+	import { formatRelativeTime } from '#lib/format.js';
+	import { derivePresenceStatus, type PresenceStatus } from '#lib/live/status.js';
+	import { de } from '#lib/i18n/de.js';
 
 	let {
 		displayName,

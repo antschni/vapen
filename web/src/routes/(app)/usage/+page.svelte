@@ -4,17 +4,17 @@
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
-	import BarSeriesChart from '$lib/components/charts/BarSeriesChart.svelte';
-	import HeatmapChart from '$lib/components/charts/HeatmapChart.svelte';
-	import Button from '$lib/components/ui/button.svelte';
-	import Card from '$lib/components/ui/card.svelte';
-	import CardContent from '$lib/components/ui/card-content.svelte';
-	import CardHeader from '$lib/components/ui/card-header.svelte';
-	import CardTitle from '$lib/components/ui/card-title.svelte';
-	import Label from '$lib/components/ui/label.svelte';
-	import { formatDurationMs, formatNumber } from '$lib/format';
-	import { de } from '$lib/i18n/de';
-	import type { components } from '$lib/api/schema.d.ts';
+	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
+	import HeatmapChart from '#lib/components/charts/HeatmapChart.svelte';
+	import Button from '#lib/components/ui/button.svelte';
+	import Card from '#lib/components/ui/card.svelte';
+	import CardContent from '#lib/components/ui/card-content.svelte';
+	import CardHeader from '#lib/components/ui/card-header.svelte';
+	import CardTitle from '#lib/components/ui/card-title.svelte';
+	import Label from '#lib/components/ui/label.svelte';
+	import { formatDurationMs, formatNumber } from '#lib/format.js';
+	import { de } from '#lib/i18n/de.js';
+	import type { components } from '#lib/api/schema.d.ts';
 	import type { PageData, ActionData } from './$types';
 
 	type Puff = components['schemas']['Puff'];
@@ -52,7 +52,7 @@
 			q.set('from', data.filters.fromIso);
 			q.set('to', data.filters.toIso);
 		}
-		return `/usage/export.csv?${q}` as `/usage/export.csv?${string}`;
+		return resolve(`usage/export.csv?${q}`);
 	});
 
 	const puffDelta = $derived(
@@ -150,7 +150,7 @@
 			<div class="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2">
 				<Button type="submit">{de.pages.usage.applyFilters}</Button>
 				<a
-					href={resolve(exportHref)}
+					href={exportHref}
 					class="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent"
 				>
 					{de.pages.usage.exportCsv}

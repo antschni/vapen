@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { useRegisterSW } from 'virtual:pwa-register/svelte';
-	import Button from '$lib/components/ui/button.svelte';
+	import Button from '#lib/components/ui/button.svelte';
 
 	const { needRefresh, updateServiceWorker } = useRegisterSW({
 		onRegistered(r) {

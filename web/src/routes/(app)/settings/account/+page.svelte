@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import Button from '$lib/components/ui/button.svelte';
-	import Card from '$lib/components/ui/card.svelte';
-	import CardContent from '$lib/components/ui/card-content.svelte';
-	import CardHeader from '$lib/components/ui/card-header.svelte';
-	import CardTitle from '$lib/components/ui/card-title.svelte';
-	import Input from '$lib/components/ui/input.svelte';
-	import Label from '$lib/components/ui/label.svelte';
-	import { de } from '$lib/i18n/de';
+	import Button from '#lib/components/ui/button.svelte';
+	import Card from '#lib/components/ui/card.svelte';
+	import CardContent from '#lib/components/ui/card-content.svelte';
+	import CardHeader from '#lib/components/ui/card-header.svelte';
+	import CardTitle from '#lib/components/ui/card-title.svelte';
+	import Input from '#lib/components/ui/input.svelte';
+	import Label from '#lib/components/ui/label.svelte';
+	import { de } from '#lib/i18n/de.js';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -87,7 +87,7 @@
 		</CardHeader>
 		<CardContent>
 			<a
-				href={resolve('/settings/account/export')}
+				href={resolve('settings/account/export')}
 				class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
 			>
 				{de.pages.account.export}

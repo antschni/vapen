@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { de } from '$lib/i18n/de';
+	import { de } from '#lib/i18n/de.js';
 
 	let { children } = $props();
 </script>

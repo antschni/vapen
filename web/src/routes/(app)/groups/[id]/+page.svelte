@@ -1,12 +1,12 @@
 <script lang="ts">
-	import LivePresenceGrid from '$lib/components/LivePresenceGrid.svelte';
-	import Badge from '$lib/components/ui/badge.svelte';
-	import Card from '$lib/components/ui/card.svelte';
-	import CardContent from '$lib/components/ui/card-content.svelte';
-	import CardHeader from '$lib/components/ui/card-header.svelte';
-	import CardTitle from '$lib/components/ui/card-title.svelte';
-	import { formatDurationMs, formatNumber } from '$lib/format';
-	import { de } from '$lib/i18n/de';
+	import LivePresenceGrid from '#lib/components/LivePresenceGrid.svelte';
+	import Badge from '#lib/components/ui/badge.svelte';
+	import Card from '#lib/components/ui/card.svelte';
+	import CardContent from '#lib/components/ui/card-content.svelte';
+	import CardHeader from '#lib/components/ui/card-header.svelte';
+	import CardTitle from '#lib/components/ui/card-title.svelte';
+	import { formatDurationMs, formatNumber } from '#lib/format.js';
+	import { de } from '#lib/i18n/de.js';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 
@@ -18,10 +18,8 @@
 		return de.pages.groups.roleMember;
 	}
 
-	type GroupRangeHref = `/groups/${string}?range=${string}`;
-
-	function rangeHref(r: 'today' | '7d' | '30d'): GroupRangeHref {
-		return `/groups/${data.groupId}?range=${r}`;
+	function rangeHref(r: 'today' | '7d' | '30d'): string {
+		return `${resolve('/(app)/groups/[id]', { id: data.groupId })}?range=${r}`;
 	}
 
 	function hasUsage(member: PageData['overview']['members'][number]): boolean {
@@ -37,9 +35,7 @@
 
 <div class="flex flex-wrap items-center justify-between gap-3">
 	<div>
-		<p class="text-sm text-muted-foreground">
-			<a href={resolve('/groups')} class="hover:underline">{de.common.back}</a>
-		</p>
+		<p class="text-sm text-muted-foreground"><a href={resolve('groups')} class="hover:underline">{de.common.back}</a></p>
 		<h1 class="text-2xl font-bold tracking-tight">{data.groupName}</h1>
 	</div>
 	{#if data.role === 'owner' || data.role === 'admin'}
@@ -63,7 +59,7 @@
 		<CardTitle>{de.pages.groups.leaderboard}</CardTitle>
 		<div class="flex gap-1">
 			<a
-				href={resolve(rangeHref('today'))}
+				href={rangeHref('today')}
 				class="rounded-md px-2 py-1 text-xs {data.range === 'today'
 					? 'bg-accent'
 					: 'text-muted-foreground hover:bg-accent/50'}"
@@ -71,7 +67,7 @@
 				{de.pages.groups.rangeToday}
 			</a>
 			<a
-				href={resolve(rangeHref('7d'))}
+				href={rangeHref('7d')}
 				class="rounded-md px-2 py-1 text-xs {data.range === '7d'
 					? 'bg-accent'
 					: 'text-muted-foreground hover:bg-accent/50'}"
@@ -79,7 +75,7 @@
 				{de.pages.groups.range7d}
 			</a>
 			<a
-				href={resolve(rangeHref('30d'))}
+				href={rangeHref('30d')}
 				class="rounded-md px-2 py-1 text-xs {data.range === '30d'
 					? 'bg-accent'
 					: 'text-muted-foreground hover:bg-accent/50'}"
@@ -122,9 +118,7 @@
 				</div>
 				{#if hasUsage(member)}
 					<p class="mt-2 text-sm text-muted-foreground">
-						{de.pages.groups.usageSummary}:
-						{formatNumber(member.usage!.puff_count)} Züge ·
-						{formatDurationMs(member.usage!.total_duration_ms)}
+						{de.pages.groups.usageSummary}: {formatNumber((member.usage!).puff_count)} Züge · {formatDurationMs((member.usage!).total_duration_ms)}
 					</p>
 				{:else if !member.visibility.usage_summary}
 					<p class="mt-2 text-sm text-muted-foreground">{de.empty.private}</p>

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import EmptyState from '$lib/components/EmptyState.svelte';
-	import Badge from '$lib/components/ui/badge.svelte';
-	import Card from '$lib/components/ui/card.svelte';
-	import CardContent from '$lib/components/ui/card-content.svelte';
-	import { formatRelativeTime } from '$lib/format';
-	import { de } from '$lib/i18n/de';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import Badge from '#lib/components/ui/badge.svelte';
+	import Card from '#lib/components/ui/card.svelte';
+	import CardContent from '#lib/components/ui/card-content.svelte';
+	import { formatRelativeTime } from '#lib/format.js';
+	import { de } from '#lib/i18n/de.js';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 

@@ -48,6 +48,8 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+      args:
+        ORIGIN: ${ORIGIN:-${SERVICE_URL_WEB_3000:-http://localhost:3000}}
     restart: unless-stopped
     depends_on:
       api:
