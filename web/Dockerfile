@@ -1,5 +1,5 @@
 # Build context must be the repository root (see docker-compose.yml) so api/openapi.yaml is available.
-FROM node:22-alpine AS build
+FROM node:22.17-alpine AS build
 WORKDIR /app/web
 ARG ORIGIN=http://localhost:3000
 ENV ORIGIN=$ORIGIN
@@ -10,7 +10,7 @@ COPY api/openapi.yaml ../api/openapi.yaml
 RUN npm run generate:api
 RUN npm run build
 
-FROM node:22-alpine AS run
+FROM node:22.17-alpine AS run
 # SvelteKit 3 requires Node.js >= 22.17 (see web/package.json engines).
 WORKDIR /app
 ENV NODE_ENV=production

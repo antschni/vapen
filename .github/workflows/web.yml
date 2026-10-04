@@ -5,10 +5,12 @@ on:
     paths:
       - 'web/**'
       - 'api/openapi.yaml'
+      - '.github/workflows/web.yml'
   pull_request:
     paths:
       - 'web/**'
       - 'api/openapi.yaml'
+      - '.github/workflows/web.yml'
 
 jobs:
   check:
@@ -17,8 +19,8 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22.17'
           cache: npm
