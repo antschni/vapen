@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../../core/duration_format.dart';
 import '../../data/api/api_providers.dart';
@@ -17,12 +18,32 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int? _todayPuffs;
   int? _todayDurationMs;
+  bool _statsLoaded = false;
+
+  TrackingBridge? _bridge;
 
   @override
   void initState() {
     super.initState();
     _loadStats();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncTrackingState());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _bridge = ref.read(trackingBridgeProvider);
+      _bridge!.trackingState.addListener(_onTrackingStateChanged);
+      _syncTrackingState();
+    });
+  }
+
+  @override
+  void dispose() {
+    _bridge?.trackingState.removeListener(_onTrackingStateChanged);
+    super.dispose();
+  }
+
+  void _onTrackingStateChanged() {
+    final pending = _bridge?.trackingState.value?.pendingUploads ?? 0;
+    if (pending == 0 && _statsLoaded) {
+      _loadStats();
+    }
   }
 
   Future<void> _syncTrackingState() async {
@@ -36,13 +57,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _loadStats() async {
     final api = ref.read(apiClientProvider);
     final now = DateTime.now().toUtc();
-    final start = DateTime.utc(now.year, now.month, now.day);
-    final stats = await api.getUsageStats(from: start, to: now, bucket: 'day');
-    if (!mounted) return;
-    setState(() {
-      _todayPuffs = stats.totals.puffCount;
-      _todayDurationMs = stats.totals.totalDurationMs;
-    });
+    final tz = await FlutterTimezone.getLocalTimezone();
+    final localNow = now.toLocal();
+    final start = DateTime(localNow.year, localNow.month, localNow.day).toUtc();
+    try {
+      final stats = await api.getUsageStats(from: start, to: now, bucket: 'day', tz: tz);
+      if (!mounted) return;
+      setState(() {
+        _todayPuffs = stats.totals.puffCount;
+        _todayDurationMs = stats.totals.totalDurationMs;
+        _statsLoaded = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _statsLoaded = true);
+    }
+  }
+
+  int _displayTodayPuffs(TrackingState? state) {
+    final local = state?.todayPuffCount?.toInt() ?? 0;
+    final api = _todayPuffs;
+    if (api == null) return local;
+    return api > local ? api : local;
   }
 
   @override
@@ -55,6 +91,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         valueListenable: bridge.trackingState,
         builder: (context, state, _) {
           final enabled = state?.enabled ?? false;
+          final pending = state?.pendingUploads?.toInt() ?? 0;
+          final displayPuffs = _displayTodayPuffs(state);
           return RefreshIndicator(
             onRefresh: () async {
               await _syncTrackingState();
@@ -97,13 +135,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     trailing: Text('${state!.liquidPercent} %'),
                   ),
                 ListTile(
-                  title: Text(l10n.todayPuffs(_todayPuffs ?? state?.todayPuffCount?.toInt() ?? 0)),
-                  subtitle: _todayDurationMs != null
-                      ? Text('Gesamt: ${formatDurationMs(_todayDurationMs!)}')
-                      : null,
+                  title: Text(l10n.todayPuffs(displayPuffs)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_todayDurationMs != null && _todayDurationMs! > 0)
+                        Text('Gesamt (Server): ${formatDurationMs(_todayDurationMs!)}'),
+                      if (displayPuffs > 0 && (_todayPuffs ?? 0) == 0 && pending > 0)
+                        Text(
+                          'Züge am Gerät erkannt — $pending warten auf Upload',
+                          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                        ),
+                      if (displayPuffs > 0 && (_todayPuffs ?? 0) == 0 && pending == 0)
+                        const Text('Züge am Gerät — Server noch nicht synchronisiert (nach unten ziehen)'),
+                    ],
+                  ),
                 ),
                 ListTile(
-                  title: Text(l10n.pendingUploads(state?.pendingUploads?.toInt() ?? 0)),
+                  title: Text(l10n.pendingUploads(pending)),
                 ),
               ],
             ),

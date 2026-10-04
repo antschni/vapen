@@ -47,6 +47,7 @@ object TrackingController {
 
     private var lastPersistedStatus: DeviceMessage.Status? = null
     private var flushJob: Job? = null
+    @Volatile private var flushPending = false
 
     lateinit var credentials: CredentialStore
     lateinit var database: VapenDatabase
@@ -86,6 +87,8 @@ object TrackingController {
                 hardwareId = creds.hardwareId,
             ),
         )
+        lastError = null
+        requestFlush()
     }
 
     fun setPairedAddress(address: String?) {
@@ -106,6 +109,13 @@ object TrackingController {
         bleManager?.connect()
         publishState(true)
         requestFlush()
+    }
+
+    /** Foreground service / boot: reconnect BLE without toggling the tracking flag. */
+    fun resumeBleIfConfigured() {
+        if (!credentials.trackingEnabled) return
+        if (credentials.pairedBleAddress == null) return
+        bleManager?.connect()
     }
 
     fun stopTracking(context: Context) {
@@ -224,14 +234,41 @@ object TrackingController {
 
     /** Uploads everything pending; coalesces bursts (e.g. a history sync). */
     private fun requestFlush() {
+        flushPending = true
         if (flushJob?.isActive == true) return
         flushJob = scope.launch {
-            delay(FLUSH_DEBOUNCE_MS)
-            repeat(MAX_FLUSH_BATCHES) {
-                val result = runCatching { uploader.flush() }.getOrNull()
-                if (result != UploadResult.Success) return@launch
+            while (flushPending) {
+                flushPending = false
+                delay(FLUSH_DEBOUNCE_MS)
+                repeat(MAX_FLUSH_BATCHES) {
+                    val result = runCatching { uploader.flush() }.getOrNull() ?: return@launch
+                    when (result) {
+                        UploadResult.Success -> Unit
+                        UploadResult.NothingToSend -> return@launch
+                        else -> {
+                            noteUploadFailure(result)
+                            return@launch
+                        }
+                    }
+                }
             }
+            publishState(credentials.trackingEnabled)
         }
+    }
+
+    private fun noteUploadFailure(result: UploadResult) {
+        lastError = when (result) {
+            UploadResult.NoCredentials ->
+                "Upload: kein Gerät-Token — unter Mehr → Geräte erneut koppeln."
+            UploadResult.AuthError ->
+                "Upload abgelehnt (Token ungültig). Gerät in der App erneut koppeln."
+            UploadResult.ServerError -> "Upload: Server-Fehler — später erneut versuchen."
+            is UploadResult.RateLimited -> "Upload: Rate-Limit — bitte kurz warten."
+            is UploadResult.OtherError ->
+                "Upload fehlgeschlagen (HTTP ${result.code}): ${result.body.take(120)}"
+            else -> null
+        }
+        publishState(credentials.trackingEnabled)
     }
 
     private suspend fun persistPuff(
@@ -276,10 +313,13 @@ object TrackingController {
     }
 
     private fun publishState(enabled: Boolean) {
-        val state = getState().copy(enabled = enabled)
-        onMain { flutterApi?.onTrackingStateChanged(state) {} }
-        appContext?.let { context ->
-            if (enabled) onMain { VapenTrackingService.updateNotification(context, notificationText()) }
+        scope.launch {
+            val pending = runCatching { pendingCount() }.getOrDefault(0)
+            val state = getState().copy(enabled = enabled, pendingUploads = pending.toLong())
+            onMain { flutterApi?.onTrackingStateChanged(state) {} }
+            appContext?.let { context ->
+                if (enabled) onMain { VapenTrackingService.updateNotification(context, notificationText()) }
+            }
         }
     }
 

@@ -35,12 +35,18 @@ class TrackingHostApiImpl(
 
     override fun associateDevice(callback: (Result<PairingResult>) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            var replied = false
+            fun replyOnce(result: Result<PairingResult>) {
+                if (replied) return
+                replied = true
+                callback(result)
+            }
             CompanionDeviceHelper.associate(activity) { address ->
                 if (address != null) {
                     TrackingController.setPairedAddress(address)
-                    callback(Result.success(PairingResult(success = true, address = address, errorMessage = null)))
+                    replyOnce(Result.success(PairingResult(success = true, address = address, errorMessage = null)))
                 } else {
-                    callback(
+                    replyOnce(
                         Result.success(
                             PairingResult(
                                 success = false,

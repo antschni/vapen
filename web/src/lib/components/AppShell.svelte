@@ -52,7 +52,7 @@
 	}
 </script>
 
-<ModeWatcher />
+<ModeWatcher disableHeadScriptInjection />
 
 <div class="min-h-dvh bg-background">
 	<header

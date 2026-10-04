@@ -44,6 +44,9 @@ class VapenTrackingService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
         scope.launch {
+            if (TrackingController.credentials.trackingEnabled) {
+                TrackingController.resumeBleIfConfigured()
+            }
             TrackingController.uploader.flush()
             enqueueUploadWorker()
         }

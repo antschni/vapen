@@ -1,5 +1,6 @@
 import type { Handle } from "@sveltejs/kit/hooks";
 import { redirect } from "@sveltejs/kit";
+import { generateSetInitialModeExpression } from "mode-watcher";
 import { createApiClient } from "#lib/server/api.js";
 import { getClientAddress } from "#lib/server/env.js";
 import { clearTokenCookies } from "#lib/server/cookies.js";
@@ -64,7 +65,15 @@ export const handle: Handle = async ({ event, resolve }) => {
     redirect(303, target);
   }
 
-  const response = await resolve(event);
+  const response = await resolve(event, {
+    transformPageChunk: ({ html, done }) => {
+      if (!done) return html;
+      return html.replace(
+        "%modewatcher.snippet%",
+        generateSetInitialModeExpression(),
+      );
+    },
+  });
 
   for (const [key, value] of Object.entries(securityHeaders)) {
     response.headers.set(key, value);

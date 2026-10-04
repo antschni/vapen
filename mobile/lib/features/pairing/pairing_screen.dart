@@ -57,7 +57,7 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
       );
       final token = await api.createIngestToken(device.id, 'Android Vapen');
       final baseUrl = ref.read(sessionProvider).baseUrl!;
-      bridge.host.setCredentials(
+      await bridge.host.setCredentials(
         NativeCredentials(
           baseUrl: baseUrl,
           deviceId: device.id,
@@ -65,10 +65,12 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
           hardwareId: device.hardwareId,
         ),
       );
-      bridge.host.startTracking();
+      await bridge.host.startTracking();
       if (mounted) context.go('/home');
-    } catch (_) {
-      setState(() => _error = l10n.genericError);
+    } catch (e) {
+      setState(() => _error = e.toString().contains('SocketException') || e.toString().contains('Connection')
+          ? 'Server nicht erreichbar — URL und Netzwerk prüfen.'
+          : l10n.genericError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
