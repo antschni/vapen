@@ -1,7 +1,9 @@
 # Coolify: Build pack "Docker Compose", base directory `/`, compose file `docker-compose.yml`.
-# Assign one public domain to service `web` with internal port 3000, e.g. https://vapen.example.com:3000
-# (Coolify still serves HTTPS on 443; :3000 selects the container port.)
-# Set JWT_ED25519_PRIVATE_KEY in Coolify (generate: go run ./cmd/vapen-api keygen from api/).
+# 1) In the resource UI, open service `web` → Domains → e.g. https://vapen.example.com:3000
+#    (public URL stays https://vapen.example.com; :3000 is the container listen port — required.)
+# 2) Environment: JWT_ED25519_PRIVATE_KEY (go run ./cmd/vapen-api keygen from api/).
+#    Optional but recommended: ORIGIN=https://vapen.example.com, PUBLIC_BASE_URL same (no :3000).
+# 3) If the site shows "No available server", check `web` logs and `docker ps` (unhealthy = failed /health).
 # API is reached via Coolify/Traefik (api domain) or web BFF; no host port publish (8080 often taken on shared hosts).
 # Local dev: add `ports: ["8080:8080"]` under api in docker-compose.override.yml (see .gitignore).
 
@@ -40,7 +42,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-vapen}:${SERVICE_PASSWORD_64_POSTGRES:-vapen}@postgres:5432/${POSTGRES_DB:-vapen}?sslmode=disable
       LISTEN_ADDR: ":8080"
       JWT_ED25519_PRIVATE_KEY: ${JWT_ED25519_PRIVATE_KEY:?}
-      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-${SERVICE_URL_WEB_3000:-http://localhost:3000}}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-${ORIGIN:-http://localhost:3000}}
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
 
   web:
@@ -48,7 +50,8 @@ services:
       context: .
       dockerfile: web/Dockerfile
       args:
-        ORIGIN: ${ORIGIN:-${SERVICE_URL_WEB_3000:-http://localhost:3000}}
+        ORIGIN: ${ORIGIN:-http://localhost:3000}
+        COOLIFY_FQDN: ${COOLIFY_FQDN:-}
     restart: unless-stopped
     depends_on:
       api:
@@ -56,15 +59,16 @@ services:
     expose:
       - "3000"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/health"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 60s
     environment:
+      # Coolify: path suffix for generated SERVICE_URL_WEB_3000 (do not use that var as ORIGIN — it may be "/").
       SERVICE_URL_WEB_3000: /
       API_INTERNAL_URL: http://api:8080
-      ORIGIN: ${ORIGIN:-${SERVICE_URL_WEB_3000:-http://localhost:3000}}
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
       PROTOCOL_HEADER: x-forwarded-proto
       HOST_HEADER: x-forwarded-host
       ADDRESS_HEADER: x-forwarded-for

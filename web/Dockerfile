@@ -2,13 +2,19 @@
 FROM node:22.17-alpine AS build
 WORKDIR /app/web
 ARG ORIGIN=http://localhost:3000
+ARG COOLIFY_FQDN=
 ENV ORIGIN=$ORIGIN
 COPY web/package.json web/package-lock.json web/.npmrc ./
 RUN npm ci
 COPY web/ .
 COPY api/openapi.yaml ../api/openapi.yaml
 RUN npm run generate:api
-RUN npm run build
+RUN set -e; \
+  BUILD_ORIGIN="$ORIGIN"; \
+  if [ -n "$COOLIFY_FQDN" ] && { [ -z "$BUILD_ORIGIN" ] || [ "$BUILD_ORIGIN" = "http://localhost:3000" ]; }; then \
+    BUILD_ORIGIN="https://$COOLIFY_FQDN"; \
+  fi; \
+  ORIGIN="$BUILD_ORIGIN" npm run build
 
 FROM node:22.17-alpine AS run
 # SvelteKit 3 requires Node.js >= 22.17 (see web/package.json engines).
@@ -26,5 +32,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOST=0.0.0.0
 HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=5 \
-  CMD wget -q --spider http://127.0.0.1:3000/ || exit 1
+  CMD wget -q --spider http://127.0.0.1:3000/health || exit 1
 CMD ["node", "build"]
