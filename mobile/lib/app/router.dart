@@ -12,6 +12,7 @@ import '../features/settings/devices_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/onboarding/login_screen.dart';
 import '../features/onboarding/register_screen.dart';
+import '../features/onboarding/app_loading_screen.dart';
 import '../features/onboarding/server_setup_screen.dart';
 import '../features/pairing/pairing_screen.dart';
 import '../features/permissions/permissions_screen.dart';
@@ -35,15 +36,25 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootKey,
     refreshListenable: refresh,
-    initialLocation: '/setup',
+    initialLocation: '/loading',
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
-      if (session.loading) return null;
       final loc = state.matchedLocation;
       const authRoutes = {'/login', '/register'};
       final onSetup = loc == '/setup';
+      final onLoading = loc == '/loading';
       final onServerSettings = loc == '/server';
       final onJoin = loc.startsWith('/groups/join');
+
+      if (session.loading) {
+        return onLoading ? null : '/loading';
+      }
+
+      if (onLoading) {
+        if (!session.serverSetupComplete) return '/setup';
+        if (!session.isAuthenticated) return '/login';
+        return '/home';
+      }
 
       if (!session.serverSetupComplete) {
         if (!onSetup && !onJoin) return '/setup';
@@ -62,6 +73,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(path: '/loading', builder: (_, s) => const AppLoadingScreen()),
       GoRoute(path: '/setup', builder: (_, s) => const ServerSetupScreen()),
       GoRoute(path: '/login', builder: (_, s) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, s) => const RegisterScreen()),
