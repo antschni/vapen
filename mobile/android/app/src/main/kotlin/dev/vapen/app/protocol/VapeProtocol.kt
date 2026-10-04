@@ -17,9 +17,20 @@ data class DeviceInfo(val serialNumber: String?, val bleMac: String)
 interface VapeProtocol {
     val model: String
     fun matches(advertisement: Advertisement): Boolean
-    suspend fun initialize(session: GattSession, profile: BleProfile)
-    fun decode(characteristic: UUID, value: ByteArray, receivedAtMillis: Long): List<DeviceMessage>
-    suspend fun requestStatus(session: GattSession, profile: BleProfile)
-    suspend fun requestHistory(session: GattSession, profile: BleProfile, sinceDeviceIndex: Long?)
+
+    /** Selects per-device persisted state (history cursor, link flag). */
+    fun bindDevice(deviceKey: String) {}
+
+    /** Subscribes, runs the vendor handshake and returns initial messages. Throws [ProtocolException]. */
+    suspend fun initialize(session: GattSession, profile: BleProfile): List<DeviceMessage>
+
+    /** Must be called for every notification, synchronously and in arrival order. */
+    fun onNotification(characteristic: UUID, value: ByteArray, receivedAtMillis: Long): List<DeviceMessage>
+
+    suspend fun requestStatus(session: GattSession, profile: BleProfile): List<DeviceMessage>
+
+    /** Fetches puff records not yet seen. */
+    suspend fun syncHistory(session: GattSession, profile: BleProfile): List<DeviceMessage>
+
     fun hardwareId(info: DeviceInfo): String
 }

@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -32,7 +33,7 @@ class VapenTrackingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = buildNotification("Tracking aktiv", "Verbindung wird aufgebaut…")
+        val notification = buildNotification(this, lastText ?: "Verbindung wird aufgebaut…")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 NOTIFICATION_ID,
@@ -61,23 +62,6 @@ class VapenTrackingService : Service() {
         nm.createNotificationChannel(channel)
     }
 
-    private fun buildNotification(title: String, text: String): Notification {
-        val open = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(title)
-            .setContentText(text)
-            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-            .setOngoing(true)
-            .setContentIntent(open)
-            .addAction(0, "App öffnen", open)
-            .build()
-    }
-
     private fun enqueueUploadWorker() {
         val request = OneTimeWorkRequestBuilder<UploadWorker>()
             .setConstraints(
@@ -96,5 +80,34 @@ class VapenTrackingService : Service() {
     companion object {
         const val CHANNEL_ID = "vapen_tracking"
         const val NOTIFICATION_ID = 1001
+
+        @Volatile private var lastText: String? = null
+
+        /** Replaces the foreground notification text; no-op while the service is not running. */
+        fun updateNotification(context: Context, text: String) {
+            if (text == lastText) return
+            lastText = text
+            val nm = context.getSystemService(NotificationManager::class.java)
+            if (nm.activeNotifications.none { it.id == NOTIFICATION_ID }) return
+            nm.notify(NOTIFICATION_ID, buildNotification(context, text))
+        }
+
+        private fun buildNotification(context: Context, text: String): Notification {
+            val open = PendingIntent.getActivity(
+                context,
+                0,
+                Intent(context, MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            return NotificationCompat.Builder(context, CHANNEL_ID)
+                .setContentTitle("Vapen Tracking")
+                .setContentText(text)
+                .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setContentIntent(open)
+                .addAction(0, "App öffnen", open)
+                .build()
+        }
     }
 }

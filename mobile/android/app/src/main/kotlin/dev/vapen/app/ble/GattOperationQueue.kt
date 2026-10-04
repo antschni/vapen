@@ -6,81 +6,90 @@ import android.bluetooth.BluetoothGattDescriptor
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 
+/** Serializes GATT operations; Android allows only one outstanding operation per connection. */
 class GattOperationQueue {
     private val mutex = Mutex()
-    private var pendingRead: CompletableDeferred<ByteArray?>? = null
-    private var pendingWrite: CompletableDeferred<Boolean>? = null
-    private var pendingNotify: CompletableDeferred<Boolean>? = null
-    private var pendingMtu: CompletableDeferred<Int>? = null
+
+    @Volatile private var pendingRead: CompletableDeferred<ByteArray?>? = null
+    @Volatile private var pendingWrite: CompletableDeferred<Boolean>? = null
+    @Volatile private var pendingNotify: CompletableDeferred<Boolean>? = null
+    @Volatile private var pendingMtu: CompletableDeferred<Int>? = null
 
     suspend fun read(block: () -> Boolean): ByteArray? = mutex.withLock {
         val deferred = CompletableDeferred<ByteArray?>()
         pendingRead = deferred
-        if (!block()) {
+        try {
+            if (!block()) return@withLock null
+            withTimeoutOrNull(TIMEOUT_MS) { deferred.await() }
+        } finally {
             pendingRead = null
-            deferred.complete(null)
-            return@withLock null
         }
-        withTimeout(15_000) { deferred.await() }
     }
 
     suspend fun write(block: () -> Boolean): Boolean = mutex.withLock {
         val deferred = CompletableDeferred<Boolean>()
         pendingWrite = deferred
-        if (!block()) {
+        try {
+            if (!block()) return@withLock false
+            withTimeoutOrNull(TIMEOUT_MS) { deferred.await() } ?: false
+        } finally {
             pendingWrite = null
-            deferred.complete(false)
-            return@withLock false
         }
-        withTimeout(15_000) { deferred.await() }
     }
 
     suspend fun notify(block: () -> Boolean): Boolean = mutex.withLock {
         val deferred = CompletableDeferred<Boolean>()
         pendingNotify = deferred
-        if (!block()) {
+        try {
+            if (!block()) return@withLock false
+            withTimeoutOrNull(TIMEOUT_MS) { deferred.await() } ?: false
+        } finally {
             pendingNotify = null
-            deferred.complete(false)
-            return@withLock false
         }
-        withTimeout(15_000) { deferred.await() }
     }
 
     suspend fun mtu(block: () -> Boolean): Int = mutex.withLock {
         val deferred = CompletableDeferred<Int>()
         pendingMtu = deferred
-        if (!block()) {
+        try {
+            if (!block()) return@withLock DEFAULT_MTU
+            withTimeoutOrNull(TIMEOUT_MS) { deferred.await() } ?: DEFAULT_MTU
+        } finally {
             pendingMtu = null
-            deferred.complete(23)
-            return@withLock 23
         }
-        withTimeout(15_000) { deferred.await() }
     }
 
     fun completeRead(success: Boolean, data: ByteArray?) {
         pendingRead?.complete(if (success) data else null)
-        pendingRead = null
     }
 
     fun completeWrite(success: Boolean) {
         pendingWrite?.complete(success)
-        pendingWrite = null
     }
 
     fun completeNotify(success: Boolean) {
         pendingNotify?.complete(success)
-        pendingNotify = null
     }
 
     fun completeMtu(mtu: Int) {
         pendingMtu?.complete(mtu)
-        pendingMtu = null
+    }
+
+    /** Fails whatever is in flight, e.g. after the link dropped. */
+    fun failAll() {
+        pendingRead?.complete(null)
+        pendingWrite?.complete(false)
+        pendingNotify?.complete(false)
+        pendingMtu?.complete(DEFAULT_MTU)
     }
 
     companion object {
+        private const val TIMEOUT_MS = 10_000L
+        private const val DEFAULT_MTU = 23
+
         fun cccdDescriptor(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic): BluetoothGattDescriptor? {
             return characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
         }

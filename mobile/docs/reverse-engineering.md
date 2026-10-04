@@ -50,7 +50,7 @@ Document findings in `elfbar-protocol.md` in your own words. **Do not commit** A
 
 ## Phase 4 — Correlate & implement
 
-1. Map notification payloads to opcodes (see hypothesized `0xAA` framing in `elfbar-protocol.md`).
+1. Map notification payloads to the command table in `elfbar-protocol.md`.
 2. Update `InnogateFrameCodec` / `ElfbarMasterProtocol` constants.
 3. Add JSONL fixtures under `android/app/src/test/resources/ble-captures/`.
 4. Run `./gradlew :app:testDebugUnitTest`.

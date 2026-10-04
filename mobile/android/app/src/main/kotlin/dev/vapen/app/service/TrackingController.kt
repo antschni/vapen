@@ -20,9 +20,12 @@ import dev.vapen.app.data.VapenDatabase
 import dev.vapen.app.protocol.DeviceMessage
 import dev.vapen.app.upload.EventIdFactory
 import dev.vapen.app.upload.IngestUploader
+import dev.vapen.app.upload.UploadResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -35,12 +38,15 @@ object TrackingController {
     private var bleManager: BleConnectionManager? = null
     private var appContext: Context? = null
 
-    private var connectionState = TrackingConnectionState.IDLE
-    private var todayPuffCount = 0
-    private var batteryPercent: Int? = null
-    private var liquidPercent: Int? = null
-    private var isCharging: Boolean? = null
-    private var lastError: String? = null
+    @Volatile private var connectionState = TrackingConnectionState.IDLE
+    @Volatile private var todayPuffCount = 0
+    @Volatile private var batteryPercent: Int? = null
+    @Volatile private var liquidPercent: Int? = null
+    @Volatile private var isCharging: Boolean? = null
+    @Volatile private var lastError: String? = null
+
+    private var lastPersistedStatus: DeviceMessage.Status? = null
+    private var flushJob: Job? = null
 
     lateinit var credentials: CredentialStore
     lateinit var database: VapenDatabase
@@ -64,7 +70,7 @@ object TrackingController {
                 lastError = err
                 publishState(credentials.trackingEnabled)
             },
-            onMessage = { msg -> scope.launch { handleMessage(msg) } },
+            onMessage = { msg -> handleMessage(msg) },
         ).also {
             it.setSimulation(credentials.simulationEnabled)
             it.setTargetAddress(credentials.pairedBleAddress)
@@ -99,7 +105,7 @@ object TrackingController {
         context.startForegroundService(Intent(context, VapenTrackingService::class.java))
         bleManager?.connect()
         publishState(true)
-        scope.launch { uploader.flush() }
+        requestFlush()
     }
 
     fun stopTracking(context: Context) {
@@ -140,12 +146,13 @@ object TrackingController {
         publishState(credentials.trackingEnabled)
     }
 
+    /** Called in device order from a single coroutine. */
     private suspend fun handleMessage(msg: DeviceMessage) {
         val hardwareId = credentials.get()?.hardwareId ?: bleManager?.hardwareId() ?: return
         when (msg) {
-            is DeviceMessage.PuffStarted -> sendPuffStarted(hardwareId, msg.at)
+            is DeviceMessage.PuffStarted, is DeviceMessage.PuffDetected, is DeviceMessage.Unknown -> {}
             is DeviceMessage.PuffCompleted -> {
-                persistPuff(hardwareId, msg)
+                persistPuff(hardwareId, msg.startedAt, msg.durationMs, msg.deviceIndex, msg.raw, source = "live")
                 todayPuffCount++
                 val puff = PuffInfo(
                     startedAtEpochMs = msg.startedAt.toEpochMilli(),
@@ -153,48 +160,96 @@ object TrackingController {
                 )
                 onMain { flutterApi?.onPuff(puff) {} }
                 publishState(credentials.trackingEnabled)
-                uploader.flush()
+                requestFlush()
             }
             is DeviceMessage.HistoryPuff -> {
-                persistPuff(
-                    hardwareId,
-                    DeviceMessage.PuffCompleted(msg.startedAt, msg.durationMs, msg.deviceIndex, msg.raw),
-                )
-                todayPuffCount++
-                uploader.flush()
+                persistPuff(hardwareId, msg.startedAt, msg.durationMs, msg.deviceIndex, msg.raw, source = "history")
+                requestFlush()
+            }
+            is DeviceMessage.DailyPuffCount -> {
+                todayPuffCount = msg.today
+                publishState(credentials.trackingEnabled)
             }
             is DeviceMessage.Status -> {
-                batteryPercent = msg.battery
-                liquidPercent = msg.liquid
-                isCharging = msg.charging
-                persistStatus(hardwareId, msg)
+                msg.battery?.let { batteryPercent = it }
+                msg.liquid?.let { liquidPercent = it }
+                msg.charging?.let { isCharging = it }
+                if (shouldPersist(msg)) {
+                    persistStatus(hardwareId, msg)
+                    lastPersistedStatus = msg
+                    requestFlush()
+                }
                 val status = StatusInfo(
-                    batteryPercent = msg.battery?.toLong(),
-                    liquidPercent = msg.liquid?.toLong(),
-                    isCharging = msg.charging,
+                    batteryPercent = batteryPercent?.toLong(),
+                    liquidPercent = liquidPercent?.toLong(),
+                    isCharging = isCharging,
                     recordedAtEpochMs = msg.recordedAt.toEpochMilli(),
                 )
                 onMain { flutterApi?.onStatus(status) {} }
                 publishState(credentials.trackingEnabled)
-                uploader.flush()
             }
-            is DeviceMessage.Unknown -> {}
+            is DeviceMessage.DeviceAlert -> {
+                alertText(msg.code)?.let {
+                    lastError = it
+                    publishState(credentials.trackingEnabled)
+                }
+            }
+            is DeviceMessage.Warning -> {
+                lastError = msg.message
+                publishState(credentials.trackingEnabled)
+            }
         }
     }
 
-    private suspend fun sendPuffStarted(hardwareId: String, at: Instant) {
-        // Transient — not buffered; best-effort direct POST would need okhttp here; skip for now.
+    private fun shouldPersist(status: DeviceMessage.Status): Boolean {
+        val last = lastPersistedStatus ?: return true
+        val changed = status.battery != last.battery ||
+            status.liquid != last.liquid ||
+            status.charging != last.charging ||
+            status.childLock != last.childLock ||
+            status.firmware != last.firmware
+        val stale = status.recordedAt.epochSecond - last.recordedAt.epochSecond >= STATUS_HEARTBEAT_S
+        return changed || stale
     }
 
-    private suspend fun persistPuff(hardwareId: String, puff: DeviceMessage.PuffCompleted) {
-        val id = EventIdFactory.puffId(hardwareId, puff.deviceIndex, puff.startedAt)
+    private fun alertText(code: Int): String? = when (code) {
+        1 -> "Elfbar: Akku schwach"
+        2 -> "Elfbar: Liquid fast leer"
+        3 -> "Elfbar: überhitzt"
+        4 -> "Elfbar: Kurzschluss am Pod"
+        5 -> "Elfbar: Pod nicht erkannt"
+        6 -> "Elfbar: Tageslimit erreicht"
+        else -> null
+    }
+
+    /** Uploads everything pending; coalesces bursts (e.g. a history sync). */
+    private fun requestFlush() {
+        if (flushJob?.isActive == true) return
+        flushJob = scope.launch {
+            delay(FLUSH_DEBOUNCE_MS)
+            repeat(MAX_FLUSH_BATCHES) {
+                val result = runCatching { uploader.flush() }.getOrNull()
+                if (result != UploadResult.Success) return@launch
+            }
+        }
+    }
+
+    private suspend fun persistPuff(
+        hardwareId: String,
+        startedAt: Instant,
+        durationMs: Int,
+        deviceIndex: Long?,
+        raw: ByteArray,
+        source: String,
+    ) {
+        val id = EventIdFactory.puffId(hardwareId, deviceIndex, startedAt)
         val payload = buildJsonObject {
             put("type", "puff")
             put("client_event_id", id)
-            put("started_at", puff.startedAt.toString())
-            put("duration_ms", puff.durationMs)
-            put("source", if (puff.deviceIndex != null) "live" else "history")
-            put("raw", buildJsonObject { put("hex", puff.raw.joinToString("") { "%02x".format(it) }) })
+            put("started_at", startedAt.toString())
+            put("duration_ms", durationMs)
+            put("source", source)
+            put("raw", buildJsonObject { put("hex", raw.joinToString("") { "%02x".format(it) }) })
         }
         database.pendingEvents().insert(
             PendingEvent(id, "puff", payload.toString(), Instant.now().toEpochMilli()),
@@ -223,6 +278,22 @@ object TrackingController {
     private fun publishState(enabled: Boolean) {
         val state = getState().copy(enabled = enabled)
         onMain { flutterApi?.onTrackingStateChanged(state) {} }
+        appContext?.let { context ->
+            if (enabled) onMain { VapenTrackingService.updateNotification(context, notificationText()) }
+        }
+    }
+
+    private fun notificationText(): String = when (connectionState) {
+        TrackingConnectionState.LIVE -> buildString {
+            append("Verbunden · heute $todayPuffCount Züge")
+            batteryPercent?.let { append(" · Akku $it %") }
+        }
+        TrackingConnectionState.CONNECTING -> "Verbinde mit Elfbar…"
+        TrackingConnectionState.DISCOVERING -> "Suche Dienste…"
+        TrackingConnectionState.INITIALIZING -> "Kopplung mit Elfbar…"
+        TrackingConnectionState.WAITING -> lastError ?: "Warte auf Gerät…"
+        TrackingConnectionState.DISCONNECTED -> "Getrennt" + (lastError?.let { " — $it" } ?: "")
+        TrackingConnectionState.IDLE -> "Tracking pausiert"
     }
 
     /** Pigeon/Flutter channels must only be called from the platform (main) thread. */
@@ -242,4 +313,8 @@ object TrackingController {
         }
         context.startActivity(intent)
     }
+
+    private const val STATUS_HEARTBEAT_S = 15 * 60L
+    private const val FLUSH_DEBOUNCE_MS = 500L
+    private const val MAX_FLUSH_BATCHES = 50
 }

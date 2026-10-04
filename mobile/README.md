@@ -25,18 +25,18 @@ Release builds, signing, Google Play, and Android App Links: [`docs/build-and-de
 
 ## BLE / InnoGate reverse engineering
 
-There is **no public** GATT specification for ELFA MASTER. Vapen ships:
+There is **no public** GATT specification for ELFA MASTER. The protocol in [`docs/elfbar-protocol.md`](docs/elfbar-protocol.md) was derived from the InnoGate app (`com.innogate.igate`) and is implemented in `ElfbarMasterProtocol` / `InnogateFrameCodec`:
 
-- **BLE Explorer** (developer mode) + HCI snoop procedure in `docs/reverse-engineering.md`
-- **Hypothesized framing** (`0xAA` + opcode) in `docs/elfbar-protocol.md` and `InnogateFrameCodec.kt`
-- **Profile auto-detect** (Nordic UART, `FFF0`, or first write+notify service)
-- **Real Android stack**: GATT queue, foreground service, CDM pairing (`com.innogate.igate` is the vendor app package)
+- InnoGate command service `…0a0b0c0dff00` (write `ff01`, notify `ff02`), 4-byte header framing
+- Handshake (`FIRST_LINK_INFO`, set time), status reads, paged puff-record sync, live push on every puff
+- **BLE Explorer** (developer mode) + HCI snoop procedure in `docs/reverse-engineering.md` for verifying on hardware
+- **Real Android stack**: GATT queue, foreground service, CDM pairing
 
-After capture on hardware, update opcodes/UUIDs in `ElfbarMasterProtocol` and add JSONL fixtures under `android/app/src/test/resources/ble-captures/`.
+InnoGate and Vapen cannot be connected at the same time — close InnoGate before pairing.
 
 ## Simulated device
 
-Pairing → toggle **Simulated device** to exercise ingest without hardware. Disable simulation and pair via CDM for real BLE (once UUIDs/opcodes are confirmed).
+Pairing → toggle **Simulated device** to exercise ingest without hardware.
 
 ## API client
 

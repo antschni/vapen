@@ -2,27 +2,36 @@ package dev.vapen.app.ble
 
 import java.util.UUID
 
+/** ELFA MASTER / InnoGate GATT layout and command codes — see docs/elfbar-protocol.md. */
 object BleConstants {
-    val NUS_SERVICE: UUID = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")
-    val NUS_TX: UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e")
-    val NUS_RX: UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e")
+    val CIG_SERVICE: UUID = UUID.fromString("00010203-0405-0607-0809-0a0b0c0dff00")
+    val CIG_WRITE: UUID = UUID.fromString("00010203-0405-0607-0809-0a0b0c0dff01")
+    val CIG_NOTIFY: UUID = UUID.fromString("00010203-0405-0607-0809-0a0b0c0dff02")
 
-    val VENDOR_FFF0: UUID = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb")
-    val VENDOR_FFF1: UUID = UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb")
-    val VENDOR_FFF2: UUID = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
-    val VENDOR_FFF3: UUID = UUID.fromString("0000fff3-0000-1000-8000-00805f9b34fb")
-    val VENDOR_FFF4: UUID = UUID.fromString("0000fff4-0000-1000-8000-00805f9b34fb")
-    val VENDOR_FFF5: UUID = UUID.fromString("0000fff5-0000-1000-8000-00805f9b34fb")
+    /** Firmware/theme update channel. Vapen never writes to it. */
+    val OTA_SERVICE: UUID = UUID.fromString("00010203-0405-0607-0809-0a0b0c0da100")
+    val OTA_NOTIFY: UUID = UUID.fromString("00010203-0405-0607-0809-0a0b0c0da102")
 
-    const val FRAME_MAGIC: Int = 0xAA
-    const val OPC_STATUS: Int = 0x01
-    const val OPC_PUFF_STARTED: Int = 0x02
-    const val OPC_PUFF_DONE: Int = 0x03
-    const val OPC_HISTORY_PUFF: Int = 0x04
-    const val CMD_HANDSHAKE_1: Int = 0x10
-    const val CMD_HANDSHAKE_2: Int = 0x11
-    const val CMD_REQUEST_STATUS: Int = 0x20
-    const val CMD_REQUEST_HISTORY: Int = 0x21
+    const val MTU_REQUEST = 517
+
+    const val CMD_READ_IDENTIFIER = 0x05
+    const val CMD_READ_FIRMWARE_VERSION = 0x06
+    const val CMD_SET_TIME = 0x07
+    const val CMD_READ_ACTIVE_STATE = 0x0A
+    const val CMD_READ_LOCK_STATE = 0x0B
+    const val CMD_READ_SOC = 0x12
+    const val CMD_READ_FUEL = 0x13
+    const val CMD_READ_SUCTION_TIME = 0x16
+    const val CMD_FIRST_LINK_INFO = 0x2A
+    const val CMD_READ_PUFF_RECORDS = 0x33
+    const val CMD_READ_DAY_PUFF = 0x41
+
+    /** Unsolicited device alert (low battery, low liquid, overheat, …). */
+    const val PUSH_DEVICE_REPORT = 0x9E
+
+    const val RESPONSE_FLAG = 0x80
+
+    const val IDENTIFIER_TYPE_ANDROID = 0x02
 
     val NAME_HINTS = listOf("elfa", "master", "elfbar", "innogate")
 }

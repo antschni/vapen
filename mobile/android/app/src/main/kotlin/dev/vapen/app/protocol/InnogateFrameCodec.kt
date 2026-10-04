@@ -3,45 +3,46 @@ package dev.vapen.app.protocol
 import dev.vapen.app.ble.BleConstants
 
 /**
- * Hypothesized InnoGate / ELFA framing — see docs/elfbar-protocol.md.
+ * InnoGate "CIG" framing (ELFA MASTER):
+ *
+ * ```
+ * [header][command][length u16 BE][payload…]
+ * header = version << 6 | encrypted << 4 | seq & 0x0F   (version 0, never encrypted here)
+ * ```
+ *
+ * Responses echo the sequence nibble and set bit 7 of the command (`command | 0x80`).
  * Pure Kotlin for unit tests.
  */
 object InnogateFrameCodec {
-    fun encode(opcode: Int, payload: ByteArray = byteArrayOf()): ByteArray {
-        val len = 1 + payload.size
-        val body = ByteArray(2 + len)
-        body[0] = BleConstants.FRAME_MAGIC.toByte()
-        body[1] = len.toByte()
-        body[2] = opcode.toByte()
-        payload.copyInto(body, 3)
-        val checksum = body.drop(1).sumOf { it.toInt() and 0xFF } and 0xFF
-        return body + checksum.toByte()
+    const val HEADER_SIZE = 4
+
+    fun encode(seq: Int, command: Int, payload: ByteArray = byteArrayOf()): ByteArray {
+        require(payload.size <= 0xFFFF) { "payload too large" }
+        val out = ByteArray(HEADER_SIZE + payload.size)
+        out[0] = (seq and 0x0F).toByte()
+        out[1] = command.toByte()
+        out[2] = (payload.size ushr 8).toByte()
+        out[3] = payload.size.toByte()
+        payload.copyInto(out, HEADER_SIZE)
+        return out
     }
 
-    fun decodeFrames(buffer: ByteArray): Pair<List<DecodedFrame>, ByteArray> {
-        val frames = mutableListOf<DecodedFrame>()
-        var i = 0
-        while (i < buffer.size) {
-            if (buffer[i].toInt() and 0xFF != BleConstants.FRAME_MAGIC) {
-                i++
-                continue
-            }
-            if (i + 3 > buffer.size) break
-            val len = buffer[i + 1].toInt() and 0xFF
-            val total = 2 + len + 1
-            if (i + total > buffer.size) break
-            val opcode = buffer[i + 2].toInt() and 0xFF
-            val payload = buffer.copyOfRange(i + 3, i + 2 + len)
-            val checksum = buffer[i + 2 + len].toInt() and 0xFF
-            val expected = buffer.copyOfRange(i + 1, i + 2 + len).sumOf { it.toInt() and 0xFF } and 0xFF
-            if (checksum == expected) {
-                frames.add(DecodedFrame(opcode, payload))
-            }
-            i += total
-        }
-        val remainder = if (i < buffer.size) buffer.copyOfRange(i, buffer.size) else byteArrayOf()
-        return frames to remainder
+    fun decode(value: ByteArray): CigFrame? {
+        if (value.size < HEADER_SIZE) return null
+        val header = value[0].toInt() and 0xFF
+        val command = value[1].toInt() and 0xFF
+        val declared = ((value[2].toInt() and 0xFF) shl 8) or (value[3].toInt() and 0xFF)
+        val available = value.size - HEADER_SIZE
+        if (declared > available) return null
+        val payload = value.copyOfRange(HEADER_SIZE, HEADER_SIZE + declared)
+        return CigFrame(header, command, payload)
     }
 }
 
-data class DecodedFrame(val opcode: Int, val payload: ByteArray)
+class CigFrame(val header: Int, val command: Int, val payload: ByteArray) {
+    val seq: Int get() = header and 0x0F
+    val encrypted: Boolean get() = header and 0x10 != 0
+    val isResponse: Boolean get() = command and BleConstants.RESPONSE_FLAG != 0
+
+    fun u8(index: Int): Int? = payload.getOrNull(index)?.toInt()?.and(0xFF)
+}

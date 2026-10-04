@@ -17,16 +17,17 @@ class SimulatedProtocol : VapeProtocol {
 
     override fun matches(advertisement: Advertisement): Boolean = true
 
-    override suspend fun initialize(session: GattSession, profile: BleProfile) {
+    override suspend fun initialize(session: GattSession, profile: BleProfile): List<DeviceMessage> {
         delay(300)
+        return emptyList()
     }
 
-    override fun decode(characteristic: UUID, value: ByteArray, receivedAtMillis: Long): List<DeviceMessage> =
+    override fun onNotification(characteristic: UUID, value: ByteArray, receivedAtMillis: Long): List<DeviceMessage> =
         emptyList()
 
-    override suspend fun requestStatus(session: GattSession, profile: BleProfile) {}
+    override suspend fun requestStatus(session: GattSession, profile: BleProfile): List<DeviceMessage> = emptyList()
 
-    override suspend fun requestHistory(session: GattSession, profile: BleProfile, sinceDeviceIndex: Long?) {}
+    override suspend fun syncHistory(session: GattSession, profile: BleProfile): List<DeviceMessage> = emptyList()
 
     fun nextSimulatedPuff(): DeviceMessage.PuffCompleted {
         puffIndex++
@@ -35,7 +36,7 @@ class SimulatedProtocol : VapeProtocol {
         return DeviceMessage.PuffCompleted(
             startedAt = started,
             durationMs = duration,
-            deviceIndex = puffIndex,
+            deviceIndex = started.epochSecond,
             raw = byteArrayOf(0xA5.toByte(), duration.toByte()),
         )
     }

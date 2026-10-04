@@ -1,40 +1,52 @@
 package dev.vapen.app.protocol
 
-import dev.vapen.app.ble.BleConstants
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 class InnogateFrameCodecTest {
     @Test
-    fun roundTrip_puffDone() {
-        val payload = ByteBuffer.allocate(6).order(ByteOrder.LITTLE_ENDIAN).apply {
-            putInt(42)
-            putShort(2350)
-        }.array()
-        val frame = InnogateFrameCodec.encode(BleConstants.OPC_PUFF_DONE, payload)
-        val (frames, _) = InnogateFrameCodec.decodeFrames(frame)
-        assertEquals(1, frames.size)
-        assertEquals(BleConstants.OPC_PUFF_DONE, frames[0].opcode)
+    fun encode_withoutPayload_matchesInnoGateLayout() {
+        val frame = InnogateFrameCodec.encode(seq = 3, command = 0x05)
+        assertArrayEquals(byteArrayOf(0x03, 0x05, 0x00, 0x00), frame)
     }
 
     @Test
-    fun decode_labCapture_puffNotify() {
-        val hex = "aa07032a000000260963"
-        val bytes = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-        val protocol = ElfbarMasterProtocol()
-        val messages = protocol.decode(java.util.UUID.randomUUID(), bytes, System.currentTimeMillis())
-        assertTrue(messages.any { it is dev.vapen.app.protocol.DeviceMessage.PuffCompleted })
+    fun encode_lengthIsBigEndianAndSeqIsMasked() {
+        val payload = ByteArray(0x0102) { it.toByte() }
+        val frame = InnogateFrameCodec.encode(seq = 0x1F, command = 0x33, payload = payload)
+        assertEquals(0x0F, frame[0].toInt())
+        assertEquals(0x33, frame[1].toInt())
+        assertEquals(0x01, frame[2].toInt())
+        assertEquals(0x02, frame[3].toInt())
+        assertEquals(4 + payload.size, frame.size)
     }
 
     @Test
-    fun decoder_fixture_status() {
-        val payload = byteArrayOf(76, 40, 0x00, 0x00, 0x00, 0x00, 0x2A)
-        val bytes = InnogateFrameCodec.encode(BleConstants.OPC_STATUS, payload)
-        val protocol = ElfbarMasterProtocol()
-        val messages = protocol.decode(java.util.UUID.randomUUID(), bytes, System.currentTimeMillis())
-        assertTrue(messages.any { it is dev.vapen.app.protocol.DeviceMessage.Status })
+    fun decode_roundTrip() {
+        val encoded = InnogateFrameCodec.encode(seq = 7, command = 0x92, payload = byteArrayOf(76))
+        val frame = InnogateFrameCodec.decode(encoded)!!
+        assertEquals(7, frame.seq)
+        assertEquals(0x92, frame.command)
+        assertTrue(frame.isResponse)
+        assertFalse(frame.encrypted)
+        assertEquals(76, frame.u8(0))
     }
+
+    @Test
+    fun decode_rejectsTruncatedFrames() {
+        assertNull(InnogateFrameCodec.decode(bytes(0x00, 0x92, 0x00)))
+        assertNull(InnogateFrameCodec.decode(bytes(0x00, 0x92, 0x00, 0x02, 0x01)))
+    }
+
+    @Test
+    fun decode_ignoresTrailingBytes() {
+        val frame = InnogateFrameCodec.decode(bytes(0x00, 0x92, 0x00, 0x01, 0x50, 0x7F))!!
+        assertArrayEquals(bytes(0x50), frame.payload)
+    }
+
+    private fun bytes(vararg values: Int) = ByteArray(values.size) { values[it].toByte() }
 }
