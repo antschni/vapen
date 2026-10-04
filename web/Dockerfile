@@ -1,8 +1,10 @@
+# Build context must be the repository root (see docker-compose.yml) so api/openapi.yaml is available.
 FROM node:22-alpine AS build
-WORKDIR /app
-COPY package.json package-lock.json ./
+WORKDIR /app/web
+COPY web/package.json web/package-lock.json ./
 RUN npm ci
-COPY . .
+COPY web/ .
+COPY api/openapi.yaml ../api/openapi.yaml
 RUN npm run generate:api
 RUN npm run build
 
@@ -11,9 +13,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN apk add --no-cache wget \
   && addgroup -S vapen && adduser -S vapen -G vapen
-COPY --from=build /app/build ./build
-COPY --from=build /app/package.json ./
-COPY --from=build /app/package-lock.json ./
+COPY --from=build /app/web/build ./build
+COPY --from=build /app/web/package.json ./
+COPY --from=build /app/web/package-lock.json ./
 RUN npm ci --omit=dev && chown -R vapen:vapen /app
 USER vapen
 EXPOSE 3000

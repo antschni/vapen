@@ -7,6 +7,17 @@
   "passwordLabel": "Passwort",
   "displayNameLabel": "Anzeigename",
   "serverUrlLabel": "Server-URL",
+  "serverSetupTitle": "Server verbinden",
+  "serverSetupDescription": "Gib die Adresse deiner Vapen-Instanz ein (Origin, ohne /api/v1). Die Verbindung wird getestet, bevor du dich anmelden kannst.",
+  "serverConnectionTestButton": "Verbindung testen",
+  "serverConnectionFailed": "Verbindung zum Server fehlgeschlagen. Prüfe die URL und ob der Server erreichbar ist.",
+  "serverConfiguredHint": "Server: {url}",
+  "@serverConfiguredHint": {
+    "placeholders": {
+      "url": {"type": "String"}
+    }
+  },
+  "changeServerButton": "Server ändern",
   "loginButton": "Anmelden",
   "registerButton": "Konto erstellen",
   "logoutButton": "Abmelden",

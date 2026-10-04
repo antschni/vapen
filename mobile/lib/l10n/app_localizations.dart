@@ -136,6 +136,42 @@ abstract class AppLocalizations {
   /// **'Server-URL'**
   String get serverUrlLabel;
 
+  /// No description provided for @serverSetupTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Server verbinden'**
+  String get serverSetupTitle;
+
+  /// No description provided for @serverSetupDescription.
+  ///
+  /// In de, this message translates to:
+  /// **'Gib die Adresse deiner Vapen-Instanz ein (Origin, ohne /api/v1). Die Verbindung wird getestet, bevor du dich anmelden kannst.'**
+  String get serverSetupDescription;
+
+  /// No description provided for @serverConnectionTestButton.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbindung testen'**
+  String get serverConnectionTestButton;
+
+  /// No description provided for @serverConnectionFailed.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbindung zum Server fehlgeschlagen. Prüfe die URL und ob der Server erreichbar ist.'**
+  String get serverConnectionFailed;
+
+  /// No description provided for @serverConfiguredHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Server: {url}'**
+  String serverConfiguredHint(String url);
+
+  /// No description provided for @changeServerButton.
+  ///
+  /// In de, this message translates to:
+  /// **'Server ändern'**
+  String get changeServerButton;
+
   /// No description provided for @loginButton.
   ///
   /// In de, this message translates to:

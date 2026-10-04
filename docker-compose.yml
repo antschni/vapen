@@ -45,7 +45,9 @@ services:
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
 
   web:
-    build: ./web
+    build:
+      context: .
+      dockerfile: web/Dockerfile
     restart: unless-stopped
     depends_on:
       api:

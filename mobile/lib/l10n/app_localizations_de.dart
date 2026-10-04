@@ -31,6 +31,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get serverUrlLabel => 'Server-URL';
 
   @override
+  String get serverSetupTitle => 'Server verbinden';
+
+  @override
+  String get serverSetupDescription =>
+      'Gib die Adresse deiner Vapen-Instanz ein (Origin, ohne /api/v1). Die Verbindung wird getestet, bevor du dich anmelden kannst.';
+
+  @override
+  String get serverConnectionTestButton => 'Verbindung testen';
+
+  @override
+  String get serverConnectionFailed =>
+      'Verbindung zum Server fehlgeschlagen. Prüfe die URL und ob der Server erreichbar ist.';
+
+  @override
+  String serverConfiguredHint(String url) {
+    return 'Server: $url';
+  }
+
+  @override
+  String get changeServerButton => 'Server ändern';
+
+  @override
   String get loginButton => 'Anmelden';
 
   @override

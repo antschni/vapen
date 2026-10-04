@@ -12,6 +12,7 @@ import '../features/settings/devices_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/onboarding/login_screen.dart';
 import '../features/onboarding/register_screen.dart';
+import '../features/onboarding/server_setup_screen.dart';
 import '../features/pairing/pairing_screen.dart';
 import '../features/permissions/permissions_screen.dart';
 import '../features/privacy/privacy_screen.dart';
@@ -25,16 +26,31 @@ final routerProvider = Provider<GoRouter>((ref) {
   final session = ref.watch(sessionProvider);
   return GoRouter(
     navigatorKey: _rootKey,
-    initialLocation: '/login',
+    initialLocation: '/setup',
     redirect: (context, state) {
       if (session.loading) return null;
-      final loggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-      final configuringServer = state.matchedLocation == '/server';
-      if (!session.isAuthenticated && !loggingIn && !configuringServer) return '/login';
-      if (session.isAuthenticated && loggingIn) return '/home';
+      final loc = state.matchedLocation;
+      const authRoutes = {'/login', '/register'};
+      final onSetup = loc == '/setup';
+      final onServerSettings = loc == '/server';
+
+      if (!session.serverSetupComplete) {
+        if (!onSetup) return '/setup';
+        return null;
+      }
+
+      if (!session.isAuthenticated) {
+        if (authRoutes.contains(loc) || onSetup) return null;
+        if (onServerSettings) return '/login';
+        return '/login';
+      }
+
+      if (session.isAuthenticated && authRoutes.contains(loc)) return '/home';
+      if (session.isAuthenticated && onSetup) return '/home';
       return null;
     },
     routes: [
+      GoRoute(path: '/setup', builder: (_, s) => const ServerSetupScreen()),
       GoRoute(path: '/login', builder: (_, s) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, s) => const RegisterScreen()),
       GoRoute(path: '/server', builder: (_, s) => const ServerEndpointScreen()),

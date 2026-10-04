@@ -1,0 +1,9 @@
+.git
+.github
+prompts
+mobile
+**node_modules
+**/.svelte-kit
+**/build
+**/.dart_tool
+api/bin

@@ -12,12 +12,22 @@ class TokenStorage {
   static const _refreshExp = 'refresh_exp';
   static const _baseUrl = 'base_url';
   static const _preferredServer = 'preferred_server_url';
+  static const _serverSetupComplete = 'server_setup_complete';
 
   Future<void> savePreferredServerUrl(String baseUrl) async {
     await _storage.write(key: _preferredServer, value: baseUrl);
   }
 
   Future<String?> readPreferredServerUrl() => _storage.read(key: _preferredServer);
+
+  Future<void> saveServerSetupComplete(bool complete) async {
+    await _storage.write(key: _serverSetupComplete, value: complete ? '1' : '0');
+  }
+
+  Future<bool> readServerSetupComplete() async {
+    final raw = await _storage.read(key: _serverSetupComplete);
+    return raw == '1';
+  }
 
   Future<void> saveSession({
     required String baseUrl,

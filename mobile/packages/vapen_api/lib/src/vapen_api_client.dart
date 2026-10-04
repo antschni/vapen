@@ -23,6 +23,25 @@ class VapenApiClient {
 
   String get baseUrl => _baseUrl;
 
+  /// Verifies the server origin is reachable (not under `/api/v1`).
+  Future<void> checkHealth() async {
+    final probe = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 12),
+        receiveTimeout: const Duration(seconds: 12),
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+    final response = await probe.get('$_baseUrl/healthz');
+    if (response.statusCode != 200) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        type: DioExceptionType.badResponse,
+      );
+    }
+  }
+
   void setAccessToken(String? token) {
     if (token == null) {
       _dio.options.headers.remove('Authorization');
