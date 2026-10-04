@@ -19,6 +19,7 @@ RUN apk add --no-cache wget \
 COPY --from=build /app/web/build ./build
 COPY --from=build /app/web/package.json ./
 COPY --from=build /app/web/package-lock.json ./
+COPY --from=build /app/web/.npmrc ./
 RUN npm ci --omit=dev && chown -R vapen:vapen /app
 USER vapen
 EXPOSE 3000
