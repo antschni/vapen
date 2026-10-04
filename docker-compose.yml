@@ -2,7 +2,8 @@
 # Assign one public domain to service `web` with internal port 3000, e.g. https://vapen.example.com:3000
 # (Coolify still serves HTTPS on 443; :3000 selects the container port.)
 # Set JWT_ED25519_PRIVATE_KEY in Coolify (generate: go run ./cmd/vapen-api keygen from api/).
-# Optional: remove api.ports for production if the API should not be reachable on the host.
+# API is reached via Coolify/Traefik (api domain) or web BFF; no host port publish (8080 often taken on shared hosts).
+# Local dev: add `ports: ["8080:8080"]` under api in docker-compose.override.yml (see .gitignore).
 
 services:
   postgres:
@@ -29,8 +30,6 @@ services:
         condition: service_healthy
     expose:
       - "8080"
-    ports:
-      - "8080:8080"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/readyz"]
       interval: 10s
