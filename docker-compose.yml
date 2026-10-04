@@ -1,51 +1,79 @@
+# Coolify: Build pack "Docker Compose", base directory `/`, compose file `docker-compose.yml`.
+# Assign one public domain to service `web` with internal port 3000, e.g. https://vapen.example.com:3000
+# (Coolify still serves HTTPS on 443; :3000 selects the container port.)
+# Set JWT_ED25519_PRIVATE_KEY in Coolify (generate: go run ./cmd/vapen-api keygen from api/).
+# Optional: remove api.ports for production if the API should not be reachable on the host.
+
 services:
   postgres:
     image: postgres:17
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: vapen
-      POSTGRES_PASSWORD: vapen
-      POSTGRES_DB: vapen
+      POSTGRES_USER: ${POSTGRES_USER:-vapen}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES:-vapen}
+      POSTGRES_DB: ${POSTGRES_DB:-vapen}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vapen -d vapen"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vapen} -d ${POSTGRES_DB:-vapen}"]
+      interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 20s
 
   api:
     build: ./api
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
+    expose:
+      - "8080"
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     environment:
-      DATABASE_URL: postgres://vapen:vapen@postgres:5432/vapen?sslmode=disable
+      DATABASE_URL: postgres://${POSTGRES_USER:-vapen}:${SERVICE_PASSWORD_64_POSTGRES:-vapen}@postgres:5432/${POSTGRES_DB:-vapen}?sslmode=disable
       LISTEN_ADDR: ":8080"
-      JWT_ED25519_PRIVATE_KEY: ${JWT_ED25519_PRIVATE_KEY}
-      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8}
+      JWT_ED25519_PRIVATE_KEY: ${JWT_ED25519_PRIVATE_KEY:?}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-${SERVICE_URL_WEB_3000:-http://localhost:3000}}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
 
   web:
-    profiles: [full]
     build: ./web
+    restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     environment:
+      SERVICE_URL_WEB_3000: /
       API_INTERNAL_URL: http://api:8080
-      ORIGIN: https://${VAPEN_DOMAIN}
+      ORIGIN: ${ORIGIN:-${SERVICE_URL_WEB_3000:-http://localhost:3000}}
       PROTOCOL_HEADER: x-forwarded-proto
       HOST_HEADER: x-forwarded-host
       ADDRESS_HEADER: x-forwarded-for
       XFF_DEPTH: "1"
-      COOKIE_SECURE: "true"
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
       ANDROID_PACKAGE_NAME: ${ANDROID_PACKAGE_NAME:-dev.vapen.app}
       ANDROID_CERT_SHA256_FINGERPRINTS: ${ANDROID_CERT_SHA256_FINGERPRINTS:-}
 
   caddy:
-    profiles: [full]
+    profiles: [caddy]
     image: caddy:2
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -56,8 +84,10 @@ services:
     environment:
       VAPEN_DOMAIN: ${VAPEN_DOMAIN:-localhost}
     depends_on:
-      - api
-      - web
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
 
 volumes:
   postgres_data:

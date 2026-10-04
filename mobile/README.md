@@ -19,6 +19,10 @@ flutter run
 
 Default server URL: `--dart-define=VAPEN_BASE_URL=https://vapen.example.com` or edit on the login screen (debug allows `http://10.0.2.2:8080`).
 
+## Build & deploy
+
+Release builds, signing, Google Play, and Android App Links: [`docs/build-and-deploy.md`](docs/build-and-deploy.md). Manual QA: [`docs/testing.md`](docs/testing.md).
+
 ## BLE / InnoGate reverse engineering
 
 There is **no public** GATT specification for ELFA MASTER. Vapen ships:
@@ -32,7 +36,7 @@ After capture on hardware, update opcodes/UUIDs in `ElfbarMasterProtocol` and ad
 
 ## Simulated device
 
-Pairing → toggle **Simuliertes Gerät** to exercise ingest without hardware. Disable simulation and pair via CDM for real BLE (once UUIDs/opcodes are confirmed).
+Pairing → toggle **Simulated device** to exercise ingest without hardware. Disable simulation and pair via CDM for real BLE (once UUIDs/opcodes are confirmed).
 
 ## API client
 
@@ -44,7 +48,7 @@ Hand-maintained package in `packages/vapen_api/`. Regenerate from OpenAPI when t
 
 ## Android App Links
 
-Release/debug SHA-256 certificate fingerprints must match the web `assetlinks.json` (`ANDROID_PACKAGE_NAME=dev.vapen.app`). Set invite link host at build time via `manifestPlaceholders` / Gradle property `vapenAppLinkHost`.
+See [`docs/build-and-deploy.md`](docs/build-and-deploy.md) (manifest host `vapenAppLinkHost`, web `assetlinks.json`, SHA-256 fingerprints).
 
 ## Pigeon
 

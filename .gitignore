@@ -1,0 +1,69 @@
+# Local agent prompts (not published)
+prompts/
+
+# Secrets & local env
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Node / web
+node_modules/
+web/node_modules/
+web/.svelte-kit/
+web/build/
+web/.output/
+web/test-results/
+web/playwright-report/
+web/blob-report/
+web/playwright/.cache/
+
+# Go / api
+api/bin/
+api/dist/
+api/*.exe
+api/*.test
+api/coverage.out
+api/coverage.html
+
+# Flutter / Dart / mobile
+**/.dart_tool/
+**/.pub/
+**/.pub-cache/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+mobile/build/
+mobile/.packages
+mobile/coverage/
+mobile/android/.gradle/
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/ephemeral/
+mobile/ios/Flutter/Flutter.podspec
+mobile/ios/Flutter/Generated.xcconfig
+mobile/ios/Flutter/flutter_export_environment.sh
+mobile/ios/Runner/GeneratedPluginRegistrant.*
+
+# Local Docker overrides
+docker-compose.override.yml
+docker-compose.local.yml
+
+# OS & editors
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+*.iml
+.vscode/
+!web/.vscode/
+!web/.vscode/**
+
+# Logs & temp
+*.log
+/tmp/
