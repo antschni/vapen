@@ -33,14 +33,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       const authRoutes = {'/login', '/register'};
       final onSetup = loc == '/setup';
       final onServerSettings = loc == '/server';
+      final onJoin = loc.startsWith('/groups/join');
 
       if (!session.serverSetupComplete) {
-        if (!onSetup) return '/setup';
+        if (!onSetup && !onJoin) return '/setup';
         return null;
       }
 
       if (!session.isAuthenticated) {
-        if (authRoutes.contains(loc) || onSetup) return null;
+        if (authRoutes.contains(loc) || onSetup || onJoin) return null;
         if (onServerSettings) return '/login';
         return '/login';
       }

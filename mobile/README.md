@@ -48,7 +48,7 @@ Hand-maintained package in `packages/vapen_api/`. Regenerate from OpenAPI when t
 
 ## Android App Links
 
-See [`docs/build-and-deploy.md`](docs/build-and-deploy.md) (manifest host `vapenAppLinkHost`, web `assetlinks.json`, SHA-256 fingerprints).
+See [`docs/build-and-deploy.md`](docs/build-and-deploy.md): generic `/join` deep links for any self-hosted origin (sideload, no fixed manifest host).
 
 ## Pigeon
 
