@@ -3,7 +3,9 @@
 #    (public URL stays https://vapen.example.com; :3000 is the container listen port — required.)
 # 2) Environment: JWT_ED25519_PRIVATE_KEY (go run ./cmd/vapen-api keygen from api/).
 #    Optional but recommended: ORIGIN=https://vapen.example.com, PUBLIC_BASE_URL same (no :3000).
-# 3) If the site shows "No available server", check `web` logs and `docker ps` (unhealthy = failed /health).
+# 3) "No available server": Traefik skips unhealthy containers — see web healthcheck below.
+#    On the server: docker ps (web should be Up, not unhealthy). Proxy → Traefik v3.6.1+ if all apps fail.
+#    Advanced: do NOT enable "Connect To Predefined Network" unless you know why (breaks routing).
 # API is reached via Coolify/Traefik (api domain) or web BFF; no host port publish (8080 often taken on shared hosts).
 # Local dev: add `ports: ["8080:8080"]` under api in docker-compose.override.yml (see .gitignore).
 
@@ -55,20 +57,19 @@ services:
     restart: unless-stopped
     depends_on:
       api:
-        condition: service_healthy
+        condition: service_started
     expose:
       - "3000"
+    # Traefik (Coolify) will not route to containers Docker marks unhealthy. Disabled so routing
+    # works once the process listens; probe manually with GET /health on the container.
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
+      disable: true
     environment:
       # Coolify: path suffix for generated SERVICE_URL_WEB_3000 (do not use that var as ORIGIN — it may be "/").
       SERVICE_URL_WEB_3000: /
       API_INTERNAL_URL: http://api:8080
-      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      # Set ORIGIN in Coolify env to override; COOLIFY_FQDN is injected on deploy.
+      ORIGIN: ${ORIGIN:-https://${COOLIFY_FQDN:-localhost:3000}}
       PROTOCOL_HEADER: x-forwarded-proto
       HOST_HEADER: x-forwarded-host
       ADDRESS_HEADER: x-forwarded-for
