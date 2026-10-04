@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Build
 import dev.vapen.app.bridge.ExplorerDirection
@@ -30,45 +31,87 @@ class BleExplorerManager(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val log = mutableListOf<JSONObject>()
-    private var scanner: android.bluetooth.le.BluetoothLeScanner? = null
     private var gatt: BluetoothGatt? = null
+    private var scanning = false
+
+    private val scanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            handleScanResult(result, activeFilter)
+        }
+
+        override fun onBatchScanResults(results: MutableList<ScanResult>) {
+            results.forEach { handleScanResult(it, activeFilter) }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            scanning = false
+            emit(ExplorerDirection.SCAN, note = "scan failed error=$errorCode")
+        }
+    }
+
+    private var activeFilter = ExplorerScanFilter()
 
     @SuppressLint("MissingPermission")
     fun startScan(filter: ExplorerScanFilter) {
+        activeFilter = filter
+        BlePermissions.missingScanMessage(context)?.let { msg ->
+            emit(ExplorerDirection.SCAN, note = msg)
+            return
+        }
         val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
-        scanner = adapter.bluetoothLeScanner
+        if (adapter == null || !adapter.isEnabled) {
+            emit(ExplorerDirection.SCAN, note = "Bluetooth ist aus — bitte einschalten.")
+            return
+        }
+        val scanner = adapter.bluetoothLeScanner
+        if (scanner == null) {
+            emit(ExplorerDirection.SCAN, note = "BLE-Scanner nicht verfügbar.")
+            return
+        }
+        if (scanning) {
+            scanner.stopScan(scanCallback)
+        }
+        scanning = true
         emit(ExplorerDirection.SCAN, note = "scan start")
-        scanner?.startScan(
-            object : ScanCallback() {
-                override fun onScanResult(callbackType: Int, result: ScanResult) {
-                    val name = result.device.name
-                    val rssi = result.rssi
-                    if (filter.minRssi != null && rssi < filter.minRssi!!) return
-                    if (filter.nameContains != null && name?.contains(filter.nameContains!!, true) != true) return
-                    val md = result.scanRecord?.manufacturerSpecificData?.let { sparse ->
-                        if (sparse.size() == 0) "" else {
-                            val first = sparse.valueAt(0)
-                            first.joinToString("") { "%02x".format(it) }
-                        }
-                    } ?: ""
-                    emit(
-                        ExplorerDirection.SCAN,
-                        hex = md,
-                        note = "${result.device.address} rssi=$rssi name=${name ?: "?"}",
-                    )
-                }
-            },
-        )
+        val settings = ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .build()
+        scanner.startScan(null, settings, scanCallback)
     }
 
     @SuppressLint("MissingPermission")
     fun stopScan() {
-        scanner?.stopScan(object : ScanCallback() {})
+        val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
+        adapter?.bluetoothLeScanner?.stopScan(scanCallback)
+        scanning = false
         emit(ExplorerDirection.SCAN, note = "scan stop")
+    }
+
+    private fun handleScanResult(result: ScanResult, filter: ExplorerScanFilter) {
+        val name = result.scanRecord?.deviceName?.takeIf { it.isNotEmpty() }
+            ?: result.device.name
+        val rssi = result.rssi
+        if (filter.minRssi != null && rssi < filter.minRssi!!) return
+        if (filter.nameContains != null && name?.contains(filter.nameContains!!, true) != true) return
+        val md = result.scanRecord?.manufacturerSpecificData?.let { sparse ->
+            if (sparse.size() == 0) "" else {
+                val first = sparse.valueAt(0)
+                first.joinToString("") { "%02x".format(it) }
+            }
+        } ?: ""
+        emit(
+            ExplorerDirection.SCAN,
+            hex = md,
+            note = "${result.device.address} rssi=$rssi name=${name ?: "?"}",
+        )
     }
 
     @SuppressLint("MissingPermission")
     fun connect(address: String) {
+        BlePermissions.missingConnectMessage(context)?.let { msg ->
+            emit(ExplorerDirection.CONNECT, note = msg)
+            return
+        }
         val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
         emit(ExplorerDirection.CONNECT, note = address)
         gatt?.close()
@@ -117,12 +160,18 @@ class BleExplorerManager(
     private val explorerCallback = object : BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                gatt.discoverServices()
+            when (newState) {
+                BluetoothProfile.STATE_CONNECTED -> gatt.discoverServices()
+                BluetoothProfile.STATE_DISCONNECTED ->
+                    emit(ExplorerDirection.DISCONNECT, note = "status=$status")
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                emit(ExplorerDirection.READ, note = "service discovery failed status=$status")
+                return
+            }
             gatt.services?.forEach { service ->
                 service.characteristics.forEach { char ->
                     val props = char.properties

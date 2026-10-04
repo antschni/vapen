@@ -32,6 +32,10 @@
   "connectionLive": "Verbunden",
   "connectionWaiting": "Warte auf Gerät",
   "connectionDisconnected": "Getrennt",
+  "connectionConnecting": "Verbinde…",
+  "connectionDiscovering": "Dienste werden ermittelt…",
+  "connectionInitializing": "Initialisiere…",
+  "connectionIdle": "Inaktiv",
   "pendingUploads": "{count} ausstehende Uploads",
   "@pendingUploads": {
     "placeholders": {

@@ -256,6 +256,30 @@ abstract class AppLocalizations {
   /// **'Getrennt'**
   String get connectionDisconnected;
 
+  /// No description provided for @connectionConnecting.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbinde…'**
+  String get connectionConnecting;
+
+  /// No description provided for @connectionDiscovering.
+  ///
+  /// In de, this message translates to:
+  /// **'Dienste werden ermittelt…'**
+  String get connectionDiscovering;
+
+  /// No description provided for @connectionInitializing.
+  ///
+  /// In de, this message translates to:
+  /// **'Initialisiere…'**
+  String get connectionInitializing;
+
+  /// No description provided for @connectionIdle.
+  ///
+  /// In de, this message translates to:
+  /// **'Inaktiv'**
+  String get connectionIdle;
+
   /// No description provided for @pendingUploads.
   ///
   /// In de, this message translates to:

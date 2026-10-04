@@ -95,6 +95,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get connectionDisconnected => 'Getrennt';
 
   @override
+  String get connectionConnecting => 'Verbinde…';
+
+  @override
+  String get connectionDiscovering => 'Dienste werden ermittelt…';
+
+  @override
+  String get connectionInitializing => 'Initialisiere…';
+
+  @override
+  String get connectionIdle => 'Inaktiv';
+
+  @override
   String pendingUploads(int count) {
     return '$count ausstehende Uploads';
   }

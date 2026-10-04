@@ -40,6 +40,7 @@ class BleConnectionManager(
     private var session: AndroidGattSession? = null
     private var reconnectJob: Job? = null
     private var pollJob: Job? = null
+    private var connectTimeoutJob: Job? = null
     private var backoffMs = 1_000L
     private val targetAddress = AtomicReference<String?>(null)
     private var simulation = false
@@ -62,7 +63,11 @@ class BleConnectionManager(
         }
         val address = targetAddress.get()
         if (address == null) {
-            onState(TrackingConnectionState.WAITING, "Kein Gerät gekoppelt")
+            onState(TrackingConnectionState.WAITING, "Kein Gerät gekoppelt — unter Geräte erneut koppeln.")
+            return
+        }
+        BlePermissions.missingConnectMessage(context)?.let { msg ->
+            onState(TrackingConnectionState.DISCONNECTED, msg)
             return
         }
         val adapter = BluetoothAdapter.getDefaultAdapter()
@@ -72,13 +77,26 @@ class BleConnectionManager(
         }
         val device = adapter.getRemoteDevice(address)
         onState(TrackingConnectionState.CONNECTING, null)
+        connectTimeoutJob?.cancel()
         gatt?.close()
         gatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            device.connectGatt(context, true, callback, BluetoothDevice.TRANSPORT_LE)
+            device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
         } else {
-            device.connectGatt(context, true, callback)
+            device.connectGatt(context, false, callback)
         }
         session = AndroidGattSession({ gatt }, queue)
+        connectTimeoutJob = scope.launch {
+            delay(25_000)
+            if (gatt != null) {
+                gatt?.close()
+                gatt = null
+                onState(
+                    TrackingConnectionState.DISCONNECTED,
+                    "Verbindungstimeout — Elfbar nah ans Telefon, Bildschirm an, ggf. erneut koppeln.",
+                )
+                scheduleReconnect()
+            }
+        }
     }
 
     private fun startStatusPolling(sess: AndroidGattSession, p: BleProfile) {
@@ -97,6 +115,7 @@ class BleConnectionManager(
     fun disconnect() {
         reconnectJob?.cancel()
         pollJob?.cancel()
+        connectTimeoutJob?.cancel()
         gatt?.close()
         gatt = null
         onState(TrackingConnectionState.DISCONNECTED, null)
@@ -105,11 +124,13 @@ class BleConnectionManager(
     private val callback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                connectTimeoutJob?.cancel()
                 backoffMs = 1_000
                 onState(TrackingConnectionState.DISCOVERING, null)
                 gatt.discoverServices()
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                onState(TrackingConnectionState.DISCONNECTED, if (status == 133) "InnoGate schließen?" else null)
+                connectTimeoutJob?.cancel()
+                onState(TrackingConnectionState.DISCONNECTED, disconnectHint(status))
                 scheduleReconnect()
             }
         }
@@ -206,5 +227,13 @@ class BleConnectionManager(
 
     fun matchesScan(name: String?, address: String, rssi: Int): Boolean {
         return protocol.matches(Advertisement(name, address, rssi, null, emptyList()))
+    }
+
+    private fun disconnectHint(status: Int): String? = when (status) {
+        0 -> null
+        133 -> "GATT-Fehler 133 — Gerät in Reichweite halten, Bluetooth neu starten."
+        8 -> "Verbindung beendet — Elfbar wach halten (Display an)."
+        19 -> "Gerät getrennt (Peer)."
+        else -> "BLE getrennt (status=$status)"
     }
 }

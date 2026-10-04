@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data/native/vapen_native.g.dart';
@@ -15,6 +16,7 @@ class BleExplorerScreen extends ConsumerStatefulWidget {
 
 class _BleExplorerScreenState extends ConsumerState<BleExplorerScreen> {
   final _marker = TextEditingController();
+  bool _scanning = false;
 
   @override
   void dispose() {
@@ -22,11 +24,48 @@ class _BleExplorerScreenState extends ConsumerState<BleExplorerScreen> {
     super.dispose();
   }
 
+  Future<bool> _ensureBlePermissions() async {
+    final statuses = await [
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.locationWhenInUse,
+    ].request();
+    final ok = statuses.values.every((s) => s.isGranted);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Bluetooth- und Standort-Berechtigung nötig (Standort nur für BLE-Scan unter Android 11).',
+          ),
+        ),
+      );
+    }
+    return ok;
+  }
+
+  Future<void> _startScan(TrackingBridge bridge) async {
+    if (!await _ensureBlePermissions()) return;
+    bridge.explorerEvents.value = [];
+    setState(() => _scanning = true);
+    bridge.host.explorerStartScan(ExplorerScanFilter());
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Scan läuft — Elfbar einschalten (Display an), 1–2 m Abstand.')),
+    );
+  }
+
+  void _stopScan(TrackingBridge bridge) {
+    bridge.host.explorerStopScan();
+    setState(() => _scanning = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Scan beendet')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bridge = ref.watch(trackingBridgeProvider);
-    final events = bridge.explorerEvents.value;
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.bleExplorerTitle),
@@ -68,24 +107,47 @@ class _BleExplorerScreenState extends ConsumerState<BleExplorerScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               FilledButton(
-                onPressed: () => bridge.host.explorerStartScan(ExplorerScanFilter()),
-                child: const Text('Scan'),
+                onPressed: _scanning ? null : () => _startScan(bridge),
+                child: Text(_scanning ? 'Scan…' : 'Scan'),
               ),
               FilledButton(
-                onPressed: () => bridge.host.explorerStopScan(),
+                onPressed: _scanning ? () => _stopScan(bridge) : null,
                 child: const Text('Stop'),
               ),
             ],
           ),
+          if (_scanning)
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: LinearProgressIndicator(),
+            ),
           Expanded(
-            child: ListView.builder(
-              itemCount: events.length,
-              itemBuilder: (context, i) {
-                final e = events[i];
-                return ListTile(
-                  dense: true,
-                  title: Text('${e.direction.name} ${e.note ?? ''}'),
-                  subtitle: Text(e.hex),
+            child: ValueListenableBuilder<List<ExplorerEvent>>(
+              valueListenable: bridge.explorerEvents,
+              builder: (context, events, _) {
+                if (events.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        _scanning
+                            ? 'Warte auf BLE-Geräte… (Fernseher o. Ä. zeigt, dass der Scan grundsätzlich funktioniert.)'
+                            : 'Scan starten, um Geräte in der Nähe zu sehen.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: events.length,
+                  itemBuilder: (context, i) {
+                    final e = events[i];
+                    return ListTile(
+                      dense: true,
+                      title: Text('${e.direction.name} ${e.note ?? ''}'),
+                      subtitle: Text(e.hex.isNotEmpty ? e.hex : '—'),
+                    );
+                  },
                 );
               },
             ),
