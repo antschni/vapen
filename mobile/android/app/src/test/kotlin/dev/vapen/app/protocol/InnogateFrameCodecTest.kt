@@ -21,6 +21,15 @@ class InnogateFrameCodecTest {
     }
 
     @Test
+    fun decode_labCapture_puffNotify() {
+        val hex = "aa07032a000000260963"
+        val bytes = hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        val protocol = ElfbarMasterProtocol()
+        val messages = protocol.decode(java.util.UUID.randomUUID(), bytes, System.currentTimeMillis())
+        assertTrue(messages.any { it is dev.vapen.app.protocol.DeviceMessage.PuffCompleted })
+    }
+
+    @Test
     fun decoder_fixture_status() {
         val payload = byteArrayOf(76, 40, 0x00, 0x00, 0x00, 0x00, 0x2A)
         val bytes = InnogateFrameCodec.encode(BleConstants.OPC_STATUS, payload)

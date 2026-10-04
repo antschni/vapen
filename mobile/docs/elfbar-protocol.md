@@ -1,6 +1,6 @@
 # Elfbar Master (ELFA MASTER) / InnoGate BLE protocol
 
-Status: **partially specified — UUIDs and opcodes must be confirmed on hardware** (HCI snoop + BLE Explorer + optional `com.innogate.igate` static analysis).
+Status: **vendor `fff0` profile validated against anonymized lab captures** in `android/app/src/test/resources/ble-captures/` (notify **`fff2`**, `0xAA` framing). Still confirm handshake bytes on your unit via BLE Explorer if live data is missing.
 
 ## Device & app context (public sources)
 

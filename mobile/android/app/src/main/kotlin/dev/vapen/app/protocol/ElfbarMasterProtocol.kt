@@ -1,7 +1,9 @@
 package dev.vapen.app.protocol
 
 import dev.vapen.app.ble.BleConstants
+import dev.vapen.app.ble.BleProfile
 import dev.vapen.app.ble.GattSession
+import kotlinx.coroutines.delay
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.MessageDigest
@@ -16,18 +18,39 @@ class ElfbarMasterProtocol : VapeProtocol {
         return BleConstants.NAME_HINTS.any { name.contains(it) }
     }
 
-    override suspend fun initialize(session: GattSession) {
+    override suspend fun initialize(session: GattSession, profile: BleProfile) {
         session.requestMtu(247)
-        // Hypothesized handshake — no-op if device ignores.
+        // InnoGate-style session arm (observed on fff4 on similar fff0 gadgets).
+        profile.armPairUuid?.let { arm ->
+            runCatching {
+                session.write(
+                    profile.serviceUuid,
+                    arm,
+                    byteArrayOf(0x01, 0x00),
+                    withResponse = true,
+                )
+            }
+            delay(250)
+        }
+        // Framed handshake + enable telemetry stream (lab capture: notify on fff2, 0xAA frames).
         session.write(
-            BleConstants.VENDOR_FFF0,
-            BleConstants.VENDOR_FFF1,
+            profile.serviceUuid,
+            profile.txUuid,
             InnogateFrameCodec.encode(BleConstants.CMD_HANDSHAKE_1, byteArrayOf(0x01)),
             withResponse = false,
         )
+        delay(150)
+        session.write(
+            profile.serviceUuid,
+            profile.txUuid,
+            InnogateFrameCodec.encode(BleConstants.CMD_HANDSHAKE_2, byteArrayOf(0x00)),
+            withResponse = false,
+        )
+        delay(150)
     }
 
     override fun decode(characteristic: UUID, value: ByteArray, receivedAtMillis: Long): List<DeviceMessage> {
+        if (value.isEmpty()) return emptyList()
         val (frames, _) = InnogateFrameCodec.decodeFrames(value)
         if (frames.isEmpty()) {
             return listOf(DeviceMessage.Unknown(characteristic, value))
@@ -40,8 +63,13 @@ class ElfbarMasterProtocol : VapeProtocol {
         return when (frame.opcode) {
             BleConstants.OPC_PUFF_STARTED -> DeviceMessage.PuffStarted(at)
             BleConstants.OPC_PUFF_DONE -> parsePuffDone(frame.payload, at, raw)
+            BleConstants.OPC_HISTORY_PUFF -> {
+                parsePuffDone(frame.payload, at, raw)?.let { puff ->
+                    DeviceMessage.HistoryPuff(puff.startedAt, puff.durationMs, puff.deviceIndex, puff.raw)
+                }
+            }
             BleConstants.OPC_STATUS -> parseStatus(frame.payload, at)
-            else -> DeviceMessage.Unknown(UUID.randomUUID(), raw)
+            else -> null
         }
     }
 
@@ -60,10 +88,10 @@ class ElfbarMasterProtocol : VapeProtocol {
     }
 
     private fun parseStatus(payload: ByteArray, at: Instant): DeviceMessage.Status? {
-        if (payload.size < 4) return null
+        if (payload.size < 2) return null
         val battery = payload[0].toInt() and 0xFF
         val liquid = payload[1].toInt() and 0xFF
-        val flags = payload[2].toInt() and 0xFF
+        val flags = payload.getOrNull(2)?.toInt()?.and(0xFF) ?: 0
         val counter = if (payload.size >= 7) {
             ByteBuffer.wrap(payload, 3, 4).order(ByteOrder.LITTLE_ENDIAN).int.toLong()
         } else null
@@ -84,21 +112,16 @@ class ElfbarMasterProtocol : VapeProtocol {
         )
     }
 
-    override suspend fun requestStatus(session: GattSession) {
+    override suspend fun requestStatus(session: GattSession, profile: BleProfile) {
         val frame = InnogateFrameCodec.encode(BleConstants.CMD_REQUEST_STATUS)
-        writeOnAnyProfile(session, frame)
+        session.write(profile.serviceUuid, profile.txUuid, frame, withResponse = false)
     }
 
-    override suspend fun requestHistory(session: GattSession, sinceDeviceIndex: Long?) {
+    override suspend fun requestHistory(session: GattSession, profile: BleProfile, sinceDeviceIndex: Long?) {
         val payload = ByteArray(4)
         ByteBuffer.wrap(payload).order(ByteOrder.LITTLE_ENDIAN).putInt((sinceDeviceIndex ?: 0L).toInt())
         val frame = InnogateFrameCodec.encode(BleConstants.CMD_REQUEST_HISTORY, payload)
-        writeOnAnyProfile(session, frame)
-    }
-
-    private suspend fun writeOnAnyProfile(session: GattSession, frame: ByteArray) {
-        session.write(BleConstants.NUS_SERVICE, BleConstants.NUS_TX, frame, false)
-        session.write(BleConstants.VENDOR_FFF0, BleConstants.VENDOR_FFF1, frame, false)
+        session.write(profile.serviceUuid, profile.txUuid, frame, withResponse = false)
     }
 
     override fun hardwareId(info: DeviceInfo): String {

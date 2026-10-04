@@ -1,5 +1,6 @@
 package dev.vapen.app.protocol
 
+import dev.vapen.app.ble.BleProfile
 import dev.vapen.app.ble.GattSession
 import kotlinx.coroutines.delay
 import java.security.MessageDigest
@@ -16,16 +17,16 @@ class SimulatedProtocol : VapeProtocol {
 
     override fun matches(advertisement: Advertisement): Boolean = true
 
-    override suspend fun initialize(session: GattSession) {
+    override suspend fun initialize(session: GattSession, profile: BleProfile) {
         delay(300)
     }
 
     override fun decode(characteristic: UUID, value: ByteArray, receivedAtMillis: Long): List<DeviceMessage> =
         emptyList()
 
-    override suspend fun requestStatus(session: GattSession) {}
+    override suspend fun requestStatus(session: GattSession, profile: BleProfile) {}
 
-    override suspend fun requestHistory(session: GattSession, sinceDeviceIndex: Long?) {}
+    override suspend fun requestHistory(session: GattSession, profile: BleProfile, sinceDeviceIndex: Long?) {}
 
     fun nextSimulatedPuff(): DeviceMessage.PuffCompleted {
         puffIndex++

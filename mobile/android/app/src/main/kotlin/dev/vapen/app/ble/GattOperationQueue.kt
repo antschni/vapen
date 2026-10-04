@@ -16,31 +16,47 @@ class GattOperationQueue {
     private var pendingNotify: CompletableDeferred<Boolean>? = null
     private var pendingMtu: CompletableDeferred<Int>? = null
 
-    suspend fun read(block: () -> Unit): ByteArray? = mutex.withLock {
+    suspend fun read(block: () -> Boolean): ByteArray? = mutex.withLock {
         val deferred = CompletableDeferred<ByteArray?>()
         pendingRead = deferred
-        block()
+        if (!block()) {
+            pendingRead = null
+            deferred.complete(null)
+            return@withLock null
+        }
         withTimeout(15_000) { deferred.await() }
     }
 
-    suspend fun write(block: () -> Unit): Boolean = mutex.withLock {
+    suspend fun write(block: () -> Boolean): Boolean = mutex.withLock {
         val deferred = CompletableDeferred<Boolean>()
         pendingWrite = deferred
-        block()
+        if (!block()) {
+            pendingWrite = null
+            deferred.complete(false)
+            return@withLock false
+        }
         withTimeout(15_000) { deferred.await() }
     }
 
-    suspend fun notify(block: () -> Unit): Boolean = mutex.withLock {
+    suspend fun notify(block: () -> Boolean): Boolean = mutex.withLock {
         val deferred = CompletableDeferred<Boolean>()
         pendingNotify = deferred
-        block()
+        if (!block()) {
+            pendingNotify = null
+            deferred.complete(false)
+            return@withLock false
+        }
         withTimeout(15_000) { deferred.await() }
     }
 
-    suspend fun mtu(block: () -> Unit): Int = mutex.withLock {
+    suspend fun mtu(block: () -> Boolean): Int = mutex.withLock {
         val deferred = CompletableDeferred<Int>()
         pendingMtu = deferred
-        block()
+        if (!block()) {
+            pendingMtu = null
+            deferred.complete(23)
+            return@withLock 23
+        }
         withTimeout(15_000) { deferred.await() }
     }
 

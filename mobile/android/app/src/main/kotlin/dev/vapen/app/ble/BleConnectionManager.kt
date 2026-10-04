@@ -39,6 +39,7 @@ class BleConnectionManager(
     private var protocol: VapeProtocol = ElfbarMasterProtocol()
     private var session: AndroidGattSession? = null
     private var reconnectJob: Job? = null
+    private var pollJob: Job? = null
     private var backoffMs = 1_000L
     private val targetAddress = AtomicReference<String?>(null)
     private var simulation = false
@@ -80,9 +81,22 @@ class BleConnectionManager(
         session = AndroidGattSession({ gatt }, queue)
     }
 
+    private fun startStatusPolling(sess: AndroidGattSession, p: BleProfile) {
+        pollJob?.cancel()
+        pollJob = scope.launch {
+            while (true) {
+                delay(45_000)
+                runCatching {
+                    protocol.requestStatus(sess, p)
+                }
+            }
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun disconnect() {
         reconnectJob?.cancel()
+        pollJob?.cancel()
         gatt?.close()
         gatt = null
         onState(TrackingConnectionState.DISCONNECTED, null)
@@ -110,14 +124,16 @@ class BleConnectionManager(
             scope.launch {
                 onState(TrackingConnectionState.INITIALIZING, null)
                 val sess = session ?: return@launch
+                val p = profile ?: return@launch
                 try {
-                    protocol.initialize(sess)
-                    profile?.let { p ->
-                        sess.setNotify(p.serviceUuid, p.rxUuid, true)
+                    for (rx in p.rxUuids) {
+                        sess.setNotify(p.serviceUuid, rx, true)
                     }
-                    protocol.requestStatus(sess)
-                    protocol.requestHistory(sess, null)
+                    protocol.initialize(sess, p)
+                    protocol.requestStatus(sess, p)
+                    protocol.requestHistory(sess, p, null)
                     onState(TrackingConnectionState.LIVE, null)
+                    startStatusPolling(sess, p)
                 } catch (e: Exception) {
                     onState(TrackingConnectionState.DISCONNECTED, e.message)
                 }

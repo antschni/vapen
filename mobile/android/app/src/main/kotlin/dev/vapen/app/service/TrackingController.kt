@@ -153,10 +153,14 @@ object TrackingController {
                 publishState(credentials.trackingEnabled)
                 uploader.flush()
             }
-            is DeviceMessage.HistoryPuff -> persistPuff(
-                hardwareId,
-                DeviceMessage.PuffCompleted(msg.startedAt, msg.durationMs, msg.deviceIndex, msg.raw),
-            )
+            is DeviceMessage.HistoryPuff -> {
+                persistPuff(
+                    hardwareId,
+                    DeviceMessage.PuffCompleted(msg.startedAt, msg.durationMs, msg.deviceIndex, msg.raw),
+                )
+                todayPuffCount++
+                uploader.flush()
+            }
             is DeviceMessage.Status -> {
                 batteryPercent = msg.battery
                 liquidPercent = msg.liquid
