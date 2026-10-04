@@ -14,11 +14,9 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let displayName = $state('');
-	let timezone = $state('Europe/Berlin');
 
 	$effect(() => {
 		displayName = data.profile?.display_name ?? '';
-		timezone = data.profile?.timezone ?? 'Europe/Berlin';
 	});
 </script>
 
@@ -38,10 +36,6 @@
 				<div class="space-y-2">
 					<Label for="display_name">{de.auth.displayName}</Label>
 					<Input id="display_name" name="display_name" bind:value={displayName} required />
-				</div>
-				<div class="space-y-2">
-					<Label for="timezone">{de.auth.timezone}</Label>
-					<Input id="timezone" name="timezone" bind:value={timezone} required />
 				</div>
 				<p class="text-xs text-muted-foreground">{data.profile.email}</p>
 				{#if form?.profileError}

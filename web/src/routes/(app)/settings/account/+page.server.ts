@@ -19,7 +19,6 @@ export const actions: Actions = {
     const form = await request.formData();
     const parsed = profileSchema.safeParse({
       display_name: form.get("display_name"),
-      timezone: form.get("timezone"),
     });
     if (!parsed.success)
       return fail(400, { profileError: de.errors.validationFailed });

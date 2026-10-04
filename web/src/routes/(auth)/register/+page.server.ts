@@ -10,7 +10,6 @@ import { de } from "#lib/i18n/de.js";
 
 export const load: PageServerLoad = async ({ url }) => {
   return {
-    defaultTimezone: "Europe/Berlin",
     redirectTo: validateRedirectTo(url.searchParams.get("redirectTo")),
   };
 };

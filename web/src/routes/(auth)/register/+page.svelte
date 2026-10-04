@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import { readBrowserTimezone } from '#lib/browser-timezone.js';
 	import { de } from '#lib/i18n/de.js';
 	import Button from '#lib/components/ui/button.svelte';
 	import Input from '#lib/components/ui/input.svelte';
@@ -18,11 +19,10 @@
 	let email = $state('');
 	let password = $state('');
 	let display_name = $state('');
-	let timezone = $state('Europe/Berlin');
+	let timezone = $state('UTC');
 
-	onMount(() => {
-		const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-		timezone = tz || data.defaultTimezone;
+	$effect(() => {
+		if (browser) timezone = readBrowserTimezone();
 	});
 </script>
 
@@ -32,7 +32,17 @@
 		<p class="text-sm text-muted-foreground">{de.auth.registerSubtitle}</p>
 	</CardHeader>
 	<CardContent>
-		<form method="POST" class="space-y-4" use:enhance>
+		<form
+			method="POST"
+			class="space-y-4"
+			use:enhance={() => {
+				timezone = readBrowserTimezone();
+				return async ({ update }) => {
+					await update();
+				};
+			}}
+		>
+			<input type="hidden" name="timezone" value={timezone} />
 			{#if data.redirectTo}
 				<input type="hidden" name="redirectTo" value={data.redirectTo} />
 			{/if}
@@ -60,13 +70,6 @@
 				/>
 				{#if form?.fieldErrors?.display_name}
 					<p class="text-xs text-destructive">{form.fieldErrors.display_name[0]}</p>
-				{/if}
-			</div>
-			<div class="space-y-2">
-				<Label for="timezone">{de.auth.timezone}</Label>
-				<Input id="timezone" name="timezone" type="text" required bind:value={timezone} />
-				{#if form?.fieldErrors?.timezone}
-					<p class="text-xs text-destructive">{form.fieldErrors.timezone[0]}</p>
 				{/if}
 			</div>
 			<div class="space-y-2">

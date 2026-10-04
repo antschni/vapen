@@ -39,6 +39,9 @@ export const profileSchema = z.object({
     .string({ required_error: de.validation.required })
     .min(2, de.validation.displayNameMin)
     .max(40, de.validation.displayNameMax),
+});
+
+export const timezoneSchema = z.object({
   timezone: z
     .string({ required_error: de.validation.required })
     .min(1, de.validation.timezone),
