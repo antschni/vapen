@@ -13,11 +13,7 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let displayName = $state('');
-
-	$effect(() => {
-		displayName = data.profile?.display_name ?? '';
-	});
+	let displayName = $state(data.profile?.display_name ?? '');
 </script>
 
 <svelte:head>

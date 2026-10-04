@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { readBrowserTimezone } from '#lib/browser-timezone.js';
 	import { de } from '#lib/i18n/de.js';
 	import Button from '#lib/components/ui/button.svelte';

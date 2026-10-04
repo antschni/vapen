@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { readBrowserTimezone } from '#lib/browser-timezone.js';
 
@@ -13,9 +14,11 @@
 		if (!tz || tz === storedTimezone) return;
 
 		syncing = true;
-		const body = new FormData();
-		body.set('timezone', tz);
-		fetch('?/syncTimezone', { method: 'POST', body })
+		fetch(resolve('timezone/sync'), {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ timezone: tz })
+		})
 			.then((res) => {
 				if (res.ok) return invalidateAll();
 			})
