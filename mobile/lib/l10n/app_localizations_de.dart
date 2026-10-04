@@ -45,6 +45,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verbindung zum Server fehlgeschlagen. Prüfe die URL und ob der Server erreichbar ist.';
 
   @override
+  String get serverConnectionSuccess => 'Verbindung erfolgreich.';
+
+  @override
   String serverConfiguredHint(String url) {
     return 'Server: $url';
   }

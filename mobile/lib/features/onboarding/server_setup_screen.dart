@@ -55,6 +55,11 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
     try {
       await ref.read(sessionProvider.notifier).testAndSaveServer(url);
       if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.serverConnectionSuccess)),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
       context.go('/login');
     } on ArgumentError {
       setState(() => _error = l10n.invalidServerUrl);

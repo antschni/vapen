@@ -37,6 +37,7 @@ class TokenStorage {
     required DateTime refreshExpiresAt,
   }) async {
     await savePreferredServerUrl(baseUrl);
+    await saveServerSetupComplete(true);
     await _storage.write(key: _baseUrl, value: baseUrl);
     await _storage.write(key: _access, value: accessToken);
     await _storage.write(key: _refresh, value: refreshToken);

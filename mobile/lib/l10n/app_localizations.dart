@@ -160,6 +160,12 @@ abstract class AppLocalizations {
   /// **'Verbindung zum Server fehlgeschlagen. Prüfe die URL und ob der Server erreichbar ist.'**
   String get serverConnectionFailed;
 
+  /// No description provided for @serverConnectionSuccess.
+  ///
+  /// In de, this message translates to:
+  /// **'Verbindung erfolgreich.'**
+  String get serverConnectionSuccess;
+
   /// No description provided for @serverConfiguredHint.
   ///
   /// In de, this message translates to:

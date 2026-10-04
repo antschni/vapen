@@ -11,6 +11,7 @@
   "serverSetupDescription": "Gib die Adresse deiner Vapen-Instanz ein (Origin, ohne /api/v1). Die Verbindung wird getestet, bevor du dich anmelden kannst.",
   "serverConnectionTestButton": "Verbindung testen",
   "serverConnectionFailed": "Verbindung zum Server fehlgeschlagen. Prüfe die URL und ob der Server erreichbar ist.",
+  "serverConnectionSuccess": "Verbindung erfolgreich.",
   "serverConfiguredHint": "Server: {url}",
   "@serverConfiguredHint": {
     "placeholders": {

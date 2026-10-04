@@ -22,12 +22,22 @@ import '../features/stats/stats_screen.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
+/// Notifies [GoRouter] when auth/session changes without recreating the router
+/// (recreating would reset navigation to [GoRouter.initialLocation]).
+final _routerRefreshProvider = Provider<_RouterRefresh>((ref) {
+  final refresh = _RouterRefresh(ref);
+  ref.onDispose(refresh.dispose);
+  return refresh;
+});
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final session = ref.watch(sessionProvider);
+  final refresh = ref.watch(_routerRefreshProvider);
   return GoRouter(
     navigatorKey: _rootKey,
+    refreshListenable: refresh,
     initialLocation: '/setup',
     redirect: (context, state) {
+      final session = ref.read(sessionProvider);
       if (session.loading) return null;
       final loc = state.matchedLocation;
       const authRoutes = {'/login', '/register'};
@@ -41,7 +51,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!session.isAuthenticated) {
-        if (authRoutes.contains(loc) || onSetup || onJoin) return null;
+        if (onSetup) return '/login';
+        if (authRoutes.contains(loc) || onJoin) return null;
         if (onServerSettings) return '/login';
         return '/login';
       }
@@ -120,3 +131,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+class _RouterRefresh extends ChangeNotifier {
+  _RouterRefresh(this._ref) {
+    _ref.listen(sessionProvider, (_, __) => notifyListeners());
+  }
+
+  final Ref _ref;
+}
