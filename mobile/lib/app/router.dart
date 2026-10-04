@@ -106,10 +106,26 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/more',
                 builder: (_, s) => const SettingsScreen(),
                 routes: [
-                  GoRoute(path: 'privacy', builder: (_, s) => const PrivacyScreen()),
-                  GoRoute(path: 'explorer', builder: (_, s) => const BleExplorerScreen()),
-                  GoRoute(path: 'account', builder: (_, s) => const AccountScreen()),
-                  GoRoute(path: 'devices', builder: (_, s) => const DevicesScreen()),
+                  GoRoute(
+                    path: 'privacy',
+                    parentNavigatorKey: _rootKey,
+                    builder: (_, s) => const PrivacyScreen(),
+                  ),
+                  GoRoute(
+                    path: 'explorer',
+                    parentNavigatorKey: _rootKey,
+                    builder: (_, s) => const BleExplorerScreen(),
+                  ),
+                  GoRoute(
+                    path: 'account',
+                    parentNavigatorKey: _rootKey,
+                    builder: (_, s) => const AccountScreen(),
+                  ),
+                  GoRoute(
+                    path: 'devices',
+                    parentNavigatorKey: _rootKey,
+                    builder: (_, s) => const DevicesScreen(),
+                  ),
                 ],
               ),
             ],
