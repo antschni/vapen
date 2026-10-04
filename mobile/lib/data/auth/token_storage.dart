@@ -11,6 +11,13 @@ class TokenStorage {
   static const _accessExp = 'access_exp';
   static const _refreshExp = 'refresh_exp';
   static const _baseUrl = 'base_url';
+  static const _preferredServer = 'preferred_server_url';
+
+  Future<void> savePreferredServerUrl(String baseUrl) async {
+    await _storage.write(key: _preferredServer, value: baseUrl);
+  }
+
+  Future<String?> readPreferredServerUrl() => _storage.read(key: _preferredServer);
 
   Future<void> saveSession({
     required String baseUrl,
@@ -19,6 +26,7 @@ class TokenStorage {
     required DateTime accessExpiresAt,
     required DateTime refreshExpiresAt,
   }) async {
+    await savePreferredServerUrl(baseUrl);
     await _storage.write(key: _baseUrl, value: baseUrl);
     await _storage.write(key: _access, value: accessToken);
     await _storage.write(key: _refresh, value: refreshToken);
@@ -37,5 +45,9 @@ class TokenStorage {
     return raw == null ? null : DateTime.tryParse(raw);
   }
 
-  Future<void> clear() => _storage.deleteAll();
+  Future<void> clearSession() async {
+    for (final key in [_access, _refresh, _accessExp, _refreshExp, _baseUrl]) {
+      await _storage.delete(key: key);
+    }
+  }
 }

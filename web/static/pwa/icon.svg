@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Vapen">
+  <rect width="512" height="512" rx="96" fill="#4466aa"/>
+  <path
+    fill="#ffffff"
+    d="M128 144h72l56 168 56-168h72L296 368h-80L128 144z"
+  />
+</svg>

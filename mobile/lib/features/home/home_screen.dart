@@ -5,7 +5,7 @@ import '../../core/duration_format.dart';
 import '../../data/api/api_providers.dart';
 import '../../data/native/vapen_native.g.dart';
 import '../../l10n/app_localizations.dart';
-import '../../main.dart';
+import '../../data/native/tracking_bridge.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

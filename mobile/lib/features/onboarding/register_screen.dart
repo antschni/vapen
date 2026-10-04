@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,8 +21,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _displayName = TextEditingController();
-  final _server = TextEditingController(text: defaultBaseUrl());
+  final _server = TextEditingController();
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadServerUrl());
+  }
+
+  Future<void> _loadServerUrl() async {
+    final storage = ref.read(tokenStorageProvider);
+    final preferred = await storage.readPreferredServerUrl();
+    final fromSession = ref.read(sessionProvider).baseUrl;
+    if (!mounted) return;
+    _server.text = fromSession ?? preferred ?? defaultBaseUrl();
+  }
 
   @override
   void dispose() {
@@ -34,9 +49,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
-    final baseUrl = _server.text.trim();
-    if (!isAllowedBaseUrl(baseUrl, isRelease: bool.fromEnvironment('dart.vm.product'))) {
-      setState(() => _error = 'Ungültige Server-URL');
+    final baseUrl = normalizeBaseUrl(_server.text);
+    if (!isAllowedBaseUrl(baseUrl, isRelease: kReleaseMode)) {
+      setState(() => _error = l10n.invalidServerUrl);
       return;
     }
     setState(() => _error = null);

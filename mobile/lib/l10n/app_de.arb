@@ -43,5 +43,12 @@
   "developerMode": "Entwicklermodus",
   "simulatedDevice": "Simuliertes Gerät",
   "invalidCredentials": "E-Mail oder Passwort ist falsch.",
-  "genericError": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+  "invalidServerUrl": "Ungültige Server-URL",
+  "genericError": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  "serverEndpointTitle": "Server",
+  "serverEndpointDescription": "Adresse deiner Vapen-Instanz (Origin, ohne /api/v1). Öffentliche Server sollten HTTPS nutzen; HTTP ist für localhost und private Netzwerke erlaubt.",
+  "serverEndpointSave": "Speichern",
+  "serverEndpointSaved": "Server-URL gespeichert",
+  "serverEndpointChangeLogout": "Bei einer anderen URL wirst du abgemeldet. Hintergrund-Uploads stoppen, bis du dich erneut anmeldest und das Gerät ggf. neu koppelst.",
+  "cancelButton": "Abbrechen"
 }

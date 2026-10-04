@@ -117,6 +117,29 @@ class AppLocalizationsDe extends AppLocalizations {
   String get invalidCredentials => 'E-Mail oder Passwort ist falsch.';
 
   @override
+  String get invalidServerUrl => 'Ungültige Server-URL';
+
+  @override
   String get genericError =>
       'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
+
+  @override
+  String get serverEndpointTitle => 'Server';
+
+  @override
+  String get serverEndpointDescription =>
+      'Adresse deiner Vapen-Instanz (Origin, ohne /api/v1). Öffentliche Server sollten HTTPS nutzen; HTTP ist für localhost und private Netzwerke erlaubt.';
+
+  @override
+  String get serverEndpointSave => 'Speichern';
+
+  @override
+  String get serverEndpointSaved => 'Server-URL gespeichert';
+
+  @override
+  String get serverEndpointChangeLogout =>
+      'Bei einer anderen URL wirst du abgemeldet. Hintergrund-Uploads stoppen, bis du dich erneut anmeldest und das Gerät ggf. neu koppelst.';
+
+  @override
+  String get cancelButton => 'Abbrechen';
 }

@@ -292,11 +292,53 @@ abstract class AppLocalizations {
   /// **'E-Mail oder Passwort ist falsch.'**
   String get invalidCredentials;
 
+  /// No description provided for @invalidServerUrl.
+  ///
+  /// In de, this message translates to:
+  /// **'Ungültige Server-URL'**
+  String get invalidServerUrl;
+
   /// No description provided for @genericError.
   ///
   /// In de, this message translates to:
   /// **'Etwas ist schiefgelaufen. Bitte versuche es erneut.'**
   String get genericError;
+
+  /// No description provided for @serverEndpointTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Server'**
+  String get serverEndpointTitle;
+
+  /// No description provided for @serverEndpointDescription.
+  ///
+  /// In de, this message translates to:
+  /// **'Adresse deiner Vapen-Instanz (Origin, ohne /api/v1). Öffentliche Server sollten HTTPS nutzen; HTTP ist für localhost und private Netzwerke erlaubt.'**
+  String get serverEndpointDescription;
+
+  /// No description provided for @serverEndpointSave.
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get serverEndpointSave;
+
+  /// No description provided for @serverEndpointSaved.
+  ///
+  /// In de, this message translates to:
+  /// **'Server-URL gespeichert'**
+  String get serverEndpointSaved;
+
+  /// No description provided for @serverEndpointChangeLogout.
+  ///
+  /// In de, this message translates to:
+  /// **'Bei einer anderen URL wirst du abgemeldet. Hintergrund-Uploads stoppen, bis du dich erneut anmeldest und das Gerät ggf. neu koppelst.'**
+  String get serverEndpointChangeLogout;
+
+  /// No description provided for @cancelButton.
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get cancelButton;
 }
 
 class _AppLocalizationsDelegate

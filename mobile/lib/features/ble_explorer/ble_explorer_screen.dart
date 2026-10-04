@@ -4,7 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../data/native/vapen_native.g.dart';
 import '../../l10n/app_localizations.dart';
-import '../../main.dart';
+import '../../data/native/tracking_bridge.dart';
 
 class BleExplorerScreen extends ConsumerStatefulWidget {
   const BleExplorerScreen({super.key});

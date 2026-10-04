@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/auth/session_notifier.dart';
 import '../../l10n/app_localizations.dart';
-import '../../main.dart';
+import '../../data/native/tracking_bridge.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -28,6 +28,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ListTile(
             title: Text(session.user?.email ?? ''),
             subtitle: Text(session.user?.displayName ?? ''),
+          ),
+          ListTile(
+            title: Text(l10n.serverEndpointTitle),
+            subtitle: Text(session.baseUrl ?? ''),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/server'),
           ),
           ListTile(
             title: const Text('Konto'),

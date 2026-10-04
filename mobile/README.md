@@ -17,7 +17,7 @@ dart run pigeon --input pigeons/vapen_native.dart
 flutter run
 ```
 
-Default server URL: `--dart-define=VAPEN_BASE_URL=https://vapen.example.com` or edit on the login screen (debug allows `http://10.0.2.2:8080`).
+Server URL: **Einstellungen → Server** (persistiert lokal). Optionaler Build-Default: `--dart-define=VAPEN_BASE_URL=…`. Login/Registrierung übernehmen die gespeicherte URL.
 
 ## Build & deploy
 

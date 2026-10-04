@@ -10,7 +10,7 @@ import '../../data/api/api_providers.dart';
 import '../../data/auth/session_notifier.dart';
 import '../../data/native/vapen_native.g.dart';
 import '../../l10n/app_localizations.dart';
-import '../../main.dart';
+import '../../data/native/tracking_bridge.dart';
 
 String hardwareIdFromBleAddress(String address) {
   final normalized = address.toLowerCase();

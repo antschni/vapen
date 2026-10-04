@@ -15,6 +15,7 @@ import '../features/onboarding/register_screen.dart';
 import '../features/pairing/pairing_screen.dart';
 import '../features/permissions/permissions_screen.dart';
 import '../features/privacy/privacy_screen.dart';
+import '../features/settings/server_endpoint_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 
@@ -28,13 +29,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       if (session.loading) return null;
       final loggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-      if (!session.isAuthenticated && !loggingIn) return '/login';
+      final configuringServer = state.matchedLocation == '/server';
+      if (!session.isAuthenticated && !loggingIn && !configuringServer) return '/login';
       if (session.isAuthenticated && loggingIn) return '/home';
       return null;
     },
     routes: [
       GoRoute(path: '/login', builder: (_, s) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, s) => const RegisterScreen()),
+      GoRoute(path: '/server', builder: (_, s) => const ServerEndpointScreen()),
       GoRoute(path: '/permissions', builder: (_, s) => const PermissionsScreen()),
       GoRoute(path: '/pairing', builder: (_, s) => const PairingScreen()),
       StatefulShellRoute.indexedStack(

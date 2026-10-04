@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'vapen_native.g.dart';
+
+final trackingBridgeProvider = Provider<TrackingBridge>((ref) => TrackingBridge());
 
 class TrackingBridge extends TrackingFlutterApi {
   TrackingBridge() {

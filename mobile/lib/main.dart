@@ -20,8 +20,6 @@ void main() {
   );
 }
 
-final trackingBridgeProvider = Provider<TrackingBridge>((ref) => TrackingBridge());
-
 class VapenApp extends ConsumerStatefulWidget {
   const VapenApp({super.key});
 

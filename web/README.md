@@ -41,6 +41,13 @@ See `.env.example`. Root `docker-compose.yml` and `.env.example` should mirror t
 | `npm test` | Vitest unit tests |
 | `npm run test:e2e` | Playwright |
 
+## Progressive Web App (PWA)
+
+The dashboard is installable as a PWA (`@vite-pwa/sveltekit`): web manifest, service worker, and offline-friendly caching of static assets (JS/CSS). **HTML and API traffic stay network-first** so sessions and live data are not served from stale cache.
+
+- Icons and source art: `static/pwa/` (regenerate PNGs from `icon.svg` with `npx @vite-pwa/assets-generator -r static -p minimal pwa/icon.svg`).
+- After deploy, use Chrome DevTools → Application → Manifest / Service workers to verify installability.
+
 ## Architecture
 
 - **BFF**: `hooks.server.ts` refreshes JWTs and attaches `locals.api`.

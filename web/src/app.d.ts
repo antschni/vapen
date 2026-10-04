@@ -1,3 +1,5 @@
+/// <reference types="vite-plugin-pwa/svelte" />
+
 import type { ApiClient } from '$lib/server/api';
 import type { components } from '$lib/api/schema.d.ts';
 
