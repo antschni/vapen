@@ -6,5 +6,5 @@ export function messageFromApiProblem(
   fallback?: string,
 ): string {
   const problem = error as components["schemas"]["Problem"] | undefined;
-  return mapProblemCodeToGerman(problem?.code, fallback);
+  return mapProblemCodeToGerman(problem?.code, fallback, problem?.detail);
 }

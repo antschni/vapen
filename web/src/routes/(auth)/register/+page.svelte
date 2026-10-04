@@ -71,6 +71,7 @@
 			</div>
 			<div class="space-y-2">
 				<Label for="password">{de.auth.password}</Label>
+				<p class="text-xs text-muted-foreground">{de.validation.passwordMin}</p>
 				<Input
 					id="password"
 					name="password"

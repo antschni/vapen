@@ -26,9 +26,13 @@ export const actions: Actions = {
     });
 
     if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const firstFieldMessage = Object.values(fieldErrors)
+        .flat()
+        .find((m): m is string => typeof m === "string" && m.length > 0);
       return fail(400, {
-        message: de.errors.validationFailed,
-        fieldErrors: parsed.error.flatten().fieldErrors,
+        message: firstFieldMessage ?? de.errors.validationFailed,
+        fieldErrors,
       });
     }
 
