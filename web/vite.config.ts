@@ -16,7 +16,16 @@ export default defineConfig({
       },
       csp: {
         mode: "auto",
-        directives: { "default-src": ["self"], "frame-ancestors": ["none"] },
+        directives: {
+          "default-src": ["self"],
+          // Tailwind/Svelte/bits-ui use inline styles; lucide/bits-ui use data: SVGs.
+          "img-src": ["self", "data:", "blob:"],
+          "style-src": ["self", "unsafe-inline"],
+          "font-src": ["self", "data:"],
+          "worker-src": ["self", "blob:"],
+          "manifest-src": ["self"],
+          "frame-ancestors": ["none"],
+        },
       },
     }),
 
