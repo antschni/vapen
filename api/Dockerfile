@@ -6,7 +6,8 @@ COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /vapen-api ./cmd/vapen-api
 
 FROM alpine:3.21 AS run
-RUN apk add --no-cache ca-certificates wget
+# tzdata: Go time.LoadLocation needs zoneinfo (register timezone validation, usage stats).
+RUN apk add --no-cache ca-certificates wget tzdata
 WORKDIR /app
 COPY --from=build /vapen-api /app/vapen-api
 COPY db/migrations /app/db/migrations
