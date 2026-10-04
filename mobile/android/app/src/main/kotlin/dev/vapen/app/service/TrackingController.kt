@@ -3,6 +3,8 @@ package dev.vapen.app.service
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import dev.vapen.app.ble.BleConnectionManager
@@ -28,6 +30,7 @@ import java.time.Instant
 
 object TrackingController {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var flutterApi: TrackingFlutterApi? = null
     private var bleManager: BleConnectionManager? = null
     private var appContext: Context? = null
@@ -144,12 +147,11 @@ object TrackingController {
             is DeviceMessage.PuffCompleted -> {
                 persistPuff(hardwareId, msg)
                 todayPuffCount++
-                flutterApi?.onPuff(
-                    PuffInfo(
-                        startedAtEpochMs = msg.startedAt.toEpochMilli(),
-                        durationMs = msg.durationMs.toLong(),
-                    ),
-                ) {}
+                val puff = PuffInfo(
+                    startedAtEpochMs = msg.startedAt.toEpochMilli(),
+                    durationMs = msg.durationMs.toLong(),
+                )
+                onMain { flutterApi?.onPuff(puff) {} }
                 publishState(credentials.trackingEnabled)
                 uploader.flush()
             }
@@ -166,14 +168,13 @@ object TrackingController {
                 liquidPercent = msg.liquid
                 isCharging = msg.charging
                 persistStatus(hardwareId, msg)
-                flutterApi?.onStatus(
-                    StatusInfo(
-                        batteryPercent = msg.battery?.toLong(),
-                        liquidPercent = msg.liquid?.toLong(),
-                        isCharging = msg.charging,
-                        recordedAtEpochMs = msg.recordedAt.toEpochMilli(),
-                    ),
-                ) {}
+                val status = StatusInfo(
+                    batteryPercent = msg.battery?.toLong(),
+                    liquidPercent = msg.liquid?.toLong(),
+                    isCharging = msg.charging,
+                    recordedAtEpochMs = msg.recordedAt.toEpochMilli(),
+                )
+                onMain { flutterApi?.onStatus(status) {} }
                 publishState(credentials.trackingEnabled)
                 uploader.flush()
             }
@@ -220,7 +221,13 @@ object TrackingController {
     }
 
     private fun publishState(enabled: Boolean) {
-        flutterApi?.onTrackingStateChanged(getState().copy(enabled = enabled)) {}
+        val state = getState().copy(enabled = enabled)
+        onMain { flutterApi?.onTrackingStateChanged(state) {} }
+    }
+
+    /** Pigeon/Flutter channels must only be called from the platform (main) thread. */
+    private fun onMain(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) block() else mainHandler.post(block)
     }
 
     fun isIgnoringBatteryOptimizations(context: Context): Boolean {

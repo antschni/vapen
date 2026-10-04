@@ -76,8 +76,9 @@ class BleConnectionManager(
             return
         }
         val device = adapter.getRemoteDevice(address)
+        reconnectJob?.cancel()
+        pollJob?.cancel()
         onState(TrackingConnectionState.CONNECTING, null)
-        connectTimeoutJob?.cancel()
         gatt?.close()
         gatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
@@ -85,18 +86,29 @@ class BleConnectionManager(
             device.connectGatt(context, false, callback)
         }
         session = AndroidGattSession({ gatt }, queue)
+        armWatchdog(
+            25_000,
+            "Verbindungstimeout — Elfbar nah ans Telefon, Bildschirm an, ggf. erneut koppeln.",
+        )
+    }
+
+    /** Aborts the current attempt if it does not reach LIVE in time (connect, discovery or init can hang). */
+    private fun armWatchdog(timeoutMs: Long, message: String) {
+        connectTimeoutJob?.cancel()
         connectTimeoutJob = scope.launch {
-            delay(25_000)
-            if (gatt != null) {
-                gatt?.close()
-                gatt = null
-                onState(
-                    TrackingConnectionState.DISCONNECTED,
-                    "Verbindungstimeout — Elfbar nah ans Telefon, Bildschirm an, ggf. erneut koppeln.",
-                )
-                scheduleReconnect()
-            }
+            delay(timeoutMs)
+            failAndReconnect(message)
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun failAndReconnect(message: String?, reconnect: Boolean = true) {
+        connectTimeoutJob?.cancel()
+        pollJob?.cancel()
+        gatt?.close()
+        gatt = null
+        onState(TrackingConnectionState.DISCONNECTED, message)
+        if (reconnect) scheduleReconnect()
     }
 
     private fun startStatusPolling(sess: AndroidGattSession, p: BleProfile) {
@@ -122,41 +134,53 @@ class BleConnectionManager(
     }
 
     private val callback = object : BluetoothGattCallback() {
+        @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                connectTimeoutJob?.cancel()
-                backoffMs = 1_000
+            if (gatt !== this@BleConnectionManager.gatt) return
+            if (newState == BluetoothProfile.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
+                if (!gatt.discoverServices()) {
+                    failAndReconnect("Dienstsuche konnte nicht gestartet werden.")
+                    return
+                }
+                armWatchdog(30_000, "Dienstsuche/Initialisierung hängt — Elfbar wach halten (Display an).")
                 onState(TrackingConnectionState.DISCOVERING, null)
-                gatt.discoverServices()
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                connectTimeoutJob?.cancel()
-                onState(TrackingConnectionState.DISCONNECTED, disconnectHint(status))
-                scheduleReconnect()
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED || status != BluetoothGatt.GATT_SUCCESS) {
+                failAndReconnect(disconnectHint(status))
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            if (status != BluetoothGatt.GATT_SUCCESS) return
-            profile = BleProfileDetector.detect(gatt)
-            if (profile == null) {
-                onState(TrackingConnectionState.DISCONNECTED, "Unbekanntes GATT-Profil")
+            if (gatt !== this@BleConnectionManager.gatt) return
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                failAndReconnect("Dienstsuche fehlgeschlagen (status=$status)")
                 return
             }
+            val p = BleProfileDetector.detect(gatt)
+            profile = p
+            if (p == null) {
+                val uuids = gatt.services.orEmpty().joinToString { it.uuid.toString() }
+                failAndReconnect("Unbekanntes GATT-Profil: $uuids", reconnect = false)
+                return
+            }
+            onState(TrackingConnectionState.INITIALIZING, null)
             scope.launch {
-                onState(TrackingConnectionState.INITIALIZING, null)
                 val sess = session ?: return@launch
-                val p = profile ?: return@launch
                 try {
-                    for (rx in p.rxUuids) {
-                        sess.setNotify(p.serviceUuid, rx, true)
+                    sess.setNotify(p.serviceUuid, p.rxUuid, true)
+                    for (rx in p.rxUuids.drop(1)) {
+                        runCatching { sess.setNotify(p.serviceUuid, rx, true) }
                     }
                     protocol.initialize(sess, p)
                     protocol.requestStatus(sess, p)
                     protocol.requestHistory(sess, p, null)
+                    if (gatt !== this@BleConnectionManager.gatt) return@launch
+                    connectTimeoutJob?.cancel()
+                    backoffMs = 1_000
                     onState(TrackingConnectionState.LIVE, null)
                     startStatusPolling(sess, p)
                 } catch (e: Exception) {
-                    onState(TrackingConnectionState.DISCONNECTED, e.message)
+                    if (gatt !== this@BleConnectionManager.gatt) return@launch
+                    failAndReconnect("Initialisierung fehlgeschlagen: ${e.message ?: e::class.simpleName}")
                 }
             }
         }

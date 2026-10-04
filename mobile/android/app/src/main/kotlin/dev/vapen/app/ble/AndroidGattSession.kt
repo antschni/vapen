@@ -2,6 +2,7 @@ package dev.vapen.app.ble
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
+import java.io.IOException
 import java.util.UUID
 
 class AndroidGattSession(
@@ -13,12 +14,11 @@ class AndroidGattSession(
             val g = gatt() ?: return@read false
             val c = g.getService(service)?.getCharacteristic(characteristic) ?: return@read false
             g.readCharacteristic(c)
-            true
         }
     }
 
     override suspend fun write(service: UUID, characteristic: UUID, value: ByteArray, withResponse: Boolean) {
-        queue.write {
+        val ok = queue.write {
             val g = gatt() ?: return@write false
             val c = g.getService(service)?.getCharacteristic(characteristic) ?: return@write false
             c.writeType = if (withResponse) {
@@ -28,30 +28,31 @@ class AndroidGattSession(
             }
             c.value = value
             g.writeCharacteristic(c)
-            true
         }
+        if (!ok) throw IOException("Schreiben auf $characteristic fehlgeschlagen")
     }
 
     override suspend fun setNotify(service: UUID, characteristic: UUID, enabled: Boolean) {
-        queue.notify {
+        val ok = queue.notify {
             val g = gatt() ?: return@notify false
             val c = g.getService(service)?.getCharacteristic(characteristic) ?: return@notify false
-            g.setCharacteristicNotification(c, enabled)
+            if (!g.setCharacteristicNotification(c, enabled)) return@notify false
             val descriptor = GattOperationQueue.cccdDescriptor(g, c) ?: return@notify false
-            descriptor.value = if (enabled) {
-                android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-            } else {
-                android.bluetooth.BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+            val indicate = c.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY == 0 &&
+                c.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0
+            descriptor.value = when {
+                !enabled -> android.bluetooth.BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+                indicate -> android.bluetooth.BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                else -> android.bluetooth.BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
             }
             g.writeDescriptor(descriptor)
-            true
         }
+        if (!ok) throw IOException("Notifications auf $characteristic konnten nicht aktiviert werden")
     }
 
     override suspend fun requestMtu(mtu: Int): Int {
         return queue.mtu {
-            gatt()?.requestMtu(mtu)
-            gatt() != null
+            gatt()?.requestMtu(mtu) ?: false
         }
     }
 }
