@@ -134,7 +134,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(this._ref) {
-    _ref.listen(sessionProvider, (_, __) => notifyListeners());
+    _ref.listen(sessionProvider, (_, _) => notifyListeners());
   }
 
   final Ref _ref;
