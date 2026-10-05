@@ -55,6 +55,7 @@ object TrackingController {
 
     fun setFlutterApi(api: TrackingFlutterApi?) {
         flutterApi = api
+        if (!::credentials.isInitialized) return
         publishState(credentials.trackingEnabled)
     }
 
@@ -105,7 +106,9 @@ object TrackingController {
         init(context)
         credentials.trackingEnabled = true
         bleManager?.setSimulation(credentials.simulationEnabled)
-        context.startForegroundService(Intent(context, VapenTrackingService::class.java))
+        if (!TrackingServiceLauncher.tryStart(context)) {
+            lastError = "Hintergrund-Tracking benötigt Bluetooth-Berechtigung."
+        }
         bleManager?.connect()
         publishState(true)
         requestFlush()

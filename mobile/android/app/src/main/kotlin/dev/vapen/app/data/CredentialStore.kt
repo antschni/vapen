@@ -1,6 +1,8 @@
 package dev.vapen.app.data
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -12,13 +14,22 @@ data class NativeCredentials(
 )
 
 class CredentialStore(context: Context) {
-    private val prefs = EncryptedSharedPreferences.create(
-        context,
-        "vapen_credentials",
-        MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-    )
+    private val prefs: SharedPreferences = openPrefs(context.applicationContext)
+
+    private fun openPrefs(context: Context): SharedPreferences {
+        return try {
+            EncryptedSharedPreferences.create(
+                context,
+                "vapen_credentials",
+                MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Encrypted credentials unavailable, using fallback store", e)
+            context.getSharedPreferences(FALLBACK_PREFS, Context.MODE_PRIVATE)
+        }
+    }
 
     fun save(credentials: NativeCredentials) {
         prefs.edit()
@@ -55,6 +66,8 @@ class CredentialStore(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_SIMULATION, value).apply()
 
     companion object {
+        private const val TAG = "CredentialStore"
+        private const val FALLBACK_PREFS = "vapen_credentials_fallback"
         private const val KEY_BASE_URL = "base_url"
         private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_DEVICE_TOKEN = "device_token"

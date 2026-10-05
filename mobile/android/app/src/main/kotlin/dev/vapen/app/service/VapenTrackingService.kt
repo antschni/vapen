@@ -34,20 +34,25 @@ class VapenTrackingService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = buildNotification(this, lastText ?: "Verbindung wird aufgebaut…")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (_: SecurityException) {
+            stopSelf()
+            return START_NOT_STICKY
         }
         scope.launch {
             if (TrackingController.credentials.trackingEnabled) {
                 TrackingController.resumeBleIfConfigured()
             }
-            TrackingController.uploader.flush()
+            runCatching { TrackingController.uploader.flush() }
             enqueueUploadWorker()
         }
         return START_STICKY

@@ -59,7 +59,7 @@ class _VapenAppState extends ConsumerState<VapenApp> {
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
-      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      title: 'Vapen',
       theme: VapenTheme.light(),
       darkTheme: VapenTheme.dark(),
       themeMode: ThemeMode.system,

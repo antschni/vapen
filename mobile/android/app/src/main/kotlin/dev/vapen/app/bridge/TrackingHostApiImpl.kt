@@ -5,6 +5,7 @@ import android.os.Build
 import dev.vapen.app.ble.BleExplorerManager
 import dev.vapen.app.companion.CompanionDeviceHelper
 import dev.vapen.app.service.TrackingController
+import dev.vapen.app.service.TrackingServiceLauncher
 import kotlinx.coroutines.runBlocking
 
 class TrackingHostApiImpl(
@@ -19,6 +20,10 @@ class TrackingHostApiImpl(
 
     fun attachEngine() {
         TrackingController.setFlutterApi(flutterApi)
+        if (TrackingController.credentials.trackingEnabled) {
+            TrackingServiceLauncher.tryStart(activity.applicationContext)
+            TrackingController.resumeBleIfConfigured()
+        }
     }
 
     fun detachEngine() {
