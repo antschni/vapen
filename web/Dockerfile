@@ -31,6 +31,7 @@ USER vapen
 EXPOSE 3000
 ENV PORT=3000
 ENV HOST=0.0.0.0
-# No Dockerfile HEALTHCHECK: Coolify Traefik drops unhealthy backends ("No available server").
-# Liveness is configured in docker-compose.yml (disabled for routing; use /health manually).
+# Liveness for Coolify/Traefik. GET /health needs no auth (see web/src/routes/health).
+HEALTHCHECK --interval=10s --timeout=5s --start-period=40s --retries=5 \
+  CMD wget -q --spider http://127.0.0.1:3000/health || exit 1
 CMD ["node", "build"]

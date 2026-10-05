@@ -16,5 +16,5 @@ ENV LISTEN_ADDR=:8080
 EXPOSE 8080
 USER vapen
 HEALTHCHECK --interval=10s --timeout=5s --start-period=40s --retries=5 \
-  CMD wget -q --spider http://127.0.0.1:8080/readyz || exit 1
+  CMD wget -q --spider http://127.0.0.1:8080/healthz || exit 1
 ENTRYPOINT ["/app/vapen-api", "-migrations", "/app/db/migrations"]
