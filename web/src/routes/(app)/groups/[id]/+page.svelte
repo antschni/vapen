@@ -1,6 +1,8 @@
 <script lang="ts">
 	import LivePresenceGrid from '#lib/components/LivePresenceGrid.svelte';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
+	import LiveStatsBadge from '#lib/components/LiveStatsBadge.svelte';
+	import LiveStatsPulse from '#lib/components/LiveStatsPulse.svelte';
 	import Badge from '#lib/components/ui/badge.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
@@ -37,10 +39,12 @@
 <LiveRefresh />
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-	<div>
+	<div class="min-w-0 flex-1">
 		<p class="text-sm text-muted-foreground"><a href={resolve('groups')} class="hover:underline">{de.common.back}</a></p>
 		<h1 class="text-2xl font-bold tracking-tight">{data.groupName}</h1>
 	</div>
+	<div class="flex flex-wrap items-center gap-2">
+		<LiveStatsBadge />
 	{#if data.role === 'owner' || data.role === 'admin'}
 		<a
 			href={resolve('/(app)/groups/[id]/settings', { id: data.groupId })}
@@ -49,6 +53,7 @@
 			{de.pages.groups.settings}
 		</a>
 	{/if}
+	</div>
 </div>
 
 <Card class="mt-6">
@@ -57,7 +62,8 @@
 	</CardContent>
 </Card>
 
-<Card class="mt-6">
+<LiveStatsPulse class="mt-6 block">
+<Card>
 	<CardHeader class="flex flex-row flex-wrap items-center justify-between gap-2">
 		<CardTitle>{de.pages.groups.leaderboard}</CardTitle>
 		<div class="flex gap-1">
@@ -107,6 +113,7 @@
 		{/if}
 	</CardContent>
 </Card>
+</LiveStatsPulse>
 
 <Card class="mt-6">
 	<CardHeader>

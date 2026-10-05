@@ -3,15 +3,28 @@ import { format, startOfDay, subDays } from "date-fns";
 import { de as dateFnsDe } from "date-fns/locale";
 import type { PageServerLoad } from "./$types";
 import { toIso } from "#lib/server/ranges.js";
+import { de } from "#lib/i18n/de.js";
+
+function chartLabel(iso: string, pattern: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return format(date, pattern, { locale: dateFnsDe });
+}
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
   const { user, groups } = await parent();
   const tz = user.timezone;
-  const now = new TZDate(new Date(), tz);
+  let now: TZDate;
+  try {
+    now = new TZDate(new Date(), tz);
+  } catch {
+    now = new TZDate(new Date(), "UTC");
+  }
   const todayStart = startOfDay(now);
   const yesterdayStart = startOfDay(subDays(now, 1));
   const yesterdayEnd = todayStart;
 
+  const statsTz = now.timeZone ?? tz;
   const [todayStats, yesterdayStats, weekStats, devicesRes] = await Promise.all(
     [
       locals.api!.GET("/stats/usage", {
@@ -19,7 +32,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
           from: toIso(todayStart),
           to: toIso(now),
           bucket: "hour",
-          tz,
+          tz: statsTz,
         },
       }),
       locals.api!.GET("/stats/usage", {
@@ -27,7 +40,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
           from: toIso(yesterdayStart),
           to: toIso(yesterdayEnd),
           bucket: "day",
-          tz,
+          tz: statsTz,
         },
       }),
       locals.api!.GET("/stats/usage", {
@@ -35,7 +48,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
           from: toIso(startOfDay(subDays(now, 6))),
           to: toIso(now),
           bucket: "day",
-          tz,
+          tz: statsTz,
         },
       }),
       locals.api!.GET("/devices"),
@@ -50,25 +63,30 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
   if (firstGroup) {
     const overview = await locals.api!.GET("/groups/{id}/overview", {
       params: { path: { id: firstGroup.id } },
-      query: { tz },
+      query: { tz: statsTz },
     });
-    groupOverview = overview.data ?? null;
+    groupOverview = overview.error ? null : (overview.data ?? null);
   }
 
-  const today = todayStats.data;
-  const yesterday = yesterdayStats.data;
-  const week = weekStats.data;
+  const statsFailed =
+    Boolean(todayStats.error) ||
+    Boolean(yesterdayStats.error) ||
+    Boolean(weekStats.error);
+
+  const today = todayStats.error ? null : (todayStats.data ?? null);
+  const yesterday = yesterdayStats.error ? null : (yesterdayStats.data ?? null);
+  const week = weekStats.error ? null : (weekStats.data ?? null);
 
   const barPoints =
     week?.series.map((s) => ({
-      label: format(new Date(s.bucket_start), "EEE", { locale: dateFnsDe }),
+      label: chartLabel(s.bucket_start, "EEE"),
       durationMs: s.total_duration_ms,
       puffCount: s.puff_count,
     })) ?? [];
 
   const hourlyToday =
     today?.series.map((s) => ({
-      label: format(new Date(s.bucket_start), "HH", { locale: dateFnsDe }),
+      label: chartLabel(s.bucket_start, "HH"),
       durationMs: s.total_duration_ms,
       puffCount: s.puff_count,
     })) ?? [];
@@ -101,5 +119,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
     hourlyToday,
     firstGroupId: firstGroup?.id ?? null,
     groupOverview,
+    statsFailed,
+    statsErrorMessage: statsFailed ? de.errors.internal : null,
   };
 };

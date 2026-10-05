@@ -4,6 +4,7 @@
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
 	import MiniLiveWidget from '#lib/components/MiniLiveWidget.svelte';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
+	import LiveStatsPulse from '#lib/components/LiveStatsPulse.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
 	import CardHeader from '#lib/components/ui/card-header.svelte';
@@ -30,15 +31,23 @@
 
 <LiveRefresh />
 
-<PageHeader title={de.pages.overview.title} />
+<PageHeader title={de.pages.overview.title} liveStats />
 
-<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+{#if data.statsFailed && data.statsErrorMessage}
+	<p class="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+		{data.statsErrorMessage}
+	</p>
+{/if}
+
+<LiveStatsPulse class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 	<KpiCard
+		animateLive
 		title={de.pages.overview.kpiPuffsToday}
 		value={formatNumber(data.todayTotals?.puff_count ?? 0)}
 		trend={puffTrend}
 	/>
 	<KpiCard
+		animateLive
 		title={de.pages.overview.kpiTimeToday}
 		value={formatDurationMs(data.todayTotals?.total_duration_ms ?? 0)}
 		subtitle={data.durationDelta !== null
@@ -46,17 +55,19 @@
 			: undefined}
 	/>
 	<KpiCard
+		animateLive
 		title={de.pages.overview.kpiAvg7}
 		value={`${formatNumber(data.avg7)} ${de.pages.overview.puffsPerDay}`}
 	/>
 	<KpiCard
+		animateLive
 		title={de.pages.overview.kpiBattery}
 		value={data.battery !== null ? `${data.battery} %` : '—'}
 		subtitle={data.isCharging ? de.pages.overview.charging : undefined}
 	/>
-</div>
+</LiveStatsPulse>
 
-<div class="mt-8 grid gap-6 lg:grid-cols-3">
+<LiveStatsPulse class="mt-8 grid gap-6 lg:grid-cols-3">
 	<Card class="lg:col-span-2">
 		<CardHeader>
 			<CardTitle>{de.pages.overview.chartWeek}</CardTitle>
@@ -65,7 +76,11 @@
 			{#if data.barPoints.length === 0}
 				<p class="text-sm text-muted-foreground">{de.empty.noData}</p>
 			{:else}
-				<BarSeriesChart points={data.barPoints} ariaLabel={de.pages.overview.chartWeek} />
+				<BarSeriesChart
+					animateLive
+					points={data.barPoints}
+					ariaLabel={de.pages.overview.chartWeek}
+				/>
 			{/if}
 		</CardContent>
 	</Card>
@@ -78,11 +93,15 @@
 			{#if data.hourlyToday.length === 0}
 				<p class="text-sm text-muted-foreground">{de.empty.noData}</p>
 			{:else}
-				<BarSeriesChart points={data.hourlyToday} ariaLabel={de.pages.overview.chartTodayHourly} />
+				<BarSeriesChart
+					animateLive
+					points={data.hourlyToday}
+					ariaLabel={de.pages.overview.chartTodayHourly}
+				/>
 			{/if}
 		</CardContent>
 	</Card>
-</div>
+</LiveStatsPulse>
 
 {#if data.firstGroupId}
 	<Card class="mt-6">

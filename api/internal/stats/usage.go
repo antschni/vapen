@@ -2,6 +2,7 @@ package stats
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -135,9 +136,10 @@ WHERE user_id = $1
 }
 
 func loadSeries(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, device pgtype.UUID, from, to time.Time, tz, bucket string) ([]openapi.UsageSeriesPoint, error) {
-	rows, err := pool.Query(ctx, `
+	bucket = normalizeBucket(bucket)
+	rows, err := pool.Query(ctx, fmt.Sprintf(`
 SELECT
-  (date_trunc($6, started_at AT TIME ZONE $4) AT TIME ZONE $4),
+  (date_trunc('%s', started_at AT TIME ZONE $4) AT TIME ZONE $4),
   count(*)::int,
   coalesce(sum(duration_ms),0)::bigint,
   coalesce(avg(duration_ms),0)::int,
@@ -148,7 +150,7 @@ WHERE user_id = $1
   AND started_at < $3
   AND ($5::uuid IS NULL OR device_id = $5)
 GROUP BY 1
-ORDER BY 1`, userID, from, to, tz, device, bucket)
+ORDER BY 1`, bucket), userID, from, to, tz, device)
 	if err != nil {
 		return nil, err
 	}

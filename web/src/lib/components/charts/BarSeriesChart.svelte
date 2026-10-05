@@ -9,10 +9,12 @@
 
 	let {
 		points,
-		ariaLabel
+		ariaLabel,
+		animateLive = false
 	}: {
 		points: BarPoint[];
 		ariaLabel: string;
+		animateLive?: boolean;
 	} = $props();
 
 	const maxDuration = $derived(
@@ -25,7 +27,9 @@
 		{#each points as point (point.label)}
 			<div class="flex min-w-0 flex-1 flex-col items-center gap-1">
 				<div
-					class="w-full rounded-t bg-primary/80 transition-all"
+					class="w-full rounded-t bg-primary/80 {animateLive
+						? 'transition-[height,opacity,transform] duration-700 ease-out motion-safe:origin-bottom'
+						: 'transition-all'}"
 					style="height: {Math.max(4, (point.durationMs / maxDuration) * 100)}%"
 					title="{point.label}: {formatDurationMs(point.durationMs)}, {point.puffCount} Züge"
 				></div>

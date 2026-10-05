@@ -223,6 +223,9 @@ export const de = {
     },
   },
   live: {
+    statsLabel: "Live",
+    statsHint: "Statistiken werden alle paar Sekunden automatisch aktualisiert.",
+    statsSyncing: "Aktualisiere …",
     vaping: "Vaped gerade",
     vapingShort: "Live",
     active: "Kürzlich aktiv",

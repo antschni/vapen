@@ -6,6 +6,7 @@
 	import { enhance } from '$app/forms';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
+	import LiveStatsPulse from '#lib/components/LiveStatsPulse.svelte';
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import HeatmapChart from '#lib/components/charts/HeatmapChart.svelte';
@@ -138,7 +139,7 @@
 
 <LiveRefresh />
 
-<PageHeader title={de.pages.usage.title} />
+<PageHeader title={de.pages.usage.title} liveStats />
 
 <Card>
 	<CardHeader>
@@ -216,8 +217,9 @@
 	</CardContent>
 </Card>
 
+<LiveStatsPulse class="mt-6 space-y-6">
 {#if data.stats}
-	<div class="mt-6 grid gap-4 sm:grid-cols-2">
+	<div class="grid gap-4 sm:grid-cols-2">
 		<Card>
 			<CardHeader>
 				<CardTitle>{de.pages.usage.comparePrevious}</CardTitle>
@@ -238,7 +240,7 @@
 	</div>
 {/if}
 
-<div class="mt-6 grid gap-6 lg:grid-cols-2">
+<div class="grid gap-6 lg:grid-cols-2">
 	<Card>
 		<CardHeader>
 			<CardTitle>{de.pages.usage.chartSeries}</CardTitle>
@@ -247,7 +249,7 @@
 			{#if chartPoints.length === 0}
 				<p class="text-sm text-muted-foreground">{de.empty.noData}</p>
 			{:else}
-				<BarSeriesChart points={chartPoints} ariaLabel={de.pages.usage.chartSeries} />
+				<BarSeriesChart animateLive points={chartPoints} ariaLabel={de.pages.usage.chartSeries} />
 			{/if}
 		</CardContent>
 	</Card>
@@ -264,6 +266,7 @@
 		</CardContent>
 	</Card>
 </div>
+</LiveStatsPulse>
 
 <Card class="mt-6">
 	<CardHeader>
