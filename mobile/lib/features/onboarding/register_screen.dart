@@ -5,6 +5,7 @@ import 'package:vapen_api/vapen_api.dart';
 
 import 'package:flutter_timezone/flutter_timezone.dart';
 
+import '../../core/ui/widgets.dart';
 import '../../data/auth/session_notifier.dart';
 import '../../data/devices/account_devices.dart';
 import '../../l10n/app_localizations.dart';
@@ -22,6 +23,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _displayName = TextEditingController();
   String? _error;
   bool _submitting = false;
+  bool _showPassword = false;
 
   @override
   void dispose() {
@@ -61,52 +63,62 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final l10n = AppLocalizations.of(context)!;
     final baseUrl = ref.watch(sessionProvider).baseUrl;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.registerTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
+    return AutofillGroup(
+      child: AuthScaffold(
+        title: l10n.registerTitle,
+        subtitle: 'Erstelle ein Konto, um deine Züge zu tracken und mit Freunden zu teilen.',
         children: [
           if (baseUrl != null) ...[
-            Text(
-              l10n.serverConfiguredHint(baseUrl),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 12),
+            ServerChip(url: baseUrl),
+            const SizedBox(height: 20),
           ],
           TextField(
             controller: _displayName,
-            decoration: InputDecoration(labelText: l10n.displayNameLabel),
+            decoration: InputDecoration(
+              labelText: l10n.displayNameLabel,
+              prefixIcon: const Icon(Icons.badge_outlined),
+            ),
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.nickname],
             enabled: !_submitting,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _email,
-            decoration: InputDecoration(labelText: l10n.emailLabel),
+            decoration: InputDecoration(
+              labelText: l10n.emailLabel,
+              prefixIcon: const Icon(Icons.alternate_email_rounded),
+            ),
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.email],
             enabled: !_submitting,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _password,
-            decoration: InputDecoration(labelText: l10n.passwordLabel),
-            obscureText: true,
+            decoration: InputDecoration(
+              labelText: l10n.passwordLabel,
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                tooltip: _showPassword ? 'Verbergen' : 'Anzeigen',
+                onPressed: () => setState(() => _showPassword = !_showPassword),
+                icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+              ),
+            ),
+            obscureText: !_showPassword,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.newPassword],
             enabled: !_submitting,
+            onSubmitted: (_) => _submitting ? null : _submit(),
           ),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ],
+          if (_error != null) FormError(_error!),
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _submitting ? null : _submit,
-            child: _submitting
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.registerButton),
+          LoadingButton(
+            label: l10n.registerButton,
+            loading: _submitting,
+            onPressed: _submit,
           ),
         ],
       ),

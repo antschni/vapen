@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/config.dart';
+import '../../core/ui/widgets.dart';
 import '../../data/auth/session_notifier.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -87,31 +88,40 @@ class _ServerEndpointScreenState extends ConsumerState<ServerEndpointScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.serverEndpointTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: [
-          Text(l10n.serverEndpointDescription),
-          const SizedBox(height: 16),
+          Text(
+            l10n.serverEndpointDescription,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 20),
           TextField(
             controller: _controller,
             decoration: InputDecoration(
               labelText: l10n.serverUrlLabel,
               hintText: 'https://vapen.example.com',
+              prefixIcon: const Icon(Icons.dns_outlined),
               errorText: _error,
+              errorMaxLines: 3,
             ),
             keyboardType: TextInputType.url,
             autocorrect: false,
             enabled: !_saving,
+            onSubmitted: (_) => _saving ? null : _save(),
+          ),
+          const SizedBox(height: 16),
+          InfoBanner(
+            icon: Icons.warning_amber_rounded,
+            tone: BannerTone.neutral,
+            text: l10n.serverEndpointChangeLogout,
           ),
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.serverEndpointSave),
+          LoadingButton(
+            label: l10n.serverEndpointSave,
+            loading: _saving,
+            onPressed: _save,
           ),
         ],
       ),

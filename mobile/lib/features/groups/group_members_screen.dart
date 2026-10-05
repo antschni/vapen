@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vapen_api/vapen_api.dart';
 
+import '../../core/ui/widgets.dart';
 import '../../data/api/api_providers.dart';
 import '../../data/auth/session_notifier.dart';
 import '../../l10n/app_localizations.dart';
@@ -154,76 +155,81 @@ class _GroupMembersScreenState extends ConsumerState<GroupMembersScreen> {
     final isOwner = myRole == 'owner';
     final isAdmin = myRole == 'admin' || isOwner;
 
+    final scheme = Theme.of(context).colorScheme;
+    final members = [...?group?.members]..sort((a, b) {
+        const order = {'owner': 0, 'admin': 1, 'member': 2};
+        final byRole = (order[a.role] ?? 3).compareTo(order[b.role] ?? 3);
+        return byRole != 0 ? byRole : a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
+      });
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.groupMembersTitle)),
+      appBar: AppBar(
+        title: Text(group?.name ?? l10n.groupMembersTitle),
+        bottom: _busy
+            ? const PreferredSize(preferredSize: Size.fromHeight(2), child: LinearProgressIndicator(minHeight: 2))
+            : null,
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_error!),
-                      const SizedBox(height: 16),
-                      FilledButton(onPressed: _load, child: const Text('Erneut versuchen')),
-                    ],
-                  ),
-                )
+              ? ErrorState(message: _error!, onRetry: _load)
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                     children: [
-                      if (group != null)
-                        Text(
-                          group.name,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      Text(
-                        '${group?.memberCount ?? 0} ${l10n.groupMembersTitle.toLowerCase()}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                      SectionHeader(
+                        '${group?.memberCount ?? 0} ${l10n.groupMembersTitle}',
+                        padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
                       ),
-                      const SizedBox(height: 16),
-                      ...?group?.members.map((member) {
-                        final canChangeRole = isOwner && member.role != 'owner';
-                        final canRemove = isAdmin && member.role != 'owner' && !(member.role == 'admin' && !isOwner);
-                        return _MemberTile(
-                          member: member,
-                          roleLabel: _roleLabel(l10n, member.role),
-                          isSelf: member.userId == _myUserId,
-                          busy: _busy,
-                          canChangeRole: canChangeRole,
-                          canRemove: canRemove,
-                          onPromoteAdmin: member.role == 'member'
-                              ? () => _setRole(member, 'admin', l10n)
-                              : null,
-                          onDemoteMember: member.role == 'admin'
-                              ? () => _setRole(member, 'member', l10n)
-                              : null,
-                          onTransferOwnership: canChangeRole
-                              ? () => _setRole(member, 'owner', l10n)
-                              : null,
-                          onRemove: canRemove ? () => _removeMember(member, l10n) : null,
-                          l10n: l10n,
-                        );
-                      }),
-                      const SizedBox(height: 24),
-                      if (myRole != null && myRole != 'owner')
-                        OutlinedButton(
-                          onPressed: _busy ? null : () => _leaveGroup(l10n),
-                          child: Text(l10n.groupLeave),
-                        ),
-                      if (isOwner) ...[
-                        const SizedBox(height: 8),
-                        FilledButton(
-                          onPressed: _busy ? null : () => _deleteGroup(l10n),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                            foregroundColor: Theme.of(context).colorScheme.onError,
-                          ),
-                          child: Text(l10n.groupDelete),
+                      GroupedCard(
+                        children: [
+                          for (final member in members)
+                            _MemberTile(
+                              member: member,
+                              roleLabel: _roleLabel(l10n, member.role),
+                              isSelf: member.userId == _myUserId,
+                              busy: _busy,
+                              onPromoteAdmin: isOwner && member.role == 'member'
+                                  ? () => _setRole(member, 'admin', l10n)
+                                  : null,
+                              onDemoteMember: isOwner && member.role == 'admin'
+                                  ? () => _setRole(member, 'member', l10n)
+                                  : null,
+                              onTransferOwnership: isOwner && member.role != 'owner'
+                                  ? () => _setRole(member, 'owner', l10n)
+                                  : null,
+                              onRemove: isAdmin &&
+                                      member.role != 'owner' &&
+                                      !(member.role == 'admin' && !isOwner)
+                                  ? () => _removeMember(member, l10n)
+                                  : null,
+                              l10n: l10n,
+                            ),
+                        ],
+                      ),
+                      if (myRole != null) ...[
+                        const SectionHeader('Gruppe'),
+                        GroupedCard(
+                          children: [
+                            if (myRole != 'owner')
+                              NavTile(
+                                icon: Icons.logout_rounded,
+                                title: l10n.groupLeave,
+                                color: scheme.error,
+                                onTap: _busy ? null : () => _leaveGroup(l10n),
+                                trailing: const SizedBox.shrink(),
+                              ),
+                            if (isOwner)
+                              NavTile(
+                                icon: Icons.delete_forever_outlined,
+                                title: l10n.groupDelete,
+                                subtitle: 'Für alle Mitglieder, unwiderruflich',
+                                color: scheme.error,
+                                onTap: _busy ? null : () => _deleteGroup(l10n),
+                                trailing: const SizedBox.shrink(),
+                              ),
+                          ],
                         ),
                       ],
                     ],
@@ -233,14 +239,14 @@ class _GroupMembersScreenState extends ConsumerState<GroupMembersScreen> {
   }
 }
 
+enum _MemberAction { promote, demote, transfer, remove }
+
 class _MemberTile extends StatelessWidget {
   const _MemberTile({
     required this.member,
     required this.roleLabel,
     required this.isSelf,
     required this.busy,
-    required this.canChangeRole,
-    required this.canRemove,
     required this.l10n,
     this.onPromoteAdmin,
     this.onDemoteMember,
@@ -252,8 +258,6 @@ class _MemberTile extends StatelessWidget {
   final String roleLabel;
   final bool isSelf;
   final bool busy;
-  final bool canChangeRole;
-  final bool canRemove;
   final AppLocalizations l10n;
   final VoidCallback? onPromoteAdmin;
   final VoidCallback? onDemoteMember;
@@ -263,78 +267,73 @@ class _MemberTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  child: Text(
-                    member.displayName.isNotEmpty ? member.displayName[0].toUpperCase() : '?',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        member.displayName,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      if (isSelf)
-                        Text(
-                          'Du',
-                          style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.primary),
-                        ),
-                    ],
-                  ),
-                ),
-                Chip(
-                  label: Text(roleLabel),
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                ),
-              ],
-            ),
-            if (canChangeRole || canRemove) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (onPromoteAdmin != null)
-                    OutlinedButton(
-                      onPressed: busy ? null : onPromoteAdmin,
-                      child: Text(l10n.groupPromoteAdmin),
-                    ),
-                  if (onDemoteMember != null)
-                    OutlinedButton(
-                      onPressed: busy ? null : onDemoteMember,
-                      child: Text(l10n.groupDemoteMember),
-                    ),
-                  if (onTransferOwnership != null)
-                    OutlinedButton(
-                      onPressed: busy ? null : onTransferOwnership,
-                      child: Text(l10n.groupTransferOwnership),
-                    ),
-                  if (onRemove != null)
-                    TextButton(
-                      onPressed: busy ? null : onRemove,
-                      style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
-                      child: Text(l10n.groupRemoveMember),
-                    ),
-                ],
-              ),
-            ],
+    final scheme = theme.colorScheme;
+    final hasActions =
+        onPromoteAdmin != null || onDemoteMember != null || onTransferOwnership != null || onRemove != null;
+    final (roleIcon, roleColor) = switch (member.role) {
+      'owner' => (Icons.workspace_premium_rounded, scheme.primary),
+      'admin' => (Icons.shield_outlined, scheme.tertiary),
+      _ => (null, scheme.onSurfaceVariant),
+    };
+    return ListTile(
+      contentPadding: const EdgeInsets.fromLTRB(16, 4, 4, 4),
+      leading: InitialAvatar(name: member.displayName),
+      title: Text(
+        isSelf ? '${member.displayName} (du)' : member.displayName,
+        style: TextStyle(fontWeight: isSelf ? FontWeight.w700 : FontWeight.w500),
+      ),
+      subtitle: Row(
+        children: [
+          if (roleIcon != null) ...[
+            Icon(roleIcon, size: 14, color: roleColor),
+            const SizedBox(width: 4),
           ],
-        ),
+          Text(roleLabel, style: TextStyle(color: roleColor)),
+        ],
+      ),
+      trailing: hasActions
+          ? PopupMenuButton<_MemberAction>(
+              enabled: !busy,
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (action) => switch (action) {
+                _MemberAction.promote => onPromoteAdmin?.call(),
+                _MemberAction.demote => onDemoteMember?.call(),
+                _MemberAction.transfer => onTransferOwnership?.call(),
+                _MemberAction.remove => onRemove?.call(),
+              },
+              itemBuilder: (context) => [
+                if (onPromoteAdmin != null)
+                  _item(_MemberAction.promote, Icons.shield_outlined, l10n.groupPromoteAdmin),
+                if (onDemoteMember != null)
+                  _item(_MemberAction.demote, Icons.remove_moderator_outlined, l10n.groupDemoteMember),
+                if (onTransferOwnership != null)
+                  _item(_MemberAction.transfer, Icons.workspace_premium_outlined, l10n.groupTransferOwnership),
+                if (onRemove != null) ...[
+                  const PopupMenuDivider(),
+                  _item(
+                    _MemberAction.remove,
+                    Icons.person_remove_outlined,
+                    l10n.groupRemoveMember,
+                    color: scheme.error,
+                  ),
+                ],
+              ],
+            )
+          : null,
+    );
+  }
+
+  PopupMenuItem<_MemberAction> _item(_MemberAction value, IconData icon, String label, {Color? color}) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 12),
+          Text(label, style: TextStyle(color: color)),
+        ],
       ),
     );
   }
 }
+

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/config.dart';
+import '../../core/ui/widgets.dart';
 import '../../data/auth/session_notifier.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -78,44 +79,32 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
     final session = ref.watch(sessionProvider);
     final canGoBackToLogin = session.serverSetupComplete;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.serverSetupTitle),
-        automaticallyImplyLeading: canGoBackToLogin,
-        leading: canGoBackToLogin
-            ? BackButton(onPressed: () => context.go('/login'))
-            : null,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text(l10n.serverSetupDescription),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              labelText: l10n.serverUrlLabel,
-              hintText: 'https://vapen.example.com',
-              errorText: _error,
-            ),
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-            enabled: !_testing,
-            onSubmitted: (_) => _testing ? null : _testConnection(),
+    return AuthScaffold(
+      title: l10n.serverSetupTitle,
+      subtitle: l10n.serverSetupDescription,
+      leading: canGoBackToLogin ? BackButton(onPressed: () => context.go('/login')) : null,
+      children: [
+        TextField(
+          controller: _controller,
+          decoration: InputDecoration(
+            labelText: l10n.serverUrlLabel,
+            hintText: 'https://vapen.example.com',
+            prefixIcon: const Icon(Icons.dns_outlined),
+            errorText: _error,
+            errorMaxLines: 3,
           ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _testing ? null : _testConnection,
-            child: _testing
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.serverConnectionTestButton),
-          ),
-        ],
-      ),
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          enabled: !_testing,
+          onSubmitted: (_) => _testing ? null : _testConnection(),
+        ),
+        const SizedBox(height: 24),
+        LoadingButton(
+          label: l10n.serverConnectionTestButton,
+          loading: _testing,
+          onPressed: _testConnection,
+        ),
+      ],
     );
   }
 }

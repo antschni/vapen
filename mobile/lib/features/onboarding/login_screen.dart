@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vapen_api/vapen_api.dart';
 
+import '../../core/ui/widgets.dart';
 import '../../data/auth/session_notifier.dart';
 import '../../data/devices/account_devices.dart';
 import '../../l10n/app_localizations.dart';
@@ -19,6 +20,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _password = TextEditingController();
   String? _error;
   bool _submitting = false;
+  bool _showPassword = false;
 
   @override
   void dispose() {
@@ -54,60 +56,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
     final baseUrl = ref.watch(sessionProvider).baseUrl;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.loginTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
+    return AutofillGroup(
+      child: AuthScaffold(
+        title: 'Willkommen zurück',
+        subtitle: 'Melde dich an, um dein Tracking fortzusetzen.',
         children: [
           if (baseUrl != null) ...[
-            Text(
-              l10n.serverConfiguredHint(baseUrl),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+            ServerChip(
+              url: baseUrl,
+              label: l10n.changeServerButton,
+              onChange: _submitting ? null : () => context.go('/setup'),
             ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: _submitting ? null : () => context.go('/setup'),
-                child: Text(l10n.changeServerButton),
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
           ],
           TextField(
             controller: _email,
-            decoration: InputDecoration(labelText: l10n.emailLabel),
+            decoration: InputDecoration(
+              labelText: l10n.emailLabel,
+              prefixIcon: const Icon(Icons.alternate_email_rounded),
+            ),
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.email],
             enabled: !_submitting,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _password,
-            decoration: InputDecoration(labelText: l10n.passwordLabel),
-            obscureText: true,
+            decoration: InputDecoration(
+              labelText: l10n.passwordLabel,
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                tooltip: _showPassword ? 'Verbergen' : 'Anzeigen',
+                onPressed: () => setState(() => _showPassword = !_showPassword),
+                icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+              ),
+            ),
+            obscureText: !_showPassword,
+            textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.password],
             enabled: !_submitting,
+            onSubmitted: (_) => _submitting ? null : _submit(),
           ),
-          if (_error != null) ...[
-            const SizedBox(height: 12),
-            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ],
+          if (_error != null) FormError(_error!),
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _submitting ? null : _submit,
-            child: _submitting
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.loginButton),
+          LoadingButton(
+            label: l10n.loginButton,
+            loading: _submitting,
+            onPressed: _submit,
           ),
-          TextButton(
-            onPressed: _submitting ? null : () => context.push('/register'),
-            child: Text(l10n.registerTitle),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Noch kein Konto?',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              TextButton(
+                onPressed: _submitting ? null : () => context.push('/register'),
+                child: Text(l10n.registerTitle),
+              ),
+            ],
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/ui/widgets.dart';
 import '../../data/api/api_providers.dart';
 
 class JoinGroupScreen extends ConsumerStatefulWidget {
@@ -16,6 +17,7 @@ class JoinGroupScreen extends ConsumerStatefulWidget {
 class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> {
   late final TextEditingController _code;
   String? _error;
+  bool _joining = false;
 
   @override
   void initState() {
@@ -38,33 +40,52 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> {
       setState(() => _error = 'Code muss 10 Zeichen haben');
       return;
     }
-    setState(() => _error = null);
+    setState(() {
+      _error = null;
+      _joining = true;
+    });
     try {
       final group = await ref.read(apiClientProvider).joinGroup(code);
       if (mounted) context.go('/groups/${group.id}');
     } catch (_) {
-      setState(() => _error = 'Beitritt fehlgeschlagen');
+      if (mounted) setState(() => _error = 'Beitritt fehlgeschlagen');
+    } finally {
+      if (mounted) setState(() => _joining = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Gruppe beitreten')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            TextField(
-              controller: _code,
-              decoration: const InputDecoration(labelText: 'Einladungscode'),
-              maxLength: 10,
-            ),
-            if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            FilledButton(onPressed: _join, child: const Text('Beitreten')),
-          ],
+    return AuthScaffold(
+      title: 'Gruppe beitreten',
+      subtitle: 'Gib den 10-stelligen Einladungscode ein, den du bekommen hast.',
+      showLogo: false,
+      children: [
+        TextField(
+          controller: _code,
+          autofocus: widget.initialCode == null,
+          maxLength: 10,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontFamily: 'monospace',
+                letterSpacing: 4,
+              ),
+          decoration: const InputDecoration(
+            hintText: 'XXXXXXXXXX',
+            counterText: '',
+          ),
+          enabled: !_joining,
+          onSubmitted: (_) => _join(),
         ),
-      ),
+        if (_error != null) FormError(_error!),
+        const SizedBox(height: 24),
+        LoadingButton(
+          label: 'Beitreten',
+          icon: Icons.group_add_outlined,
+          loading: _joining,
+          onPressed: _join,
+        ),
+      ],
     );
   }
 }

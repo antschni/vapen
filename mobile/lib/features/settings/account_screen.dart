@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:intl/intl.dart';
+import 'package:vapen_api/vapen_api.dart';
 
+import '../../core/ui/widgets.dart';
 import '../../data/api/api_providers.dart';
 import '../../data/auth/session_notifier.dart';
 
@@ -16,6 +19,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   final _displayName = TextEditingController();
   final _currentPw = TextEditingController();
   final _newPw = TextEditingController();
+  bool _savingProfile = false;
+  bool _savingPassword = false;
+  bool _showPasswords = false;
 
   @override
   void initState() {
@@ -32,43 +38,143 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     super.dispose();
   }
 
+  void _snack(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
   Future<void> _saveProfile() async {
-    final tz = await FlutterTimezone.getLocalTimezone();
-    final user = await ref.read(apiClientProvider).patchMe(
-          displayName: _displayName.text.trim(),
-          timezone: tz,
-        );
-    ref.read(sessionProvider.notifier).setUser(user);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profil gespeichert')));
+    setState(() => _savingProfile = true);
+    try {
+      final tz = await FlutterTimezone.getLocalTimezone();
+      final user = await ref.read(apiClientProvider).patchMe(
+            displayName: _displayName.text.trim(),
+            timezone: tz,
+          );
+      ref.read(sessionProvider.notifier).setUser(user);
+      _snack('Profil gespeichert');
+    } on VapenApiException catch (e) {
+      _snack(e.problem.detail ?? 'Speichern fehlgeschlagen');
+    } catch (_) {
+      _snack('Speichern fehlgeschlagen');
+    } finally {
+      if (mounted) setState(() => _savingProfile = false);
     }
   }
 
   Future<void> _changePassword() async {
-    await ref.read(apiClientProvider).changePassword(
-          currentPassword: _currentPw.text,
-          newPassword: _newPw.text,
-        );
-    _currentPw.clear();
-    _newPw.clear();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwort geändert')));
+    if (_currentPw.text.isEmpty || _newPw.text.isEmpty) {
+      _snack('Bitte beide Passwortfelder ausfüllen');
+      return;
+    }
+    setState(() => _savingPassword = true);
+    try {
+      await ref.read(apiClientProvider).changePassword(
+            currentPassword: _currentPw.text,
+            newPassword: _newPw.text,
+          );
+      _currentPw.clear();
+      _newPw.clear();
+      _snack('Passwort geändert');
+    } on VapenApiException catch (e) {
+      _snack(e.problem.detail ?? 'Passwort konnte nicht geändert werden');
+    } catch (_) {
+      _snack('Passwort konnte nicht geändert werden');
+    } finally {
+      if (mounted) setState(() => _savingPassword = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final user = ref.watch(sessionProvider).user;
     return Scaffold(
       appBar: AppBar(title: const Text('Konto')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: [
-          TextField(controller: _displayName, decoration: const InputDecoration(labelText: 'Anzeigename')),
-          FilledButton(onPressed: _saveProfile, child: const Text('Speichern')),
-          const Divider(),
-          TextField(controller: _currentPw, decoration: const InputDecoration(labelText: 'Aktuelles Passwort'), obscureText: true),
-          TextField(controller: _newPw, decoration: const InputDecoration(labelText: 'Neues Passwort'), obscureText: true),
-          FilledButton(onPressed: _changePassword, child: const Text('Passwort ändern')),
+          Center(
+            child: Column(
+              children: [
+                InitialAvatar(name: user?.displayName ?? user?.email ?? '?', radius: 40),
+                const SizedBox(height: 12),
+                Text(user?.email ?? '', style: theme.textTheme.titleMedium),
+                if (user != null)
+                  Text(
+                    'Dabei seit ${DateFormat('MMMM yyyy', 'de').format(user.createdAt.toLocal())}',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+              ],
+            ),
+          ),
+          const SectionHeader('Profil'),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _displayName,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(
+                      labelText: 'Anzeigename',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                      helperText: 'So sehen dich andere in Gruppen',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  LoadingButton(
+                    label: 'Speichern',
+                    loading: _savingProfile,
+                    onPressed: _saveProfile,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SectionHeader('Passwort'),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _currentPw,
+                    obscureText: !_showPasswords,
+                    autofillHints: const [AutofillHints.password],
+                    decoration: InputDecoration(
+                      labelText: 'Aktuelles Passwort',
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      suffixIcon: IconButton(
+                        tooltip: _showPasswords ? 'Verbergen' : 'Anzeigen',
+                        onPressed: () => setState(() => _showPasswords = !_showPasswords),
+                        icon: Icon(_showPasswords ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _newPw,
+                    obscureText: !_showPasswords,
+                    autofillHints: const [AutofillHints.newPassword],
+                    decoration: const InputDecoration(
+                      labelText: 'Neues Passwort',
+                      prefixIcon: Icon(Icons.key_rounded),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  LoadingButton(
+                    label: 'Passwort ändern',
+                    loading: _savingPassword,
+                    onPressed: _changePassword,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -97,14 +97,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           final l10n = AppLocalizations.of(context)!;
-          final theme = Theme.of(context);
           return Scaffold(
             body: navigationShell,
             bottomNavigationBar: NavigationBar(
               selectedIndex: navigationShell.currentIndex,
-              onDestinationSelected: navigationShell.goBranch,
+              onDestinationSelected: (index) => navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              ),
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              indicatorColor: theme.colorScheme.primaryContainer,
               destinations: [
                 NavigationDestination(
                   icon: const Icon(Icons.home_outlined),
@@ -112,8 +113,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                   label: l10n.homeTitle,
                 ),
                 NavigationDestination(
-                  icon: const Icon(Icons.bar_chart_outlined),
-                  selectedIcon: const Icon(Icons.bar_chart_rounded),
+                  icon: const Icon(Icons.insights_outlined),
+                  selectedIcon: const Icon(Icons.insights_rounded),
                   label: l10n.statsTitle,
                 ),
                 NavigationDestination(

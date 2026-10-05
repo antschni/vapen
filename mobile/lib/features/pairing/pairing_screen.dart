@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vapen_api/vapen_api.dart';
 
+import '../../core/ui/widgets.dart';
 import '../../data/api/api_providers.dart';
 import '../../data/auth/session_notifier.dart';
 import '../../data/native/vapen_native.g.dart';
@@ -80,27 +81,117 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.pairDeviceTitle)),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.pairDeviceHint),
-            SwitchListTile(
-              title: Text(l10n.simulatedDevice),
-              value: _useSimulation,
-              onChanged: _busy ? null : (v) => setState(() => _useSimulation = v),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return AuthScaffold(
+      title: l10n.pairDeviceTitle,
+      subtitle: l10n.pairDeviceHint,
+      showLogo: false,
+      children: [
+        Center(child: _PairingIllustration(active: _busy)),
+        const SizedBox(height: 28),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              children: [
+                for (final (i, step) in const [
+                  'Elfbar einschalten (Display an) und in die Nähe halten',
+                  'Auf „Suchen & koppeln“ tippen',
+                  'Elfbar Master in der Systemliste auswählen',
+                ].indexed)
+                  ListTile(
+                    leading: CircleAvatar(
+                      radius: 14,
+                      backgroundColor: scheme.primaryContainer,
+                      foregroundColor: scheme.onPrimaryContainer,
+                      child: Text('${i + 1}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    ),
+                    title: Text(step, style: theme.textTheme.bodyMedium),
+                  ),
+              ],
             ),
-            const SizedBox(height: 24),
-            if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            FilledButton(
-              onPressed: _busy ? null : _pair,
-              child: _busy ? const CircularProgressIndicator() : Text(l10n.pairDeviceButton),
-            ),
-          ],
+          ),
         ),
+        const SizedBox(height: 12),
+        Card(
+          child: SwitchListTile(
+            secondary: IconBadge(icon: Icons.science_outlined, color: scheme.outline, size: 36),
+            title: Text(l10n.simulatedDevice),
+            subtitle: const Text('Zum Ausprobieren ohne echte Elfbar'),
+            value: _useSimulation,
+            onChanged: _busy ? null : (v) => setState(() => _useSimulation = v),
+          ),
+        ),
+        if (_error != null) FormError(_error!),
+        const SizedBox(height: 24),
+        LoadingButton(
+          label: l10n.pairDeviceButton,
+          icon: Icons.bluetooth_searching_rounded,
+          loading: _busy,
+          onPressed: _pair,
+        ),
+      ],
+    );
+  }
+}
+
+class _PairingIllustration extends StatefulWidget {
+  const _PairingIllustration({required this.active});
+
+  final bool active;
+
+  @override
+  State<_PairingIllustration> createState() => _PairingIllustrationState();
+}
+
+class _PairingIllustrationState extends State<_PairingIllustration> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox.square(
+      dimension: 150,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              for (final offset in const [0.0, 0.5])
+                Builder(
+                  builder: (context) {
+                    final t = (_controller.value + offset) % 1.0;
+                    final speed = widget.active ? 1.0 : 0.6;
+                    return Container(
+                      width: 70 + 80 * t,
+                      height: 70 + 80 * t,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: scheme.primary.withValues(alpha: 0.18 * (1 - t) * speed),
+                      ),
+                    );
+                  },
+                ),
+              Container(
+                width: 76,
+                height: 76,
+                decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle),
+                child: Icon(Icons.bluetooth_searching_rounded, size: 36, color: scheme.onPrimary),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

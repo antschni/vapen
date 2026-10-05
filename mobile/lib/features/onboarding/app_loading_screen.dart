@@ -54,20 +54,29 @@ class _AppLoadingScreenState extends ConsumerState<AppLoadingScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const VapenLogo(size: 72),
-            const SizedBox(height: 20),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.85, end: 1),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutBack,
+              builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+              child: const VapenLogo(size: 88),
+            ),
+            const SizedBox(height: 24),
             Text(
               l10n.appTitle,
               style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 32),
-            const SizedBox(
-              width: 32,
-              height: 32,
-              child: CircularProgressIndicator(strokeWidth: 3),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: 120,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: const LinearProgressIndicator(minHeight: 4),
+              ),
             ),
           ],
         ),

@@ -6,9 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:vapen_api/vapen_api.dart';
 
 import '../../core/duration_format.dart';
+import '../../core/relative_time_format.dart';
+import '../../core/ui/widgets.dart';
 import '../../data/api/api_providers.dart';
 import '../../data/api/sse_client.dart';
 import '../../data/auth/session_notifier.dart';
@@ -29,6 +33,7 @@ class GroupDetailScreen extends ConsumerStatefulWidget {
 
 class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   StreamSubscription<Map<String, dynamic>>? _sub;
+  Timer? _ticker;
   List<Map<String, dynamic>> _liveMembers = [];
   Group? _group;
   bool _groupLoading = true;
@@ -43,6 +48,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
       _loadGroup();
       _loadOverview();
       _connectLive();
+    });
+    // Live status decays with the clock (vaping → active → idle), so re-render periodically.
+    _ticker = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted && _liveMembers.isNotEmpty) setState(() {});
     });
   }
 
@@ -87,7 +96,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   }
 
   Future<void> _loadGroup() async {
-    setState(() => _groupLoading = true);
+    setState(() => _groupLoading = _group == null);
     try {
       final group = await ref.read(apiClientProvider).getGroup(widget.groupId);
       if (!mounted) return;
@@ -101,6 +110,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     }
   }
 
+  Future<void> _refresh() async {
+    await Future.wait([_loadGroup(), _loadOverview()]);
+  }
+
   void _connectLive() {
     if (_sub != null) return;
     final session = ref.read(sessionProvider);
@@ -108,22 +121,26 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     final token = session.accessToken;
     if (baseUrl == null || token == null) return;
     final client = GroupLiveSseClient(baseUrl: baseUrl, accessToken: token, groupId: widget.groupId);
-    _sub = client.connect().listen((event) {
-      if (event['event'] == 'snapshot') {
-        final data = event['data'] as Map<String, dynamic>;
-        setState(() => _liveMembers = (data['members'] as List).cast<Map<String, dynamic>>());
-      } else if (event['event'] == 'member_update') {
-        final update = event['data'] as Map<String, dynamic>;
-        setState(() {
-          final idx = _liveMembers.indexWhere((m) => m['user_id'] == update['user_id']);
-          if (idx >= 0) {
-            _liveMembers[idx] = update;
-          } else {
-            _liveMembers.add(update);
-          }
-        });
-      }
-    });
+    _sub = client.connect().listen(
+      (event) {
+        if (!mounted) return;
+        if (event['event'] == 'snapshot') {
+          final data = event['data'] as Map<String, dynamic>;
+          setState(() => _liveMembers = (data['members'] as List).cast<Map<String, dynamic>>());
+        } else if (event['event'] == 'member_update') {
+          final update = event['data'] as Map<String, dynamic>;
+          setState(() {
+            final idx = _liveMembers.indexWhere((m) => m['user_id'] == update['user_id']);
+            if (idx >= 0) {
+              _liveMembers[idx] = update;
+            } else {
+              _liveMembers.add(update);
+            }
+          });
+        }
+      },
+      onError: (_) {},
+    );
   }
 
   Future<void> _copyToClipboard(String text, AppLocalizations l10n) async {
@@ -141,6 +158,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
 
   @override
   void dispose() {
+    _ticker?.cancel();
     _sub?.cancel();
     super.dispose();
   }
@@ -163,9 +181,12 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final title = _group?.name ?? l10n.groupsTitle;
+    final group = _group;
+    final title = group?.name ?? l10n.groupsTitle;
     final myRole = _myRoleInGroup();
     final canManageMembers = myRole == 'owner' || myRole == 'admin';
+    final myId = ref.watch(sessionProvider.select((s) => s.user?.id));
+    final inviteCode = group?.inviteCode;
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -175,57 +196,242 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
             tooltip: canManageMembers ? l10n.groupMembersManage : l10n.groupMembersTitle,
             onPressed: _groupLoading ? null : _openMembers,
           ),
+          const SizedBox(width: 4),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (_groupLoading)
-            const LinearProgressIndicator()
-          else if (_group != null) ...[
-            Card(
-              elevation: 0,
-              child: ListTile(
-                leading: const Icon(Icons.people_outline),
-                title: Text(l10n.groupMembersTitle),
-                subtitle: Text('${_group!.memberCount} ${l10n.groupMembersTitle.toLowerCase()}'),
-                trailing: const Icon(Icons.chevron_right),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+          children: [
+            if (_groupLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: LinearProgressIndicator(),
+              )
+            else if (group != null)
+              _MembersHeader(
+                group: group,
+                manageLabel: canManageMembers ? l10n.groupMembersManage : l10n.groupMembersTitle,
                 onTap: _openMembers,
               ),
+            SectionHeader(
+              'Live',
+              trailing: _liveMembers.isEmpty ? null : _LiveCounter(members: _liveMembers),
             ),
-            const SizedBox(height: 16),
-          ],
-          if (!_groupLoading && _group?.inviteCode != null) ...[
-            _InviteCard(
+            _LiveCard(members: _liveMembers, myId: myId),
+            _LeaderboardSection(
               l10n: l10n,
-              inviteCode: _group!.inviteCode!,
-              inviteUrl: _inviteUrl(_group!.inviteCode!),
-              onCopyCode: () => _copyToClipboard(_group!.inviteCode!, l10n),
-              onCopyLink: () {
-                final url = _inviteUrl(_group!.inviteCode!);
-                if (url != null) _copyToClipboard(url, l10n);
-              },
+              loading: _overviewLoading,
+              entries: _overview?.leaderboard ?? [],
+              range: _leaderboardRange,
+              myId: myId,
+              onRangeChanged: _setLeaderboardRange,
             ),
-            const SizedBox(height: 16),
+            if (!_groupLoading && inviteCode != null) ...[
+              SectionHeader(l10n.groupInviteCode),
+              _InviteCard(
+                l10n: l10n,
+                inviteCode: inviteCode,
+                inviteUrl: _inviteUrl(inviteCode),
+                onCopyCode: () => _copyToClipboard(inviteCode, l10n),
+                onCopyLink: () {
+                  final url = _inviteUrl(inviteCode);
+                  if (url != null) _copyToClipboard(url, l10n);
+                },
+                onShare: () {
+                  final url = _inviteUrl(inviteCode);
+                  Share.share(
+                    'Tritt meiner Vapen-Gruppe „$title“ bei: ${url ?? inviteCode}',
+                    subject: 'Einladung zu $title',
+                  );
+                },
+              ),
+            ],
           ],
-          Text('Live', style: Theme.of(context).textTheme.titleMedium),
-          ..._liveMembers.map((m) {
-            final vapingSince = m['vaping_since'] != null ? DateTime.parse(m['vaping_since'] as String) : null;
-            final lastPuff = m['last_puff_at'] != null ? DateTime.parse(m['last_puff_at'] as String) : null;
-            final status = deriveLiveStatus(vapingSince: vapingSince, lastPuffAt: lastPuff);
-            return ListTile(
-              title: Text(m['display_name'] as String? ?? '—'),
-              trailing: Text(status.name),
-            );
-          }),
-          const Divider(),
-          _LeaderboardSection(
-            l10n: l10n,
-            loading: _overviewLoading,
-            entries: _overview?.leaderboard ?? [],
-            range: _leaderboardRange,
-            onRangeChanged: _setLeaderboardRange,
+        ),
+      ),
+    );
+  }
+}
+
+class _MembersHeader extends StatelessWidget {
+  const _MembersHeader({required this.group, required this.manageLabel, required this.onTap});
+
+  final Group group;
+  final String manageLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final shown = group.members.take(5).toList();
+    const radius = 18.0;
+    const overlap = 12.0;
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              SizedBox(
+                width: shown.isEmpty ? 0 : radius * 2 + (shown.length - 1) * (radius * 2 - overlap),
+                height: radius * 2,
+                child: Stack(
+                  children: [
+                    for (var i = 0; i < shown.length; i++)
+                      Positioned(
+                        left: i * (radius * 2 - overlap),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: scheme.surfaceContainerLow, width: 2),
+                          ),
+                          child: InitialAvatar(name: shown[i].displayName, radius: radius - 2),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.memberCount == 1 ? '1 Mitglied' : '${group.memberCount} Mitglieder',
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    Text(
+                      manageLabel,
+                      style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LiveEntry {
+  _LiveEntry(Map<String, dynamic> m)
+      : userId = m['user_id'] as String?,
+        name = m['display_name'] as String? ?? '—',
+        lastPuff = m['last_puff_at'] != null ? DateTime.parse(m['last_puff_at'] as String) : null,
+        status = deriveLiveStatus(
+          vapingSince: m['vaping_since'] != null ? DateTime.parse(m['vaping_since'] as String) : null,
+          lastPuffAt: m['last_puff_at'] != null ? DateTime.parse(m['last_puff_at'] as String) : null,
+        );
+
+  final String? userId;
+  final String name;
+  final DateTime? lastPuff;
+  final LiveMemberStatus status;
+}
+
+class _LiveCounter extends StatelessWidget {
+  const _LiveCounter({required this.members});
+
+  final List<Map<String, dynamic>> members;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final vaping = members.map(_LiveEntry.new).where((e) => e.status == LiveMemberStatus.vaping).length;
+    if (vaping == 0) return const SizedBox.shrink();
+    return Text(
+      '$vaping dampft gerade',
+      style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w700),
+    );
+  }
+}
+
+class _LiveCard extends StatelessWidget {
+  const _LiveCard({required this.members, required this.myId});
+
+  final List<Map<String, dynamic>> members;
+  final String? myId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    if (members.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(Icons.wifi_tethering_off_rounded, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Noch keine Live-Daten — Mitglieder müssen den Live-Status teilen.',
+                  style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    final entries = members.map(_LiveEntry.new).toList()
+      ..sort((a, b) {
+        final byStatus = a.status.index.compareTo(b.status.index);
+        if (byStatus != 0) return byStatus;
+        return (b.lastPuff ?? DateTime(0)).compareTo(a.lastPuff ?? DateTime(0));
+      });
+    return GroupedCard(
+      children: [
+        for (final e in entries)
+          ListTile(
+            leading: InitialAvatar(name: e.name),
+            title: Text(e.userId != null && e.userId == myId ? '${e.name} (du)' : e.name),
+            subtitle: Text(
+              e.lastPuff != null ? 'Letzter Zug ${formatRelativeTimeDe(e.lastPuff!)}' : 'Noch kein Zug',
+            ),
+            trailing: _StatusPill(status: e.status),
+          ),
+      ],
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+
+  final LiveMemberStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final (label, bg, fg) = switch (status) {
+      LiveMemberStatus.vaping => ('Dampft', scheme.primary, scheme.onPrimary),
+      LiveMemberStatus.active => ('Aktiv', scheme.tertiaryContainer, scheme.onTertiaryContainer),
+      LiveMemberStatus.idle => ('Inaktiv', scheme.surfaceContainerHighest, scheme.onSurfaceVariant),
+    };
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: theme.textTheme.labelSmall?.copyWith(color: fg, fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -238,6 +444,7 @@ class _LeaderboardSection extends StatelessWidget {
     required this.loading,
     required this.entries,
     required this.range,
+    required this.myId,
     required this.onRangeChanged,
   });
 
@@ -245,6 +452,7 @@ class _LeaderboardSection extends StatelessWidget {
   final bool loading;
   final List<Map<String, dynamic>> entries;
   final _LeaderboardRange range;
+  final String? myId;
   final ValueChanged<_LeaderboardRange> onRangeChanged;
 
   @override
@@ -253,110 +461,96 @@ class _LeaderboardSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(l10n.groupLeaderboard, style: theme.textTheme.titleMedium),
-            ),
-            _RangeChip(
-              label: l10n.groupRangeToday,
-              selected: range == _LeaderboardRange.today,
-              onTap: () => onRangeChanged(_LeaderboardRange.today),
-            ),
-            const SizedBox(width: 4),
-            _RangeChip(
-              label: l10n.groupRange7d,
-              selected: range == _LeaderboardRange.week,
-              onTap: () => onRangeChanged(_LeaderboardRange.week),
-            ),
-            const SizedBox(width: 4),
-            _RangeChip(
-              label: l10n.groupRange30d,
-              selected: range == _LeaderboardRange.month,
-              onTap: () => onRangeChanged(_LeaderboardRange.month),
-            ),
+        SectionHeader(l10n.groupLeaderboard),
+        SegmentedButton<_LeaderboardRange>(
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(value: _LeaderboardRange.today, label: Text(l10n.groupRangeToday)),
+            ButtonSegment(value: _LeaderboardRange.week, label: Text(l10n.groupRange7d)),
+            ButtonSegment(value: _LeaderboardRange.month, label: Text(l10n.groupRange30d)),
           ],
+          selected: {range},
+          onSelectionChanged: (s) => onRangeChanged(s.first),
         ),
         const SizedBox(height: 12),
-        if (loading)
-          const LinearProgressIndicator()
-        else if (entries.isEmpty)
-          Text(
-            'Keine Einträge — Privatsphäre oder keine Züge im Zeitraum.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          )
-        else
-          Card(
-            elevation: 0,
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: entries.length,
-              separatorBuilder: (_, _) => Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.5)),
-              itemBuilder: (context, i) {
-                final e = entries[i];
-                final rank = e['rank'] as int? ?? i + 1;
-                final name = e['display_name'] as String? ?? '—';
-                final puffs = e['puff_count'] as int? ?? 0;
-                final durationMs = e['total_duration_ms'] as int? ?? 0;
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: _rankColor(theme.colorScheme, rank).withValues(alpha: 0.2),
-                    child: Text(
-                      '#$rank',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: _rankColor(theme.colorScheme, rank),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: loading
+              ? const Padding(
+                  key: ValueKey('loading'),
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : entries.isEmpty
+                  ? Card(
+                      key: const ValueKey('empty'),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.emoji_events_outlined, color: theme.colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Keine Einträge — Privatsphäre oder keine Züge im Zeitraum.',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    )
+                  : GroupedCard(
+                      key: ValueKey(range),
+                      children: [
+                        for (var i = 0; i < entries.length; i++) _rankTile(context, entries[i], i),
+                      ],
                     ),
-                  ),
-                  title: Text(name),
-                  subtitle: Text(
-                    '${l10n.groupLeaderboardPuffs(_leaderboardCountFormat.format(puffs))} · ${formatDurationMs(durationMs)}',
-                  ),
-                  trailing: Icon(Icons.emoji_events_outlined, color: _rankColor(theme.colorScheme, rank)),
-                );
-              },
-            ),
-          ),
+        ),
       ],
     );
   }
 
-  Color _rankColor(ColorScheme scheme, int rank) {
-    return switch (rank) {
-      1 => scheme.primary,
-      2 => scheme.secondary,
-      3 => scheme.tertiary,
-      _ => scheme.onSurfaceVariant,
+  Widget _rankTile(BuildContext context, Map<String, dynamic> e, int i) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final rank = e['rank'] as int? ?? i + 1;
+    final name = e['display_name'] as String? ?? '—';
+    final puffs = e['puff_count'] as int? ?? 0;
+    final durationMs = e['total_duration_ms'] as int? ?? 0;
+    final isMe = myId != null && e['user_id'] == myId;
+    final medal = switch (rank) {
+      1 => const Color(0xFFE0A526),
+      2 => const Color(0xFF9EA7B0),
+      3 => const Color(0xFFB87333),
+      _ => null,
     };
-  }
-}
-
-class _RangeChip extends StatelessWidget {
-  const _RangeChip({required this.label, required this.selected, required this.onTap});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: selected ? scheme.primaryContainer : scheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                ),
+    return Container(
+      color: isMe ? scheme.primaryContainer.withValues(alpha: 0.35) : null,
+      child: ListTile(
+        leading: SizedBox(
+          width: 40,
+          child: Center(
+            child: medal != null
+                ? Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(color: medal.withValues(alpha: 0.18), shape: BoxShape.circle),
+                    child: Icon(Icons.emoji_events_rounded, color: medal, size: 20),
+                  )
+                : Text(
+                    '#$rank',
+                    style: theme.textTheme.titleSmall?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
           ),
+        ),
+        title: Text(isMe ? '$name (du)' : name, style: TextStyle(fontWeight: isMe ? FontWeight.w700 : null)),
+        subtitle: Text(formatDurationMs(durationMs)),
+        trailing: Text(
+          l10n.groupLeaderboardPuffs(_leaderboardCountFormat.format(puffs)),
+          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -370,6 +564,7 @@ class _InviteCard extends StatelessWidget {
     required this.inviteUrl,
     required this.onCopyCode,
     required this.onCopyLink,
+    required this.onShare,
   });
 
   final AppLocalizations l10n;
@@ -377,49 +572,85 @@ class _InviteCard extends StatelessWidget {
   final String? inviteUrl;
   final VoidCallback onCopyCode;
   final VoidCallback onCopyLink;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.groupInviteCode, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            SelectableText(
-              inviteCode,
-              style: theme.textTheme.titleLarge?.copyWith(fontFamily: 'monospace', letterSpacing: 2),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FilledButton.tonalIcon(
-                  onPressed: onCopyCode,
-                  icon: const Icon(Icons.copy, size: 18),
-                  label: Text(l10n.groupCopyCode),
+            if (inviteUrl != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                if (inviteUrl != null)
-                  OutlinedButton.icon(
-                    onPressed: onCopyLink,
-                    icon: const Icon(Icons.link, size: 18),
-                    label: Text(l10n.groupCopyLink),
+                child: QrImageView(
+                  data: inviteUrl!,
+                  size: 168,
+                  padding: EdgeInsets.zero,
+                  eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.circle, color: Colors.black),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.circle,
+                    color: Colors.black,
                   ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            InkWell(
+              onTap: onCopyCode,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      inviteCode,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontFamily: 'monospace',
+                        letterSpacing: 3,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.copy_rounded, size: 18, color: scheme.onSurfaceVariant),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'QR-Code scannen lassen oder Code teilen',
+              style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                if (inviteUrl != null) ...[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onCopyLink,
+                      icon: const Icon(Icons.link_rounded, size: 18),
+                      label: Text(l10n.groupCopyLink),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onShare,
+                    icon: const Icon(Icons.share_rounded, size: 18),
+                    label: const Text('Teilen'),
+                  ),
+                ),
               ],
             ),
-            if (inviteUrl != null) ...[
-              const SizedBox(height: 12),
-              Text(l10n.groupInviteLink, style: theme.textTheme.labelMedium),
-              const SizedBox(height: 4),
-              SelectableText(
-                inviteUrl!,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
           ],
         ),
       ),

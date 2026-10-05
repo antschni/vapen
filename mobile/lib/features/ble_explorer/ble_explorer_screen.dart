@@ -82,45 +82,51 @@ class _BleExplorerScreenState extends ConsumerState<BleExplorerScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _marker,
-                    decoration: const InputDecoration(hintText: 'Marker-Notiz'),
-                  ),
+                  child: _scanning
+                      ? OutlinedButton.icon(
+                          onPressed: () => _stopScan(bridge),
+                          icon: const Icon(Icons.stop_rounded),
+                          label: const Text('Stop'),
+                        )
+                      : FilledButton.icon(
+                          onPressed: () => _startScan(bridge),
+                          icon: const Icon(Icons.radar_rounded),
+                          label: const Text('Scan starten'),
+                        ),
                 ),
-                IconButton(
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: TextField(
+              controller: _marker,
+              decoration: InputDecoration(
+                hintText: 'Marker-Notiz',
+                prefixIcon: const Icon(Icons.bookmark_outline_rounded),
+                suffixIcon: IconButton(
+                  tooltip: 'Marker setzen',
                   onPressed: () {
                     if (_marker.text.isNotEmpty) {
                       bridge.host.explorerAddMarker(_marker.text);
                       _marker.clear();
                     }
                   },
-                  icon: const Icon(Icons.bookmark_add),
+                  icon: const Icon(Icons.bookmark_add_rounded),
                 ),
-              ],
+              ),
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              FilledButton(
-                onPressed: _scanning ? null : () => _startScan(bridge),
-                child: Text(_scanning ? 'Scan…' : 'Scan'),
-              ),
-              FilledButton(
-                onPressed: _scanning ? () => _stopScan(bridge) : null,
-                child: const Text('Stop'),
-              ),
-            ],
           ),
           if (_scanning)
             const Padding(
-              padding: EdgeInsets.all(8),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: LinearProgressIndicator(),
             ),
+          const Divider(),
           Expanded(
             child: ValueListenableBuilder<List<ExplorerEvent>>(
               valueListenable: bridge.explorerEvents,
