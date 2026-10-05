@@ -66,6 +66,7 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
         ),
       );
       await bridge.host.startTracking();
+      await ref.read(tokenStorageProvider).saveActiveDeviceId(device.id);
       if (mounted) context.go('/home');
     } catch (e) {
       setState(() => _error = e.toString().contains('SocketException') || e.toString().contains('Connection')
@@ -96,7 +97,7 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
             if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
             FilledButton(
               onPressed: _busy ? null : _pair,
-              child: _busy ? const CircularProgressIndicator() : Text(l10n.continueButton),
+              child: _busy ? const CircularProgressIndicator() : Text(l10n.pairDeviceButton),
             ),
           ],
         ),

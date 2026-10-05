@@ -477,6 +477,7 @@ private open class VapenNativePigeonPigeonCodec : StandardMessageCodec() {
 interface TrackingHostApi {
   fun setCredentials(credentials: NativeCredentials)
   fun clearCredentials()
+  fun getActiveDeviceId(): String?
   fun associateDevice(callback: (Result<PairingResult>) -> Unit)
   fun startTracking()
   fun stopTracking()
@@ -527,6 +528,21 @@ interface TrackingHostApi {
             val wrapped: List<Any?> = try {
               api.clearCredentials()
               listOf(null)
+            } catch (exception: Throwable) {
+              VapenNativePigeonPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.vapen.TrackingHostApi.getActiveDeviceId$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.getActiveDeviceId())
             } catch (exception: Throwable) {
               VapenNativePigeonPigeonUtils.wrapError(exception)
             }

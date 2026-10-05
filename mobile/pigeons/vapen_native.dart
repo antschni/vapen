@@ -113,6 +113,7 @@ class ExplorerEvent {
 abstract class TrackingHostApi {
   void setCredentials(NativeCredentials credentials);
   void clearCredentials();
+  String? getActiveDeviceId();
   @async
   PairingResult associateDevice();
   void startTracking();

@@ -97,6 +97,8 @@ object TrackingController {
         bleManager?.setTargetAddress(address)
     }
 
+    fun activeDeviceId(): String? = if (::credentials.isInitialized) credentials.get()?.deviceId else null
+
     fun clearCredentials() {
         stopTrackingInternal()
         credentials.clear()

@@ -208,11 +208,167 @@ abstract class AppLocalizations {
   /// **'Statistik'**
   String get statsTitle;
 
+  /// No description provided for @statsNotSignedIn.
+  ///
+  /// In de, this message translates to:
+  /// **'Melde dich an, um Statistiken zu sehen.'**
+  String get statsNotSignedIn;
+
   /// No description provided for @groupsTitle.
   ///
   /// In de, this message translates to:
   /// **'Gruppen'**
   String get groupsTitle;
+
+  /// No description provided for @groupInviteCode.
+  ///
+  /// In de, this message translates to:
+  /// **'Einladungscode'**
+  String get groupInviteCode;
+
+  /// No description provided for @groupInviteLink.
+  ///
+  /// In de, this message translates to:
+  /// **'Einladungslink'**
+  String get groupInviteLink;
+
+  /// No description provided for @groupCopyCode.
+  ///
+  /// In de, this message translates to:
+  /// **'Code kopieren'**
+  String get groupCopyCode;
+
+  /// No description provided for @groupCopyLink.
+  ///
+  /// In de, this message translates to:
+  /// **'Link kopieren'**
+  String get groupCopyLink;
+
+  /// No description provided for @groupInviteCopied.
+  ///
+  /// In de, this message translates to:
+  /// **'In die Zwischenablage kopiert'**
+  String get groupInviteCopied;
+
+  /// No description provided for @groupLeaderboard.
+  ///
+  /// In de, this message translates to:
+  /// **'Rangliste'**
+  String get groupLeaderboard;
+
+  /// No description provided for @groupRangeToday.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute'**
+  String get groupRangeToday;
+
+  /// No description provided for @groupRange7d.
+  ///
+  /// In de, this message translates to:
+  /// **'7 Tage'**
+  String get groupRange7d;
+
+  /// No description provided for @groupRange30d.
+  ///
+  /// In de, this message translates to:
+  /// **'30 Tage'**
+  String get groupRange30d;
+
+  /// No description provided for @groupLeaderboardPuffs.
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Züge'**
+  String groupLeaderboardPuffs(String count);
+
+  /// No description provided for @groupMembersTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Mitglieder'**
+  String get groupMembersTitle;
+
+  /// No description provided for @groupMembersManage.
+  ///
+  /// In de, this message translates to:
+  /// **'Mitglieder verwalten'**
+  String get groupMembersManage;
+
+  /// No description provided for @groupRoleOwner.
+  ///
+  /// In de, this message translates to:
+  /// **'Inhaber'**
+  String get groupRoleOwner;
+
+  /// No description provided for @groupRoleAdmin.
+  ///
+  /// In de, this message translates to:
+  /// **'Admin'**
+  String get groupRoleAdmin;
+
+  /// No description provided for @groupRoleMember.
+  ///
+  /// In de, this message translates to:
+  /// **'Mitglied'**
+  String get groupRoleMember;
+
+  /// No description provided for @groupPromoteAdmin.
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Admin machen'**
+  String get groupPromoteAdmin;
+
+  /// No description provided for @groupDemoteMember.
+  ///
+  /// In de, this message translates to:
+  /// **'Admin-Rechte entziehen'**
+  String get groupDemoteMember;
+
+  /// No description provided for @groupTransferOwnership.
+  ///
+  /// In de, this message translates to:
+  /// **'Inhaberschaft übertragen'**
+  String get groupTransferOwnership;
+
+  /// No description provided for @groupTransferOwnershipConfirm.
+  ///
+  /// In de, this message translates to:
+  /// **'Inhaberschaft wirklich an {name} übertragen? Du wirst danach Admin.'**
+  String groupTransferOwnershipConfirm(String name);
+
+  /// No description provided for @groupRemoveMember.
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernen'**
+  String get groupRemoveMember;
+
+  /// No description provided for @groupRemoveMemberConfirm.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} wirklich aus der Gruppe entfernen?'**
+  String groupRemoveMemberConfirm(String name);
+
+  /// No description provided for @groupLeave.
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe verlassen'**
+  String get groupLeave;
+
+  /// No description provided for @groupLeaveConfirm.
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe wirklich verlassen?'**
+  String get groupLeaveConfirm;
+
+  /// No description provided for @groupDelete.
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe löschen'**
+  String get groupDelete;
+
+  /// No description provided for @groupDeleteConfirm.
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe unwiderruflich löschen? Alle Mitglieder verlieren den Zugang.'**
+  String get groupDeleteConfirm;
 
   /// No description provided for @privacyTitle.
   ///
@@ -334,6 +490,12 @@ abstract class AppLocalizations {
   /// **'Wähle deine Elfbar Master in der Systemliste. Schließe InnoGate, falls es läuft.'**
   String get pairDeviceHint;
 
+  /// No description provided for @pairDeviceButton.
+  ///
+  /// In de, this message translates to:
+  /// **'Suchen & koppeln'**
+  String get pairDeviceButton;
+
   /// No description provided for @bleExplorerTitle.
   ///
   /// In de, this message translates to:
@@ -405,6 +567,144 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Abbrechen'**
   String get cancelButton;
+
+  /// No description provided for @devicesTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Geräte'**
+  String get devicesTitle;
+
+  /// No description provided for @devicesEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Gerät registriert.'**
+  String get devicesEmpty;
+
+  /// No description provided for @devicesEmptyHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Kopple deine Elfbar, um Puffs zu tracken.'**
+  String get devicesEmptyHint;
+
+  /// No description provided for @deviceLastSeen.
+  ///
+  /// In de, this message translates to:
+  /// **'Zuletzt gesehen'**
+  String get deviceLastSeen;
+
+  /// No description provided for @deviceNeverSeen.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch nie'**
+  String get deviceNeverSeen;
+
+  /// No description provided for @deviceDetailTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Gerät'**
+  String get deviceDetailTitle;
+
+  /// No description provided for @deviceActiveOnPhone.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf diesem Telefon aktiv'**
+  String get deviceActiveOnPhone;
+
+  /// No description provided for @deviceSectionStatus.
+  ///
+  /// In de, this message translates to:
+  /// **'Status'**
+  String get deviceSectionStatus;
+
+  /// No description provided for @deviceSectionInfo.
+  ///
+  /// In de, this message translates to:
+  /// **'Informationen'**
+  String get deviceSectionInfo;
+
+  /// No description provided for @deviceBattery.
+  ///
+  /// In de, this message translates to:
+  /// **'Akku'**
+  String get deviceBattery;
+
+  /// No description provided for @deviceLiquid.
+  ///
+  /// In de, this message translates to:
+  /// **'Liquid'**
+  String get deviceLiquid;
+
+  /// No description provided for @deviceCharging.
+  ///
+  /// In de, this message translates to:
+  /// **'Laden'**
+  String get deviceCharging;
+
+  /// No description provided for @deviceChargingYes.
+  ///
+  /// In de, this message translates to:
+  /// **'Ja'**
+  String get deviceChargingYes;
+
+  /// No description provided for @deviceChargingNo.
+  ///
+  /// In de, this message translates to:
+  /// **'Nein'**
+  String get deviceChargingNo;
+
+  /// No description provided for @deviceFirmware.
+  ///
+  /// In de, this message translates to:
+  /// **'Firmware (Status)'**
+  String get deviceFirmware;
+
+  /// No description provided for @deviceFirmwareReported.
+  ///
+  /// In de, this message translates to:
+  /// **'Firmware (Gerät)'**
+  String get deviceFirmwareReported;
+
+  /// No description provided for @deviceStatusRecorded.
+  ///
+  /// In de, this message translates to:
+  /// **'Status erfasst'**
+  String get deviceStatusRecorded;
+
+  /// No description provided for @deviceNoStatusYet.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Status vom Gerät empfangen.'**
+  String get deviceNoStatusYet;
+
+  /// No description provided for @deviceRegistered.
+  ///
+  /// In de, this message translates to:
+  /// **'Registriert'**
+  String get deviceRegistered;
+
+  /// No description provided for @deviceHardwareId.
+  ///
+  /// In de, this message translates to:
+  /// **'Hardware-ID'**
+  String get deviceHardwareId;
+
+  /// No description provided for @deviceDeleteTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Gerät löschen'**
+  String get deviceDeleteTitle;
+
+  /// No description provided for @deviceDeleteAction.
+  ///
+  /// In de, this message translates to:
+  /// **'Gerät löschen'**
+  String get deviceDeleteAction;
+
+  /// No description provided for @deviceDeleteConfirm.
+  ///
+  /// In de, this message translates to:
+  /// **'Gerät und alle zugehörigen Daten wirklich löschen?'**
+  String get deviceDeleteConfirm;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vapen_api/vapen_api.dart';
 
+import '../../core/relative_time_format.dart';
 import '../../data/api/api_providers.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -45,11 +46,16 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
     }
   }
 
+  Future<void> _openDevice(Device device) async {
+    final deleted = await context.push<bool>('/more/devices/${device.id}');
+    if (deleted == true && mounted) await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Geräte')),
+      appBar: AppBar(title: Text(l10n.devicesTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/pairing'),
         icon: const Icon(Icons.bluetooth_connected),
@@ -87,13 +93,13 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Noch kein Gerät registriert.',
+                l10n.devicesEmpty,
                 style: Theme.of(context).textTheme.titleMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                'Kopple deine Elfbar, um Puffs zu tracken.',
+                l10n.devicesEmptyHint,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -118,13 +124,20 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
         itemBuilder: (context, i) {
           final d = devices[i];
           final status = d.latestStatus;
+          final subtitle = StringBuffer();
+          if (d.lastSeenAt != null) {
+            subtitle.write('${l10n.deviceLastSeen} ${formatRelativeTimeDe(d.lastSeenAt!)}');
+          }
+          if (status != null) {
+            if (subtitle.isNotEmpty) subtitle.write(' · ');
+            subtitle.write('Akku ${status.batteryPercent ?? "?"} %');
+          }
+          if (subtitle.isEmpty) subtitle.write(d.model);
           return ListTile(
             title: Text(d.name),
-            subtitle: Text(
-              status != null
-                  ? 'Batterie ${status.batteryPercent ?? "?"} % · Liquid ${status.liquidPercent ?? "?"} %'
-                  : d.hardwareId,
-            ),
+            subtitle: Text(subtitle.toString()),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _openDevice(d),
           );
         },
       ),

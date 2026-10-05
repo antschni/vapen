@@ -13,6 +13,7 @@ class TokenStorage {
   static const _baseUrl = 'base_url';
   static const _preferredServer = 'preferred_server_url';
   static const _serverSetupComplete = 'server_setup_complete';
+  static const _activeDeviceId = 'active_device_id';
 
   Future<void> savePreferredServerUrl(String baseUrl) async {
     await _storage.write(key: _preferredServer, value: baseUrl);
@@ -48,6 +49,13 @@ class TokenStorage {
   Future<String?> readBaseUrl() => _storage.read(key: _baseUrl);
 
   Future<String?> readAccessToken() => _storage.read(key: _access);
+
+  Future<void> saveActiveDeviceId(String deviceId) =>
+      _storage.write(key: _activeDeviceId, value: deviceId);
+
+  Future<String?> readActiveDeviceId() => _storage.read(key: _activeDeviceId);
+
+  Future<void> clearActiveDeviceId() => _storage.delete(key: _activeDeviceId);
 
   Future<String?> readRefreshToken() => _storage.read(key: _refresh);
 

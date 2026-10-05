@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/auth/session_notifier.dart';
+import '../data/permissions/required_permissions.dart';
 import '../features/ble_explorer/ble_explorer_screen.dart';
 import '../features/groups/group_detail_screen.dart';
+import '../features/groups/group_members_screen.dart';
 import '../features/groups/groups_screen.dart';
 import '../features/groups/join_group_screen.dart';
 import '../features/settings/account_screen.dart';
 import '../features/settings/devices_screen.dart';
+import '../features/settings/device_detail_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/onboarding/login_screen.dart';
 import '../features/onboarding/register_screen.dart';
@@ -20,6 +23,7 @@ import '../features/privacy/privacy_screen.dart';
 import '../features/settings/server_endpoint_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
+import '../l10n/app_localizations.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
@@ -39,20 +43,24 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/loading',
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
+      final permissions = ref.read(requiredPermissionsProvider);
       final loc = state.matchedLocation;
       const authRoutes = {'/login', '/register'};
       final onSetup = loc == '/setup';
       final onLoading = loc == '/loading';
+      final onPermissions = loc == '/permissions';
+      final onPairing = loc == '/pairing';
       final onServerSettings = loc == '/server';
       final onJoin = loc.startsWith('/groups/join');
 
-      if (session.loading) {
+      if (session.loading || permissions.loading) {
         return onLoading ? null : '/loading';
       }
 
       if (onLoading) {
         if (!session.serverSetupComplete) return '/setup';
         if (!session.isAuthenticated) return '/login';
+        if (!permissions.granted) return '/permissions';
         return '/home';
       }
 
@@ -66,6 +74,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (authRoutes.contains(loc) || onJoin) return null;
         if (onServerSettings) return '/login';
         return '/login';
+      }
+
+      if (session.isAuthenticated && !permissions.granted) {
+        if (onPermissions || onPairing) return null;
+        return '/permissions';
       }
 
       if (session.isAuthenticated && authRoutes.contains(loc)) return '/home';
@@ -82,27 +95,35 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/pairing', builder: (_, s) => const PairingScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
+          final l10n = AppLocalizations.of(context)!;
+          final theme = Theme.of(context);
           return Scaffold(
             body: navigationShell,
             bottomNavigationBar: NavigationBar(
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: navigationShell.goBranch,
-              destinations: const [
-                NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              indicatorColor: theme.colorScheme.primaryContainer,
+              destinations: [
                 NavigationDestination(
-                  icon: Icon(Icons.bar_chart_outlined),
-                  selectedIcon: Icon(Icons.bar_chart),
-                  label: 'Statistik',
+                  icon: const Icon(Icons.home_outlined),
+                  selectedIcon: const Icon(Icons.home_rounded),
+                  label: l10n.homeTitle,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.groups_outlined),
-                  selectedIcon: Icon(Icons.groups),
-                  label: 'Gruppen',
+                  icon: const Icon(Icons.bar_chart_outlined),
+                  selectedIcon: const Icon(Icons.bar_chart_rounded),
+                  label: l10n.statsTitle,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.settings_outlined),
-                  selectedIcon: Icon(Icons.settings),
-                  label: 'Mehr',
+                  icon: const Icon(Icons.groups_outlined),
+                  selectedIcon: const Icon(Icons.groups_rounded),
+                  label: l10n.groupsTitle,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.settings_outlined),
+                  selectedIcon: const Icon(Icons.settings_rounded),
+                  label: l10n.settingsTitle,
                 ),
               ],
             ),
@@ -137,6 +158,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'devices',
                     parentNavigatorKey: _rootKey,
                     builder: (_, s) => const DevicesScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        parentNavigatorKey: _rootKey,
+                        builder: (_, s) => DeviceDetailScreen(deviceId: s.pathParameters['id']!),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -151,6 +179,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/groups/:id',
         builder: (context, state) => GroupDetailScreen(groupId: state.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'members',
+            builder: (context, state) => GroupMembersScreen(groupId: state.pathParameters['id']!),
+          ),
+        ],
       ),
       GoRoute(
         path: '/join/:code',
@@ -163,6 +197,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(this._ref) {
     _ref.listen(sessionProvider, (_, _) => notifyListeners());
+    _ref.listen(requiredPermissionsProvider, (_, _) => notifyListeners());
   }
 
   final Ref _ref;

@@ -8,7 +8,12 @@ import 'auth_interceptor.dart';
 final dioProvider = Provider<Dio>((ref) {
   final session = ref.watch(sessionProvider.notifier);
   final storage = ref.watch(tokenStorageProvider);
-  final dio = Dio();
+  final dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+    ),
+  );
   dio.interceptors.add(
     AuthInterceptor(
       dio: dio,

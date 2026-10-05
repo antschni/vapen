@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ import (
 	grouppkg "github.com/antschni/vapen/api/internal/groups"
 	"github.com/antschni/vapen/api/internal/openapi"
 	"github.com/antschni/vapen/api/internal/privacy"
+	"github.com/antschni/vapen/api/internal/stats"
 	"github.com/antschni/vapen/api/internal/store"
 )
 
@@ -309,8 +311,13 @@ func (s *Server) GetGroupOverview(ctx context.Context, request openapi.GetGroupO
 	}
 	members, _ := s.q.ListGroupMembers(ctx, g.ID)
 	outMembers := []openapi.GroupOverviewMember{}
-	leaderboard := []openapi.LeaderboardEntry{}
-	rank := 1
+	type lbCandidate struct {
+		mid             uuid.UUID
+		displayName     string
+		puffCount       int
+		totalDurationMs int
+	}
+	var lbCandidates []lbCandidate
 	for _, m := range members {
 		mid := uuidFromPG(m.UserID)
 		eff := s.groupPrivacy(ctx, gid, mid).Effective
@@ -345,11 +352,36 @@ func (s *Server) GetGroupOverview(ctx context.Context, request openapi.GetGroupO
 		}
 		outMembers = append(outMembers, om)
 		if eff.ShowInLeaderboard && eff.ShareUsageSummary {
-			leaderboard = append(leaderboard, openapi.LeaderboardEntry{
-				Rank: rank, UserId: openapi_types.UUID(mid), DisplayName: m.DisplayName,
+			st, err := stats.Usage(ctx, s.pool, mid, nil, from, to, "day", tz)
+			puffCount := 0
+			totalDurationMs := 0
+			if err == nil {
+				puffCount = st.Totals.PuffCount
+				totalDurationMs = st.Totals.TotalDurationMs
+			}
+			lbCandidates = append(lbCandidates, lbCandidate{
+				mid:             mid,
+				displayName:     m.DisplayName,
+				puffCount:       puffCount,
+				totalDurationMs: totalDurationMs,
 			})
-			rank++
 		}
+	}
+	sort.Slice(lbCandidates, func(i, j int) bool {
+		if lbCandidates[i].puffCount != lbCandidates[j].puffCount {
+			return lbCandidates[i].puffCount > lbCandidates[j].puffCount
+		}
+		return lbCandidates[i].totalDurationMs > lbCandidates[j].totalDurationMs
+	})
+	leaderboard := make([]openapi.LeaderboardEntry, 0, len(lbCandidates))
+	for i, c := range lbCandidates {
+		leaderboard = append(leaderboard, openapi.LeaderboardEntry{
+			Rank:            i + 1,
+			UserId:          openapi_types.UUID(c.mid),
+			DisplayName:     c.displayName,
+			PuffCount:       c.puffCount,
+			TotalDurationMs: c.totalDurationMs,
+		})
 	}
 	cnt, _ := s.q.CountGroupMembers(ctx, g.ID)
 	overview := openapi.GroupOverview{

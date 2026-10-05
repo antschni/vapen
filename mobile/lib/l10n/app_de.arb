@@ -24,7 +24,48 @@
   "logoutButton": "Abmelden",
   "homeTitle": "Übersicht",
   "statsTitle": "Statistik",
+  "statsNotSignedIn": "Melde dich an, um Statistiken zu sehen.",
   "groupsTitle": "Gruppen",
+  "groupInviteCode": "Einladungscode",
+  "groupInviteLink": "Einladungslink",
+  "groupCopyCode": "Code kopieren",
+  "groupCopyLink": "Link kopieren",
+  "groupInviteCopied": "In die Zwischenablage kopiert",
+  "groupLeaderboard": "Rangliste",
+  "groupRangeToday": "Heute",
+  "groupRange7d": "7 Tage",
+  "groupRange30d": "30 Tage",
+  "groupLeaderboardPuffs": "{count} Züge",
+  "@groupLeaderboardPuffs": {
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+  "groupMembersTitle": "Mitglieder",
+  "groupMembersManage": "Mitglieder verwalten",
+  "groupRoleOwner": "Inhaber",
+  "groupRoleAdmin": "Admin",
+  "groupRoleMember": "Mitglied",
+  "groupPromoteAdmin": "Zum Admin machen",
+  "groupDemoteMember": "Admin-Rechte entziehen",
+  "groupTransferOwnership": "Inhaberschaft übertragen",
+  "groupTransferOwnershipConfirm": "Inhaberschaft wirklich an {name} übertragen? Du wirst danach Admin.",
+  "@groupTransferOwnershipConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "groupRemoveMember": "Entfernen",
+  "groupRemoveMemberConfirm": "{name} wirklich aus der Gruppe entfernen?",
+  "@groupRemoveMemberConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "groupLeave": "Gruppe verlassen",
+  "groupLeaveConfirm": "Gruppe wirklich verlassen?",
+  "groupDelete": "Gruppe löschen",
+  "groupDeleteConfirm": "Gruppe unwiderruflich löschen? Alle Mitglieder verlieren den Zugang.",
   "privacyTitle": "Privatsphäre",
   "settingsTitle": "Einstellungen",
   "trackingEnabled": "Tracking aktiv",
@@ -55,6 +96,7 @@
   "continueButton": "Weiter",
   "pairDeviceTitle": "Gerät koppeln",
   "pairDeviceHint": "Wähle deine Elfbar Master in der Systemliste. Schließe InnoGate, falls es läuft.",
+  "pairDeviceButton": "Suchen & koppeln",
   "bleExplorerTitle": "BLE Explorer",
   "developerMode": "Entwicklermodus",
   "simulatedDevice": "Simuliertes Gerät",
@@ -66,5 +108,28 @@
   "serverEndpointSave": "Speichern",
   "serverEndpointSaved": "Server-URL gespeichert",
   "serverEndpointChangeLogout": "Bei einer anderen URL wirst du abgemeldet. Hintergrund-Uploads stoppen, bis du dich erneut anmeldest und das Gerät ggf. neu koppelst.",
-  "cancelButton": "Abbrechen"
+  "cancelButton": "Abbrechen",
+  "devicesTitle": "Geräte",
+  "devicesEmpty": "Noch kein Gerät registriert.",
+  "devicesEmptyHint": "Kopple deine Elfbar, um Puffs zu tracken.",
+  "deviceLastSeen": "Zuletzt gesehen",
+  "deviceNeverSeen": "Noch nie",
+  "deviceDetailTitle": "Gerät",
+  "deviceActiveOnPhone": "Auf diesem Telefon aktiv",
+  "deviceSectionStatus": "Status",
+  "deviceSectionInfo": "Informationen",
+  "deviceBattery": "Akku",
+  "deviceLiquid": "Liquid",
+  "deviceCharging": "Laden",
+  "deviceChargingYes": "Ja",
+  "deviceChargingNo": "Nein",
+  "deviceFirmware": "Firmware (Status)",
+  "deviceFirmwareReported": "Firmware (Gerät)",
+  "deviceStatusRecorded": "Status erfasst",
+  "deviceNoStatusYet": "Noch kein Status vom Gerät empfangen.",
+  "deviceRegistered": "Registriert",
+  "deviceHardwareId": "Hardware-ID",
+  "deviceDeleteTitle": "Gerät löschen",
+  "deviceDeleteAction": "Gerät löschen",
+  "deviceDeleteConfirm": "Gerät und alle zugehörigen Daten wirklich löschen?"
 }

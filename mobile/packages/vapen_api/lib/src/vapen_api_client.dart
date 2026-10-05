@@ -131,6 +131,24 @@ class VapenApiClient {
     return Device.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<Device> getDevice(String id) async {
+    final response = await _request(() => _dio.get('/devices/$id'));
+    return Device.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<Device> patchDevice(String id, {String? name}) async {
+    final response = await _request(
+      () => _dio.patch('/devices/$id', data: {
+        if (name != null) 'name': name,
+      }),
+    );
+    return Device.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> deleteDevice(String id) async {
+    await _request(() => _dio.delete('/devices/$id'));
+  }
+
   Future<IngestTokenCreated> createIngestToken(String deviceId, String name) async {
     final response = await _request(
       () => _dio.post('/devices/$deviceId/ingest-tokens', data: {'name': name}),
@@ -180,9 +198,35 @@ class VapenApiClient {
     return Group.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<GroupOverview> getGroupOverview(String id, {String? tz}) async {
+  Future<GroupMember> patchGroupMember(String groupId, String userId, String role) async {
+    final response = await _request(
+      () => _dio.patch('/groups/$groupId/members/$userId', data: {'role': role}),
+    );
+    return GroupMember.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> removeGroupMember(String groupId, String userId) async {
+    await _request(() => _dio.delete('/groups/$groupId/members/$userId'));
+  }
+
+  Future<void> leaveGroup(String groupId) async {
+    await _request(() => _dio.post('/groups/$groupId/leave'));
+  }
+
+  Future<void> deleteGroup(String groupId) async {
+    await _request(() => _dio.delete('/groups/$groupId'));
+  }
+
+  Future<GroupOverview> getGroupOverview(
+    String id, {
+    DateTime? from,
+    DateTime? to,
+    String? tz,
+  }) async {
     final response = await _request(
       () => _dio.get('/groups/$id/overview', queryParameters: {
+        if (from != null) 'from': from.toUtc().toIso8601String(),
+        if (to != null) 'to': to.toUtc().toIso8601String(),
         if (tz != null) 'tz': tz,
       }),
     );

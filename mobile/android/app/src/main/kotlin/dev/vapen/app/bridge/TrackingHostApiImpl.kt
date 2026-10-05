@@ -38,6 +38,8 @@ class TrackingHostApiImpl(
         TrackingController.clearCredentials()
     }
 
+    override fun getActiveDeviceId(): String? = TrackingController.activeDeviceId()
+
     override fun associateDevice(callback: (Result<PairingResult>) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             var replied = false

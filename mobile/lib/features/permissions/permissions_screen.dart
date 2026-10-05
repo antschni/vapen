@@ -3,24 +3,46 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../data/permissions/required_permissions.dart';
 import '../../l10n/app_localizations.dart';
 import '../../data/native/tracking_bridge.dart';
 
-class PermissionsScreen extends ConsumerWidget {
+class PermissionsScreen extends ConsumerStatefulWidget {
   const PermissionsScreen({super.key});
 
-  Future<void> _requestAll(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<PermissionsScreen> createState() => _PermissionsScreenState();
+}
+
+class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
+  var _promptedBluetooth = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _promptBluetoothIfNeeded());
+  }
+
+  Future<void> _promptBluetoothIfNeeded() async {
+    if (_promptedBluetooth || !mounted) return;
+    _promptedBluetooth = true;
+    if (await bluetoothPermissionsGranted()) return;
+    await requestBluetoothPermissions();
+    await ref.read(requiredPermissionsProvider.notifier).refresh();
+  }
+
+  Future<void> _requestAll(BuildContext context) async {
+    await requestBluetoothPermissions();
     await [
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
       Permission.notification,
       Permission.locationWhenInUse,
     ].request();
+    await ref.read(requiredPermissionsProvider.notifier).refresh();
     if (context.mounted) context.go('/pairing');
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bridge = ref.watch(trackingBridgeProvider);
     return Scaffold(
@@ -45,7 +67,7 @@ class PermissionsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: () => _requestAll(context, ref),
+            onPressed: () => _requestAll(context),
             child: Text(l10n.continueButton),
           ),
         ],
