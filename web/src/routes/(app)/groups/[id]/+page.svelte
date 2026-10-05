@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LivePresenceGrid from '#lib/components/LivePresenceGrid.svelte';
+	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
 	import Badge from '#lib/components/ui/badge.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
@@ -32,6 +33,8 @@
 <svelte:head>
 	<title>{data.groupName} · {de.pages.groups.title}</title>
 </svelte:head>
+
+<LiveRefresh />
 
 <div class="flex flex-wrap items-center justify-between gap-3">
 	<div>

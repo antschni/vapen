@@ -1,6 +1,8 @@
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
+import { messageFromApiProblem } from "#lib/server/api-problem.js";
 import { parseUsageFilters } from "#lib/server/usage-params.js";
+import { de } from "#lib/i18n/de.js";
 const PUFF_LIMIT = 50;
 
 export const load: PageServerLoad = async ({ locals, parent, url }) => {
@@ -103,7 +105,7 @@ export const actions: Actions = {
     });
 
     if (error || !data) {
-      return fail(500, { message: "load failed" });
+      return fail(400, { message: messageFromApiProblem(error, de.errors.generic) });
     }
 
     return {

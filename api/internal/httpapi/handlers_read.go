@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,14 +46,37 @@ func (s *Server) ListPuffs(ctx context.Context, request openapi.ListPuffsRequest
 	if request.Params.Limit != nil {
 		limit = *request.Params.Limit
 	}
-	deviceID := pgtypeOptionalUUID(request.Params.DeviceId)
-	rows, err := s.q.ListPuffs(ctx, store.ListPuffsParams{
-		UserID:    pgUUID(target),
-		StartedAt: pgTime(from),
-		StartedAt_2: pgTime(to),
-		DeviceID:  deviceID,
-		Limit:     int32(limit),
-	})
+	cursorAt, cursorID, err := puffCursorParams(request.Params.Cursor)
+	if err != nil {
+		return nil, errValidation("invalid cursor")
+	}
+	params := store.ListPuffsParams{
+		UserID:          pgUUID(target),
+		StartedAt:       pgTime(from),
+		StartedAt_2:     pgTime(to),
+		Limit:           int32(limit),
+		DeviceID:        pgtypeOptionalUUID(request.Params.DeviceId),
+		Source:          pgTextPtr(puffSourceParam(request.Params.Source)),
+		MinDurationMs:   pgIntPtr(request.Params.MinDurationMs),
+		MaxDurationMs:   pgIntPtr(request.Params.MaxDurationMs),
+		CursorStartedAt: cursorAt,
+		CursorID:        cursorID,
+	}
+	var rows []store.Puff
+	if request.Params.Order != nil && *request.Params.Order == openapi.Asc {
+		rows, err = s.q.ListPuffsAsc(ctx, store.ListPuffsAscParams{
+			UserID:          params.UserID,
+			StartedAt:       params.StartedAt,
+			StartedAt_2:     params.StartedAt_2,
+			Limit:           params.Limit,
+			DeviceID:        params.DeviceID,
+			Source:          params.Source,
+			CursorStartedAt: params.CursorStartedAt,
+			CursorID:        params.CursorID,
+		})
+	} else {
+		rows, err = s.q.ListPuffs(ctx, params)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +87,7 @@ func (s *Server) ListPuffs(ctx context.Context, request openapi.ListPuffsRequest
 	var next *string
 	if len(rows) == limit {
 		last := rows[len(rows)-1]
-		next = ptr(last.StartedAt.Time.UTC().Format(time.RFC3339Nano))
+		next = ptr(formatPuffCursor(last.StartedAt.Time, uuidFromPG(last.ID)))
 	}
 	return openapi.ListPuffs200JSONResponse(openapi.PuffPage{Items: items, NextCursor: next}), nil
 }
@@ -73,6 +97,44 @@ func pgtypeOptionalUUID(id *openapi_types.UUID) pgtype.UUID {
 		return pgtype.UUID{Valid: false}
 	}
 	return pgUUID(uuid.UUID(*id))
+}
+
+func puffSourceParam(source *openapi.PuffSource) *string {
+	if source == nil {
+		return nil
+	}
+	value := string(*source)
+	return &value
+}
+
+func pgIntPtr(n *int) pgtype.Int4 {
+	if n == nil {
+		return pgtype.Int4{}
+	}
+	return pgtype.Int4{Int32: int32(*n), Valid: true}
+}
+
+func formatPuffCursor(started time.Time, id uuid.UUID) string {
+	return started.UTC().Format(time.RFC3339Nano) + "|" + id.String()
+}
+
+func puffCursorParams(raw *string) (pgtype.Timestamptz, pgtype.UUID, error) {
+	if raw == nil || strings.TrimSpace(*raw) == "" {
+		return pgtype.Timestamptz{}, pgtype.UUID{}, nil
+	}
+	startedRaw, idRaw, hasID := strings.Cut(*raw, "|")
+	started, err := time.Parse(time.RFC3339Nano, startedRaw)
+	if err != nil {
+		return pgtype.Timestamptz{}, pgtype.UUID{}, err
+	}
+	if !hasID {
+		return pgTime(started), pgUUID(uuid.Nil), nil
+	}
+	id, err := uuid.Parse(idRaw)
+	if err != nil {
+		return pgtype.Timestamptz{}, pgtype.UUID{}, err
+	}
+	return pgTime(started), pgUUID(id), nil
 }
 
 func puffToAPI(p store.Puff) openapi.Puff {

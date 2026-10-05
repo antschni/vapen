@@ -2,14 +2,13 @@ package httpapi
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"sort"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	grouppkg "github.com/antschni/vapen/api/internal/groups"
@@ -310,6 +309,14 @@ func (s *Server) GetGroupOverview(ctx context.Context, request openapi.GetGroupO
 		to = request.Params.To.UTC()
 	}
 	members, _ := s.q.ListGroupMembers(ctx, g.ID)
+	memberIDs := make([]uuid.UUID, 0, len(members))
+	for _, m := range members {
+		memberIDs = append(memberIDs, uuidFromPG(m.UserID))
+	}
+	usageByUser, err := stats.TotalsByUser(ctx, s.pool, memberIDs, from, to, tz)
+	if err != nil {
+		return nil, err
+	}
 	outMembers := []openapi.GroupOverviewMember{}
 	type lbCandidate struct {
 		mid             uuid.UUID
@@ -322,11 +329,11 @@ func (s *Server) GetGroupOverview(ctx context.Context, request openapi.GetGroupO
 		mid := uuidFromPG(m.UserID)
 		eff := s.groupPrivacy(ctx, gid, mid).Effective
 		vis := openapi.MemberVisibility{
-			LiveStatus:    eff.ShareLiveStatus,
-			UsageSummary:  eff.ShareUsageSummary,
-			UsageDetail:   eff.ShareUsageDetail,
-			DeviceStats:   eff.ShareDeviceStats,
-			Leaderboard:   eff.ShowInLeaderboard,
+			LiveStatus:   eff.ShareLiveStatus,
+			UsageSummary: eff.ShareUsageSummary,
+			UsageDetail:  eff.ShareUsageDetail,
+			DeviceStats:  eff.ShareDeviceStats,
+			Leaderboard:  eff.ShowInLeaderboard,
 		}
 		om := openapi.GroupOverviewMember{
 			UserId:      openapi_types.UUID(mid),
@@ -350,20 +357,25 @@ func (s *Server) GetGroupOverview(ctx context.Context, request openapi.GetGroupO
 				om.Live = &live
 			}
 		}
+		totals := usageByUser[mid]
+		if mid == userID || vis.UsageSummary {
+			usage := openapi.MemberUsage{
+				PuffCount:       totals.PuffCount,
+				TotalDurationMs: totals.TotalDurationMs,
+				AvgDurationMs:   totals.AvgDurationMs,
+				Daily:           []openapi.MemberUsageDaily{},
+			}
+			var encoded openapi.GroupOverviewMember_Usage
+			_ = encoded.FromMemberUsage(usage)
+			om.Usage = &encoded
+		}
 		outMembers = append(outMembers, om)
 		if eff.ShowInLeaderboard && eff.ShareUsageSummary {
-			st, err := stats.Usage(ctx, s.pool, mid, nil, from, to, "day", tz)
-			puffCount := 0
-			totalDurationMs := 0
-			if err == nil {
-				puffCount = st.Totals.PuffCount
-				totalDurationMs = st.Totals.TotalDurationMs
-			}
 			lbCandidates = append(lbCandidates, lbCandidate{
 				mid:             mid,
 				displayName:     m.DisplayName,
-				puffCount:       puffCount,
-				totalDurationMs: totalDurationMs,
+				puffCount:       totals.PuffCount,
+				totalDurationMs: totals.TotalDurationMs,
 			})
 		}
 	}
@@ -467,8 +479,10 @@ func (s *Server) groupToAPI(ctx context.Context, g store.Group, viewer uuid.UUID
 func (s *Server) groupPrivacy(ctx context.Context, gid, userID uuid.UUID) openapi.GroupPrivacy {
 	def, err := s.q.GetPrivacyDefaults(ctx, pgUUID(userID))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			def = store.PrivacyDefault{ShareLiveStatus: true, ShareUsageSummary: true}
+		def = store.PrivacyDefault{
+			ShareLiveStatus:   true,
+			ShareUsageSummary: true,
+			ShowInLeaderboard: true,
 		}
 	}
 	over, _ := s.q.GetGroupPrivacyOverride(ctx, store.GetGroupPrivacyOverrideParams{
@@ -476,9 +490,19 @@ func (s *Server) groupPrivacy(ctx context.Context, gid, userID uuid.UUID) openap
 	})
 	eff := privacyToAPI(def)
 	ov := openapi.PrivacyOverrides{}
-	if over.ShareLiveStatus.Valid {
-		ov.ShareLiveStatus = &over.ShareLiveStatus.Bool
-		eff.ShareLiveStatus = over.ShareLiveStatus.Bool
-	}
+	applyPrivacyOverride(over.ShareLiveStatus, &eff.ShareLiveStatus, &ov.ShareLiveStatus)
+	applyPrivacyOverride(over.ShareUsageSummary, &eff.ShareUsageSummary, &ov.ShareUsageSummary)
+	applyPrivacyOverride(over.ShareUsageDetail, &eff.ShareUsageDetail, &ov.ShareUsageDetail)
+	applyPrivacyOverride(over.ShareDeviceStats, &eff.ShareDeviceStats, &ov.ShareDeviceStats)
+	applyPrivacyOverride(over.ShowInLeaderboard, &eff.ShowInLeaderboard, &ov.ShowInLeaderboard)
 	return openapi.GroupPrivacy{Defaults: privacyToAPI(def), Overrides: ov, Effective: eff}
+}
+
+func applyPrivacyOverride(src pgtype.Bool, dest *bool, out **bool) {
+	if !src.Valid {
+		return
+	}
+	value := src.Bool
+	*dest = value
+	*out = &value
 }

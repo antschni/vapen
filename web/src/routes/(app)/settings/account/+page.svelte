@@ -9,12 +9,17 @@
 	import Input from '#lib/components/ui/input.svelte';
 	import Label from '#lib/components/ui/label.svelte';
 	import { de } from '#lib/i18n/de.js';
+	import { notify } from '#lib/notifications.svelte.js';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let displayName = $state(data.profile?.display_name ?? '');
+	let displayName = $state('');
+
+	$effect.pre(() => {
+		displayName = data.profile?.display_name ?? '';
+	});
 </script>
 
 <svelte:head>
@@ -29,7 +34,17 @@
 			<CardTitle>{de.pages.account.profile}</CardTitle>
 		</CardHeader>
 		<CardContent>
-			<form method="POST" action="?/profile" class="space-y-4" use:enhance>
+			<form
+				method="POST"
+				action="?/profile"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						await update({ reset: false });
+						if (result.type === 'success') notify(de.pages.account.profileUpdated);
+					};
+				}}
+			>
 				<div class="space-y-2">
 					<Label for="display_name">{de.auth.displayName}</Label>
 					<Input id="display_name" name="display_name" bind:value={displayName} required />
@@ -37,9 +52,6 @@
 				<p class="text-xs text-muted-foreground">{data.profile.email}</p>
 				{#if form?.profileError}
 					<p class="text-sm text-destructive">{form.profileError}</p>
-				{/if}
-				{#if form?.profileSaved}
-					<p class="text-sm text-emerald-600">{de.pages.account.saved}</p>
 				{/if}
 				<Button type="submit">{de.common.save}</Button>
 			</form>
@@ -51,7 +63,17 @@
 			<CardTitle>{de.pages.account.password}</CardTitle>
 		</CardHeader>
 		<CardContent>
-			<form method="POST" action="?/password" class="space-y-4" use:enhance>
+			<form
+				method="POST"
+				action="?/password"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						await update();
+						if (result.type === 'success') notify(de.pages.account.passwordChanged);
+					};
+				}}
+			>
 				<div class="space-y-2">
 					<Label for="current_password">{de.pages.account.currentPassword}</Label>
 					<Input id="current_password" name="current_password" type="password" required />
@@ -62,9 +84,6 @@
 				</div>
 				{#if form?.passwordError}
 					<p class="text-sm text-destructive">{form.passwordError}</p>
-				{/if}
-				{#if form?.passwordSaved}
-					<p class="text-sm text-emerald-600">{de.pages.account.passwordChanged}</p>
 				{/if}
 				<Button type="submit">{de.pages.account.password}</Button>
 			</form>

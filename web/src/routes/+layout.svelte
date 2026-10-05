@@ -2,6 +2,7 @@
 	import '../app.css';
 	import favicon from '#lib/assets/favicon.svg';
 	import PwaReloadPrompt from '#lib/components/PwaReloadPrompt.svelte';
+	import ToastHost from '#lib/components/ToastHost.svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { browser } from '$app/env';
 
@@ -27,4 +28,5 @@
 </svelte:head>
 
 {@render children()}
+<ToastHost />
 <PwaReloadPrompt />

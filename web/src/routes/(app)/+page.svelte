@@ -3,6 +3,7 @@
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
 	import MiniLiveWidget from '#lib/components/MiniLiveWidget.svelte';
+	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
 	import CardHeader from '#lib/components/ui/card-header.svelte';
@@ -26,6 +27,8 @@
 <svelte:head>
 	<title>{de.pages.overview.title} · {de.app.name}</title>
 </svelte:head>
+
+<LiveRefresh />
 
 <PageHeader title={de.pages.overview.title} />
 

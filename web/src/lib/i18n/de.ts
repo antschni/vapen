@@ -177,6 +177,7 @@ export const de = {
       inherit: "Standard übernehmen",
       on: "An",
       off: "Aus",
+      applied: "Datenschutzeinstellungen aktualisiert.",
       previewTitle: (group: string) => `So sehen dich andere in „${group}“`,
       flags: {
         share_live_status: {
@@ -217,7 +218,7 @@ export const de = {
       deleteWarning:
         "Alle deine Daten werden unwiderruflich gelöscht. Gib dein Passwort zur Bestätigung ein.",
       deleteConfirm: "Konto endgültig löschen",
-      saved: "Gespeichert.",
+      profileUpdated: "Profil aktualisiert.",
       passwordChanged: "Passwort wurde geändert.",
     },
   },

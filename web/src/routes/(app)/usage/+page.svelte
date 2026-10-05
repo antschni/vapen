@@ -2,8 +2,10 @@
 	import { format } from 'date-fns';
 	import { de as dateFnsDe } from 'date-fns/locale';
 	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import HeatmapChart from '#lib/components/charts/HeatmapChart.svelte';
@@ -15,6 +17,7 @@
 	import Label from '#lib/components/ui/label.svelte';
 	import { formatDurationMs, formatNumber } from '#lib/format.js';
 	import { de } from '#lib/i18n/de.js';
+	import { notify } from '#lib/notifications.svelte.js';
 	import type { components } from '#lib/api/schema.d.ts';
 	import type { PageData, ActionData } from './$types';
 
@@ -25,11 +28,57 @@
 	let extraPuffs = $state<Puff[]>([]);
 	let nextCursor = $state<string | null>(null);
 	let loadingMore = $state(false);
+	let preset = $state<'today' | '7d' | '30d' | '90d' | 'year' | 'custom'>('7d');
+	let bucket = $state<'hour' | 'day' | 'week' | 'month'>('day');
+	let deviceId = $state('');
+	let userId = $state('');
+	let seenFilterKey = $state<string | null>(null);
 
-	$effect(() => {
-		extraPuffs = [];
-		nextCursor = data.puffNextCursor;
+	const filterKey = $derived(
+		[
+			data.filters.preset,
+			data.filters.bucket,
+			data.filters.deviceId ?? '',
+			data.filters.userId ?? '',
+			data.filters.fromIso,
+			data.filters.toIso
+		].join('|')
+	);
+
+	$effect.pre(() => {
+		const key = filterKey;
+		const cursor = data.puffNextCursor;
+		if (seenFilterKey !== key) {
+			seenFilterKey = key;
+			preset = data.filters.preset;
+			bucket = data.filters.bucket;
+			deviceId = data.filters.deviceId ?? '';
+			userId = data.filters.userId ?? '';
+			extraPuffs = [];
+			nextCursor = cursor;
+			return;
+		}
+		if (extraPuffs.length === 0) {
+			nextCursor = cursor;
+		}
 	});
+
+	function applyFilters(event: SubmitEvent) {
+		event.preventDefault();
+		const params = new URLSearchParams();
+		params.set('preset', preset);
+		params.set('bucket', bucket);
+		if (deviceId) params.set('device_id', deviceId);
+		if (userId) params.set('user_id', userId);
+		if (data.filters.minDurationMs !== undefined) {
+			params.set('min_duration_ms', String(data.filters.minDurationMs));
+		}
+		if (data.filters.maxDurationMs !== undefined) {
+			params.set('max_duration_ms', String(data.filters.maxDurationMs));
+		}
+		const query = params.toString();
+		void goto(query ? `${resolve('usage')}?${query}` : resolve('usage'));
+	}
 
 	const allPuffs = $derived([...data.puffs, ...extraPuffs]);
 
@@ -87,6 +136,8 @@
 	<title>{de.pages.usage.title} · {de.app.name}</title>
 </svelte:head>
 
+<LiveRefresh />
+
 <PageHeader title={de.pages.usage.title} />
 
 <Card>
@@ -94,19 +145,20 @@
 		<CardTitle>{de.pages.usage.filters}</CardTitle>
 	</CardHeader>
 	<CardContent>
-		<form method="GET" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+		<form method="GET" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" onsubmit={applyFilters}>
 			<div class="space-y-2">
 				<Label for="preset">{de.pages.usage.preset}</Label>
 				<select
 					id="preset"
 					name="preset"
+					bind:value={preset}
 					class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
 				>
-					<option value="today" selected={data.filters.preset === 'today'}>{de.pages.usage.presetToday}</option>
-					<option value="7d" selected={data.filters.preset === '7d'}>{de.pages.usage.preset7d}</option>
-					<option value="30d" selected={data.filters.preset === '30d'}>{de.pages.usage.preset30d}</option>
-					<option value="90d" selected={data.filters.preset === '90d'}>{de.pages.usage.preset90d}</option>
-					<option value="year" selected={data.filters.preset === 'year'}>{de.pages.usage.presetYear}</option>
+					<option value="today">{de.pages.usage.presetToday}</option>
+					<option value="7d">{de.pages.usage.preset7d}</option>
+					<option value="30d">{de.pages.usage.preset30d}</option>
+					<option value="90d">{de.pages.usage.preset90d}</option>
+					<option value="year">{de.pages.usage.presetYear}</option>
 				</select>
 			</div>
 			<div class="space-y-2">
@@ -114,12 +166,13 @@
 				<select
 					id="bucket"
 					name="bucket"
+					bind:value={bucket}
 					class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
 				>
-					<option value="hour" selected={data.filters.bucket === 'hour'}>{de.pages.usage.bucketHour}</option>
-					<option value="day" selected={data.filters.bucket === 'day'}>{de.pages.usage.bucketDay}</option>
-					<option value="week" selected={data.filters.bucket === 'week'}>{de.pages.usage.bucketWeek}</option>
-					<option value="month" selected={data.filters.bucket === 'month'}>{de.pages.usage.bucketMonth}</option>
+					<option value="hour">{de.pages.usage.bucketHour}</option>
+					<option value="day">{de.pages.usage.bucketDay}</option>
+					<option value="week">{de.pages.usage.bucketWeek}</option>
+					<option value="month">{de.pages.usage.bucketMonth}</option>
 				</select>
 			</div>
 			<div class="space-y-2">
@@ -127,11 +180,12 @@
 				<select
 					id="device_id"
 					name="device_id"
+					bind:value={deviceId}
 					class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
 				>
 					<option value="">{de.pages.usage.deviceAll}</option>
 					{#each data.devices as device (device.id)}
-						<option value={device.id} selected={data.filters.deviceId === device.id}>{device.name}</option>
+						<option value={device.id}>{device.name}</option>
 					{/each}
 				</select>
 			</div>
@@ -140,11 +194,12 @@
 				<select
 					id="user_id"
 					name="user_id"
+					bind:value={userId}
 					class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
 				>
 					<option value="">{de.pages.usage.personSelf}</option>
 					{#each data.detailMembers as member (member.id)}
-						<option value={member.id} selected={data.filters.userId === member.id}>{member.name}</option>
+						<option value={member.id}>{member.name}</option>
 					{/each}
 				</select>
 			</div>
@@ -257,15 +312,19 @@
 					class="mt-4"
 					use:enhance={() => {
 						loadingMore = true;
-						return async ({ result, update }) => {
+						return async ({ result }) => {
 							loadingMore = false;
 							if (result.type === 'success' && result.data) {
 								const d = result.data as { items: Puff[]; next_cursor: string | null };
 								extraPuffs = [...extraPuffs, ...d.items];
 								nextCursor = d.next_cursor;
-							} else {
-								await update();
+								return;
 							}
+							const message =
+								result.type === 'failure' && result.data && typeof result.data.message === 'string'
+									? result.data.message
+									: de.errors.generic;
+							notify(message, 'error');
 						};
 					}}
 				>

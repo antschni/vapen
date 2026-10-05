@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { deserialize } from '$app/forms';
+	import { refreshAll } from '$app/navigation';
 	import PrivacyTriState from '#lib/components/PrivacyTriState.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
-	import Button from '#lib/components/ui/button.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
 	import CardHeader from '#lib/components/ui/card-header.svelte';
@@ -10,9 +10,10 @@
 	import Label from '#lib/components/ui/label.svelte';
 	import { PRIVACY_FLAGS, formValueFromOverride, type PrivacyFlag } from '#lib/privacy.js';
 	import { de } from '#lib/i18n/de.js';
-	import type { PageData, ActionData } from './$types';
+	import { notify } from '#lib/notifications.svelte.js';
+	import type { PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data }: { data: PageData } = $props();
 
 	type TriValue = 'inherit' | 'on' | 'off';
 
@@ -67,6 +68,40 @@
 	function flagLabel(flag: PrivacyFlag): string {
 		return de.pages.privacy.flags[flag].label;
 	}
+
+	let saveChain = Promise.resolve();
+
+	function saveForm(form: HTMLFormElement | null) {
+		if (!form) return;
+		const body = new FormData(form);
+		const action = form.action;
+		saveChain = saveChain
+			.then(async () => {
+				const response = await fetch(action, {
+					method: 'POST',
+					body,
+					headers: {
+						accept: 'application/json',
+						'x-sveltekit-action': 'true'
+					}
+				});
+				const result = deserialize(await response.text());
+				if (result.type === 'success') {
+					notify(de.pages.privacy.applied);
+					await refreshAll();
+					return;
+				}
+				const message =
+					result.type === 'failure' && result.data && typeof result.data.message === 'string'
+						? result.data.message
+						: de.errors.generic;
+				notify(message, 'error');
+				await refreshAll();
+			})
+			.catch(() => {
+				notify(de.errors.network, 'error');
+			});
+	}
 </script>
 
 <svelte:head>
@@ -75,13 +110,6 @@
 
 <PageHeader title={de.pages.privacy.title} description={de.pages.privacy.defaultsHint} />
 
-{#if form?.message}
-	<p class="mt-4 text-sm text-destructive">{form.message}</p>
-{/if}
-{#if form?.saved}
-	<p class="mt-4 text-sm text-emerald-600">{de.pages.account.saved}</p>
-{/if}
-
 <Card class="mt-6">
 	<CardHeader>
 		<CardTitle>{de.pages.privacy.defaults}</CardTitle>
@@ -89,7 +117,12 @@
 	</CardHeader>
 	<CardContent>
 		{#if data.defaults && defaultFlags}
-			<form method="POST" action="?/defaults" class="space-y-4" use:enhance>
+			<form
+				method="POST"
+				action="?/defaults"
+				class="space-y-4"
+				onchange={(event) => saveForm(event.currentTarget)}
+			>
 				{#each PRIVACY_FLAGS as flag (flag)}
 					<div class="flex items-center justify-between gap-4 rounded border p-3">
 						<div>
@@ -105,7 +138,6 @@
 						/>
 					</div>
 				{/each}
-				<Button type="submit">{de.common.save}</Button>
 			</form>
 		{/if}
 	</CardContent>
@@ -118,14 +150,18 @@
 				<CardTitle>{gp.groupName}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<form method="POST" action="?/group" class="space-y-4" use:enhance>
+				<form
+					method="POST"
+					action="?/group"
+					class="space-y-4"
+					onchange={(event) => saveForm(event.currentTarget)}
+				>
 					<input type="hidden" name="group_id" value={gp.groupId} />
 					{#each PRIVACY_FLAGS as flag (flag)}
 						{#if groupFlagValues[gp.groupId]}
 							<PrivacyTriState {flag} name={flag} bind:value={groupFlagValues[gp.groupId][flag]} />
 						{/if}
 					{/each}
-					<Button type="submit">{de.common.save}</Button>
 				</form>
 			</CardContent>
 		</Card>
