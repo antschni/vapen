@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import EmptyState from '#lib/components/EmptyState.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import Button from '#lib/components/ui/button.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
@@ -26,9 +27,9 @@
 	<title>{de.pages.groups.title} · {de.app.name}</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold tracking-tight">{de.pages.groups.title}</h1>
+<PageHeader title={de.pages.groups.title} />
 
-<div class="mt-6 grid gap-6 lg:grid-cols-2">
+<div class="grid gap-6 lg:grid-cols-2">
 	<Card>
 		<CardHeader>
 			<CardTitle>{de.pages.groups.create}</CardTitle>
@@ -76,7 +77,7 @@
 			<li>
 				<a
 					href={resolve('/(app)/groups/[id]', { id: group.id })}
-					class="flex items-center justify-between rounded-lg border border-border bg-card p-4 hover:bg-accent/30"
+					class="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/30 hover:shadow-md"
 				>
 					<div>
 						<p class="font-medium">{group.name}</p>

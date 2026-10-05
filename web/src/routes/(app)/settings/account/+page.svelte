@@ -9,6 +9,7 @@
 	import Input from '#lib/components/ui/input.svelte';
 	import Label from '#lib/components/ui/label.svelte';
 	import { de } from '#lib/i18n/de.js';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -20,10 +21,10 @@
 	<title>{de.pages.account.title} · {de.app.name}</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold tracking-tight">{de.pages.account.title}</h1>
+<PageHeader title={de.pages.account.title} />
 
 {#if data.profile}
-	<Card class="mt-6">
+	<Card>
 		<CardHeader>
 			<CardTitle>{de.pages.account.profile}</CardTitle>
 		</CardHeader>

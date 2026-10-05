@@ -17,7 +17,7 @@
 	} = $props();
 </script>
 
-<Card>
+<Card class="transition-shadow hover:shadow-md">
 	<CardHeader class="pb-2">
 		<CardTitle class="text-sm font-medium text-muted-foreground">{title}</CardTitle>
 	</CardHeader>

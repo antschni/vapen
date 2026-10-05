@@ -85,4 +85,24 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 25%, transparent);
+  }
+}
+
+@layer utilities {
+  .auth-backdrop {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(
+        ellipse 80% 50% at 50% -20%,
+        color-mix(in oklch, var(--primary) 18%, transparent),
+        transparent
+      ),
+      radial-gradient(
+        ellipse 60% 40% at 100% 100%,
+        color-mix(in oklch, var(--primary) 10%, transparent),
+        transparent
+      );
+  }
 }

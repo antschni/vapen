@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import type { SessionUser } from '#lib/session-user.js';
 	import { de } from '#lib/i18n/de.js';
+	import Logo from '#lib/components/Logo.svelte';
 	import Button from '#lib/components/ui/button.svelte';
 	import { ModeWatcher, toggleMode } from 'mode-watcher';
 	import {
@@ -66,7 +67,9 @@
 			onclick={() => mobileOpen = !mobileOpen}
 		><Menu class="h-5 w-5" /></Button>
 
-		<span class="font-semibold">{de.app.name}</span>
+		<a href={resolve('/(app)')} class="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
+			<Logo size="sm" />
+		</a>
 		<div class="ml-auto flex items-center gap-2">
 			<Button variant="ghost" size="icon" type="button" aria-label={de.nav.toggleTheme} onclick={toggleMode}>
 				<Sun class="h-5 w-5 dark:hidden" />
@@ -78,18 +81,27 @@
 	<div class="flex">
 		<aside
 			class={cn(
-				'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card transition-transform lg:static lg:translate-x-0',
+				'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card shadow-sm transition-transform lg:static lg:translate-x-0',
 				mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
 			)}
 		>
-			<div class="hidden h-14 items-center border-b px-6 font-semibold lg:flex">{de.app.name}</div>
+			<a
+				href={resolve('/(app)')}
+				class="hidden h-14 items-center border-b px-5 lg:flex"
+				onclick={() => (mobileOpen = false)}
+			>
+				<Logo size="sm" />
+			</a>
 			<nav class="flex flex-1 flex-col gap-1 p-3" aria-label={de.nav.settings}>
 				{#each nav as item (item.kind === 'route' ? item.route : item.path)}
 					<a
 						href={navHref(item)}
-						class={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors', isActive(item, page.url.pathname)
-							? 'bg-accent text-accent-foreground'
-							: 'text-muted-foreground hover:bg-accent/50 hover:text-foreground')}
+						class={cn(
+							'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+							isActive(item, page.url.pathname)
+								? 'bg-primary/10 text-primary'
+								: 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+						)}
 						onclick={() => mobileOpen = false}
 					><item.icon class="h-4 w-4 shrink-0" />{item.label}</a>
 				{/each}
@@ -123,8 +135,8 @@
 			></button>
 		{/if}
 
-		<main class="min-h-dvh flex-1 p-4 md:p-6 lg:p-8">
-			{@render children()}
+		<main class="min-h-dvh flex-1 bg-muted/20 p-4 md:p-6 lg:p-8">
+			<div class="mx-auto w-full max-w-6xl">{@render children()}</div>
 		</main>
 	</div>
 </div>

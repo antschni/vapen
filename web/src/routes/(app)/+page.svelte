@@ -1,5 +1,6 @@
 <script lang="ts">
 	import KpiCard from '#lib/components/KpiCard.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
 	import MiniLiveWidget from '#lib/components/MiniLiveWidget.svelte';
 	import Card from '#lib/components/ui/card.svelte';
@@ -26,9 +27,9 @@
 	<title>{de.pages.overview.title} · {de.app.name}</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold tracking-tight">{de.pages.overview.title}</h1>
+<PageHeader title={de.pages.overview.title} />
 
-<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 	<KpiCard
 		title={de.pages.overview.kpiPuffsToday}
 		value={formatNumber(data.todayTotals?.puff_count ?? 0)}

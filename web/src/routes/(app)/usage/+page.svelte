@@ -5,6 +5,7 @@
 	import { enhance } from '$app/forms';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import HeatmapChart from '#lib/components/charts/HeatmapChart.svelte';
 	import Button from '#lib/components/ui/button.svelte';
 	import Card from '#lib/components/ui/card.svelte';
@@ -86,9 +87,9 @@
 	<title>{de.pages.usage.title} · {de.app.name}</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold tracking-tight">{de.pages.usage.title}</h1>
+<PageHeader title={de.pages.usage.title} />
 
-<Card class="mt-6">
+<Card>
 	<CardHeader>
 		<CardTitle>{de.pages.usage.filters}</CardTitle>
 	</CardHeader>

@@ -16,7 +16,8 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={favicon} type="image/svg+xml" />
+	<link rel="icon" href="/pwa/favicon.ico" sizes="any" />
 	<link rel="apple-touch-icon" href="/pwa/apple-touch-icon-180x180.png" />
 	<meta name="theme-color" content="#4466aa" />
 	<meta name="mobile-web-app-capable" content="yes" />

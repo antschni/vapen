@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import PrivacyTriState from '#lib/components/PrivacyTriState.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import Button from '#lib/components/ui/button.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
@@ -13,7 +14,42 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	type TriValue = 'inherit' | 'on' | 'off';
+
 	let previewGroupId = $state('');
+	let defaultFlags = $state<Record<PrivacyFlag, boolean> | null>(null);
+	let groupFlagValues = $state<Record<string, Record<PrivacyFlag, TriValue>>>({});
+
+	function flagsFromDefaults(source: NonNullable<PageData['defaults']>): Record<PrivacyFlag, boolean> {
+		return Object.fromEntries(PRIVACY_FLAGS.map((flag) => [flag, source[flag]])) as Record<
+			PrivacyFlag,
+			boolean
+		>;
+	}
+
+	function overridesFromGroup(
+		overrides: NonNullable<(typeof data.groupPrivacy)[number]['privacy']>['overrides']
+	): Record<PrivacyFlag, TriValue> {
+		return Object.fromEntries(
+			PRIVACY_FLAGS.map((flag) => [flag, formValueFromOverride(overrides[flag])])
+		) as Record<PrivacyFlag, TriValue>;
+	}
+
+	$effect(() => {
+		if (data.defaults) {
+			defaultFlags = flagsFromDefaults(data.defaults);
+		}
+	});
+
+	$effect(() => {
+		const next: Record<string, Record<PrivacyFlag, TriValue>> = {};
+		for (const gp of data.groupPrivacy) {
+			if (gp.privacy) {
+				next[gp.groupId] = overridesFromGroup(gp.privacy.overrides);
+			}
+		}
+		groupFlagValues = next;
+	});
 
 	$effect(() => {
 		if (!previewGroupId && data.groupPrivacy[0]?.groupId) {
@@ -37,7 +73,7 @@
 	<title>{de.pages.privacy.title} · {de.app.name}</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold tracking-tight">{de.pages.privacy.title}</h1>
+<PageHeader title={de.pages.privacy.title} description={de.pages.privacy.defaultsHint} />
 
 {#if form?.message}
 	<p class="mt-4 text-sm text-destructive">{form.message}</p>
@@ -52,7 +88,7 @@
 		<p class="text-sm text-muted-foreground">{de.pages.privacy.defaultsHint}</p>
 	</CardHeader>
 	<CardContent>
-		{#if data.defaults}
+		{#if data.defaults && defaultFlags}
 			<form method="POST" action="?/defaults" class="space-y-4" use:enhance>
 				{#each PRIVACY_FLAGS as flag (flag)}
 					<div class="flex items-center justify-between gap-4 rounded border p-3">
@@ -64,7 +100,7 @@
 							id={`def-${flag}`}
 							type="checkbox"
 							name={flag}
-							checked={data.defaults[flag]}
+							bind:checked={defaultFlags[flag]}
 							class="size-4"
 						/>
 					</div>
@@ -85,11 +121,9 @@
 				<form method="POST" action="?/group" class="space-y-4" use:enhance>
 					<input type="hidden" name="group_id" value={gp.groupId} />
 					{#each PRIVACY_FLAGS as flag (flag)}
-						<PrivacyTriState
-							{flag}
-							name={flag}
-							value={formValueFromOverride(gp.privacy!.overrides[flag])}
-						/>
+						{#if groupFlagValues[gp.groupId]}
+							<PrivacyTriState {flag} name={flag} bind:value={groupFlagValues[gp.groupId][flag]} />
+						{/if}
 					{/each}
 					<Button type="submit">{de.common.save}</Button>
 				</form>

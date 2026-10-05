@@ -1,5 +1,6 @@
 <script lang="ts">
 	import EmptyState from '#lib/components/EmptyState.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
 	import Badge from '#lib/components/ui/badge.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
@@ -15,17 +16,17 @@
 	<title>{de.pages.devices.title} · {de.app.name}</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold tracking-tight">{de.pages.devices.title}</h1>
+<PageHeader title={de.pages.devices.title} />
 
 {#if data.devices.length === 0}
-	<div class="mt-6">
+	<div>
 		<EmptyState title={de.pages.devices.empty} description={de.empty.noData} />
 	</div>
 {:else}
-	<div class="mt-6 grid gap-4 sm:grid-cols-2">
+	<div class="grid gap-4 sm:grid-cols-2">
 		{#each data.devices as device (device.id)}
 			<a href={resolve('/(app)/devices/[id]', { id: device.id })} class="block">
-				<Card class="transition-colors hover:bg-accent/30">
+				<Card class="transition-shadow hover:bg-accent/30 hover:shadow-md">
 					<CardContent class="pt-6">
 						<div class="flex items-start justify-between gap-2">
 							<div>
