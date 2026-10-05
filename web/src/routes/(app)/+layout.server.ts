@@ -6,13 +6,19 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     error(401, "Unauthorized");
   }
 
-  const { data, error: apiError } = await locals.api.GET("/groups");
-  if (apiError) {
+  const [groupsRes, devicesRes] = await Promise.all([
+    locals.api.GET("/groups"),
+    locals.api.GET("/devices"),
+  ]);
+  if (groupsRes.error) {
     error(500, "Failed to load groups");
   }
 
+  const { isElfbarBridgeLive } = await import("#lib/live/elfbar-bridge.js");
+
   return {
     user: locals.user,
-    groups: data ?? [],
+    groups: groupsRes.data ?? [],
+    elfbarBridgeLive: isElfbarBridgeLive(devicesRes.data ?? []),
   };
 };

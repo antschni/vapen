@@ -7,7 +7,6 @@
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { Clock, Download, Wind } from '@lucide/svelte';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
-	import LiveStatsPulse from '#lib/components/LiveStatsPulse.svelte';
 	import KpiCard from '#lib/components/KpiCard.svelte';
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
@@ -30,7 +29,9 @@
 
 	type Puff = components['schemas']['Puff'];
 
-	let { data }: { data: PageData; form?: ActionData } = $props();
+	let { data }: { data: PageData & { elfbarBridgeLive: boolean }; form?: ActionData } = $props();
+
+	const liveCards = $derived(data.elfbarBridgeLive);
 
 	let extraPuffs = $state<Puff[]>([]);
 	let nextCursor = $state<string | null>(null);
@@ -144,9 +145,9 @@
 	<title>{de.pages.usage.title} · {de.app.name}</title>
 </svelte:head>
 
-<LiveRefresh />
+<LiveRefresh active={liveCards} />
 
-<PageHeader title={de.pages.usage.title} liveStats>
+<PageHeader title={de.pages.usage.title} liveStats={liveCards}>
 	{#snippet actions()}
 		<a href={exportHref} class={buttonVariants({ variant: 'outline', size: 'sm' })}>
 			<Download />
@@ -203,11 +204,11 @@
 		</form>
 	</Card>
 
-	<LiveStatsPulse class="space-y-6 rounded-xl">
+	<div class="space-y-6">
 		{#if data.stats}
 			<div class="grid gap-4 sm:grid-cols-2">
 				<KpiCard
-					animateLive
+					animateLive={liveCards}
 					icon={Wind}
 					title={de.pages.usage.puffsDelta}
 					value={formatNumber(data.stats.totals.puff_count)}
@@ -220,7 +221,7 @@
 						: undefined}
 				/>
 				<KpiCard
-					animateLive
+					animateLive={liveCards}
 					icon={Clock}
 					title={de.pages.usage.durationDelta}
 					value={formatDurationMs(data.stats.totals.total_duration_ms)}
@@ -236,7 +237,7 @@
 		{/if}
 
 		<div class="grid gap-4 lg:grid-cols-2">
-			<Card>
+			<Card animateLive={liveCards}>
 				<CardHeader>
 					<CardTitle>{de.pages.usage.chartSeries}</CardTitle>
 				</CardHeader>
@@ -244,11 +245,11 @@
 					{#if chartPoints.length === 0}
 						<p class="py-12 text-center text-sm text-muted-foreground">{de.empty.noData}</p>
 					{:else}
-						<BarSeriesChart animateLive points={chartPoints} ariaLabel={de.pages.usage.chartSeries} />
+						<BarSeriesChart animateLive={liveCards} points={chartPoints} ariaLabel={de.pages.usage.chartSeries} />
 					{/if}
 				</CardContent>
 			</Card>
-			<Card>
+			<Card animateLive={liveCards}>
 				<CardHeader>
 					<CardTitle>{de.pages.usage.chartHeatmap}</CardTitle>
 				</CardHeader>
@@ -261,7 +262,7 @@
 				</CardContent>
 			</Card>
 		</div>
-	</LiveStatsPulse>
+	</div>
 
 	<div class={['grid gap-4', histogram.length > 0 && 'lg:grid-cols-3']}>
 		<Card class="overflow-hidden lg:col-span-2">

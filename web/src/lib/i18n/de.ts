@@ -239,8 +239,8 @@ export const de = {
   },
   live: {
     statsLabel: "Live",
-    statsHint: "Statistiken werden alle paar Sekunden automatisch aktualisiert.",
-    statsSyncing: "Aktualisiere …",
+    statsHint:
+      "Die Mobile-App ist per Bluetooth mit einem Elfbar verbunden; Statistiken werden automatisch aktualisiert.",
     vaping: "Vaped gerade",
     vapingShort: "Live",
     active: "Kürzlich aktiv",

@@ -25,6 +25,12 @@ object EventIdFactory {
         return uuidV5(NAMESPACE, "$hardwareId:status:$minute").toString()
     }
 
+    /** 30s buckets so bridge heartbeats dedupe within the same window. */
+    fun bridgeLinkId(hardwareId: String, recordedAt: Instant): String {
+        val bucket = recordedAt.epochSecond / 30
+        return uuidV5(NAMESPACE, "$hardwareId:ble_link:$bucket").toString()
+    }
+
     fun puffStartedId(hardwareId: String, occurredAt: Instant): String {
         val second = occurredAt.epochSecond
         return uuidV5(NAMESPACE, "$hardwareId:puff_started:$second").toString()

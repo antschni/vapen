@@ -162,6 +162,7 @@ type DeviceStatsBucket string
 // DeviceStatus defines model for DeviceStatus.
 type DeviceStatus struct {
 	BatteryPercent   *int       `json:"battery_percent,omitempty"`
+	BleConnected     *bool      `json:"ble_connected,omitempty"`
 	ChildLock        *bool      `json:"child_lock,omitempty"`
 	FirmwareVersion  *string    `json:"firmware_version,omitempty"`
 	IsCharging       *bool      `json:"is_charging,omitempty"`
@@ -334,6 +335,7 @@ type IngestResponse struct {
 // IngestStatusEvent defines model for IngestStatusEvent.
 type IngestStatusEvent struct {
 	BatteryPercent   *int                  `json:"battery_percent,omitempty"`
+	BleConnected     *bool                 `json:"ble_connected,omitempty"`
 	ChildLock        *bool                 `json:"child_lock,omitempty"`
 	ClientEventId    openapi_types.UUID    `json:"client_event_id"`
 	FirmwareVersion  *string               `json:"firmware_version,omitempty"`

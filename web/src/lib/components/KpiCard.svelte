@@ -3,8 +3,6 @@
 	import { scale } from 'svelte/transition';
 	import { TrendingDown, TrendingUp } from '@lucide/svelte';
 	import Card from '#lib/components/ui/card.svelte';
-	import { getLiveRefresh } from '#lib/live/refresh.svelte.js';
-	import { cn } from '#lib/utils.js';
 
 	let {
 		title,
@@ -21,23 +19,9 @@
 		icon?: Component<{ class?: string }>;
 		animateLive?: boolean;
 	} = $props();
-
-	const live = $derived(getLiveRefresh());
-	let valueFlash = $state(false);
-
-	$effect(() => {
-		if (!animateLive) return;
-		void live.tick;
-		void value;
-		valueFlash = true;
-		const timer = setTimeout(() => {
-			valueFlash = false;
-		}, 550);
-		return () => clearTimeout(timer);
-	});
 </script>
 
-<Card class={cn('live-kpi-flash p-5', valueFlash && 'ring-2 ring-primary/20')}>
+<Card class="p-5" {animateLive}>
 	<div class="flex items-center justify-between gap-2">
 		<p class="text-[13px] font-medium text-muted-foreground">{title}</p>
 		{#if Icon}

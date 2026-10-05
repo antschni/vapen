@@ -38,7 +38,7 @@
 		{#if liveStats || actions}
 			<div class="flex flex-wrap items-center gap-2">
 				{#if liveStats}
-					<LiveStatsBadge />
+					<LiveStatsBadge active />
 				{/if}
 				{@render actions?.()}
 			</div>

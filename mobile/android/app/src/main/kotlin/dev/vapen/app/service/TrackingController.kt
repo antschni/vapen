@@ -47,6 +47,7 @@ object TrackingController {
 
     private var lastPersistedStatus: DeviceMessage.Status? = null
     private var flushJob: Job? = null
+    private var linkHeartbeatJob: Job? = null
     @Volatile private var flushPending = false
 
     lateinit var credentials: CredentialStore
@@ -68,8 +69,14 @@ object TrackingController {
         bleManager = BleConnectionManager(
             context.applicationContext,
             onState = { state, err ->
+                val wasLive = connectionState == TrackingConnectionState.LIVE
                 connectionState = state
                 lastError = err
+                val isLive = state == TrackingConnectionState.LIVE
+                if (wasLive != isLive) {
+                    scope.launch { persistBridgeLink(isLive) }
+                }
+                updateLinkHeartbeat(credentials.trackingEnabled && isLive)
                 publishState(credentials.trackingEnabled)
             },
             onMessage = { msg -> handleMessage(msg) },
@@ -298,6 +305,38 @@ object TrackingController {
         )
     }
 
+    private suspend fun persistBridgeLink(connected: Boolean) {
+        val hardwareId = credentials.get()?.hardwareId ?: bleManager?.hardwareId() ?: return
+        val recordedAt = Instant.now()
+        val id = EventIdFactory.bridgeLinkId(hardwareId, recordedAt)
+        val payload = buildJsonObject {
+            put("type", "status")
+            put("client_event_id", id)
+            put("recorded_at", recordedAt.toString())
+            put("ble_connected", connected)
+            batteryPercent?.let { put("battery_percent", it) }
+            isCharging?.let { put("is_charging", it) }
+            liquidPercent?.let { put("liquid_percent", it) }
+        }
+        database.pendingEvents().insert(
+            PendingEvent(id, "status", payload.toString(), recordedAt.toEpochMilli()),
+        )
+        requestFlush()
+    }
+
+    private fun updateLinkHeartbeat(active: Boolean) {
+        linkHeartbeatJob?.cancel()
+        linkHeartbeatJob = null
+        if (!active) return
+        linkHeartbeatJob = scope.launch {
+            while (connectionState == TrackingConnectionState.LIVE) {
+                delay(BRIDGE_HEARTBEAT_MS)
+                if (connectionState != TrackingConnectionState.LIVE) break
+                persistBridgeLink(true)
+            }
+        }
+    }
+
     private suspend fun persistStatus(hardwareId: String, status: DeviceMessage.Status) {
         val id = EventIdFactory.statusId(hardwareId, status.recordedAt)
         val payload = buildJsonObject {
@@ -359,6 +398,7 @@ object TrackingController {
         context.startActivity(intent)
     }
 
+    private const val BRIDGE_HEARTBEAT_MS = 45_000L
     private const val STATUS_HEARTBEAT_S = 15 * 60L
     private const val FLUSH_DEBOUNCE_MS = 500L
     private const val MAX_FLUSH_BATCHES = 50

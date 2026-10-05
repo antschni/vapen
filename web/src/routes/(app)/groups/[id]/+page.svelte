@@ -3,7 +3,6 @@
 	import { Lock, Settings } from '@lucide/svelte';
 	import LivePresenceGrid from '#lib/components/LivePresenceGrid.svelte';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
-	import LiveStatsPulse from '#lib/components/LiveStatsPulse.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import Avatar from '#lib/components/ui/avatar.svelte';
 	import Badge from '#lib/components/ui/badge.svelte';
@@ -18,7 +17,9 @@
 	import { cn } from '#lib/utils.js';
 	import type { PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data }: { data: PageData & { elfbarBridgeLive: boolean } } = $props();
+
+	const liveCards = $derived(data.elfbarBridgeLive);
 
 	const ranges = [
 		{ value: 'today', label: de.pages.groups.rangeToday },
@@ -46,9 +47,9 @@
 	<title>{data.groupName} · {de.pages.groups.title}</title>
 </svelte:head>
 
-<LiveRefresh />
+<LiveRefresh active={liveCards} />
 
-<PageHeader title={data.groupName} liveStats back={{ href: resolve('groups'), label: de.pages.groups.title }}>
+<PageHeader title={data.groupName} liveStats={liveCards} back={{ href: resolve('groups'), label: de.pages.groups.title }}>
 	{#snippet actions()}
 		{#if data.role === 'owner' || data.role === 'admin'}
 			<a
@@ -73,8 +74,8 @@
 	</Card>
 
 	<div class="grid items-start gap-6 lg:grid-cols-5">
-		<LiveStatsPulse class="rounded-xl lg:col-span-3">
-			<Card>
+		<div class="lg:col-span-3">
+			<Card animateLive={liveCards}>
 				<CardHeader>
 					<CardTitle>{de.pages.groups.leaderboard}</CardTitle>
 					{#snippet actions()}
@@ -124,7 +125,7 @@
 					{/if}
 				</CardContent>
 			</Card>
-		</LiveStatsPulse>
+		</div>
 
 		<Card class="lg:col-span-2">
 			<CardHeader>

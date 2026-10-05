@@ -6,7 +6,6 @@
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
 	import MiniLiveWidget from '#lib/components/MiniLiveWidget.svelte';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
-	import LiveStatsPulse from '#lib/components/LiveStatsPulse.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
 	import CardHeader from '#lib/components/ui/card-header.svelte';
@@ -16,7 +15,9 @@
 	import { de } from '#lib/i18n/de.js';
 	import type { PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data }: { data: PageData & { elfbarBridgeLive: boolean } } = $props();
+
+	const liveCards = $derived(data.elfbarBridgeLive);
 
 	const puffTrend = $derived(
 		data.puffDelta === null
@@ -43,9 +44,9 @@
 	<title>{de.pages.overview.title} · {de.app.name}</title>
 </svelte:head>
 
-<LiveRefresh />
+<LiveRefresh active={liveCards} />
 
-<PageHeader title={de.pages.overview.title} liveStats />
+<PageHeader title={de.pages.overview.title} liveStats={liveCards} />
 
 {#if data.statsFailed && data.statsErrorMessage}
 	<div
@@ -58,39 +59,39 @@
 {/if}
 
 <div class="space-y-6">
-	<LiveStatsPulse class="grid gap-4 rounded-xl sm:grid-cols-2 xl:grid-cols-4">
+	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 		<KpiCard
-			animateLive
+			animateLive={liveCards}
 			icon={Wind}
 			title={de.pages.overview.kpiPuffsToday}
 			value={formatNumber(data.todayTotals?.puff_count ?? 0)}
 			trend={puffTrend}
 		/>
 		<KpiCard
-			animateLive
+			animateLive={liveCards}
 			icon={Clock}
 			title={de.pages.overview.kpiTimeToday}
 			value={formatDurationMs(data.todayTotals?.total_duration_ms ?? 0)}
 			trend={durationTrend}
 		/>
 		<KpiCard
-			animateLive
+			animateLive={liveCards}
 			icon={CalendarDays}
 			title={de.pages.overview.kpiAvg7}
 			value={formatNumber(data.avg7)}
 			subtitle={de.pages.overview.puffsPerDay}
 		/>
 		<KpiCard
-			animateLive
+			animateLive={liveCards}
 			icon={BatteryMedium}
 			title={de.pages.overview.kpiBattery}
 			value={data.battery !== null ? `${data.battery} %` : '—'}
 			subtitle={data.isCharging ? de.pages.overview.charging : undefined}
 		/>
-	</LiveStatsPulse>
+	</div>
 
-	<LiveStatsPulse class="grid gap-4 rounded-xl lg:grid-cols-5">
-		<Card class="lg:col-span-3">
+	<div class="grid gap-4 lg:grid-cols-5">
+		<Card class="lg:col-span-3" animateLive={liveCards}>
 			<CardHeader>
 				<CardTitle>{de.pages.overview.chartWeek}</CardTitle>
 			</CardHeader>
@@ -98,12 +99,12 @@
 				{#if data.barPoints.length === 0}
 					<p class="py-12 text-center text-sm text-muted-foreground">{de.empty.noData}</p>
 				{:else}
-					<BarSeriesChart animateLive points={data.barPoints} ariaLabel={de.pages.overview.chartWeek} />
+					<BarSeriesChart animateLive={liveCards} points={data.barPoints} ariaLabel={de.pages.overview.chartWeek} />
 				{/if}
 			</CardContent>
 		</Card>
 
-		<Card class="lg:col-span-2">
+		<Card class="lg:col-span-2" animateLive={liveCards}>
 			<CardHeader>
 				<CardTitle>{de.pages.overview.chartTodayHourly}</CardTitle>
 			</CardHeader>
@@ -111,11 +112,11 @@
 				{#if data.hourlyToday.length === 0}
 					<p class="py-12 text-center text-sm text-muted-foreground">{de.empty.noData}</p>
 				{:else}
-					<BarSeriesChart animateLive points={data.hourlyToday} ariaLabel={de.pages.overview.chartTodayHourly} />
+					<BarSeriesChart animateLive={liveCards} points={data.hourlyToday} ariaLabel={de.pages.overview.chartTodayHourly} />
 				{/if}
 			</CardContent>
 		</Card>
-	</LiveStatsPulse>
+	</div>
 
 	{#if data.firstGroupId}
 		<Card>

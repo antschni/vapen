@@ -540,6 +540,8 @@ export interface components {
         DeviceStatus: {
             /** Format: date-time */
             recorded_at?: string;
+            /** @description Mobile app has an active BLE session to the Elfbar (bridge heartbeat). */
+            ble_connected?: boolean;
             battery_percent?: number;
             is_charging?: boolean;
             liquid_percent?: number;
@@ -867,6 +869,7 @@ export interface components {
             type?: "status";
             /** Format: date-time */
             recorded_at: string;
+            ble_connected?: boolean;
             battery_percent?: number;
             is_charging?: boolean;
             liquid_percent?: number;

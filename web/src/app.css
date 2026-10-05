@@ -108,32 +108,10 @@
 }
 
 @layer utilities {
-  @keyframes live-stats-ring {
-    0% {
-      box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 0%, transparent);
-    }
-    40% {
-      box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 22%, transparent);
-    }
-    100% {
-      box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 0%, transparent);
-    }
-  }
-
-  .live-stats-pulse-active {
-    animation: live-stats-ring 0.65s ease-out;
-  }
-
   .live-kpi-flash {
     transition:
       box-shadow 0.35s ease,
       ring-color 0.35s ease;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .live-stats-pulse-active {
-      animation: none;
-    }
   }
 
   .auth-backdrop {

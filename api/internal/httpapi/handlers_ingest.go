@@ -115,6 +115,9 @@ func (s *Server) IngestEvents(ctx context.Context, request openapi.IngestEventsR
 				continue
 			}
 			st := map[string]interface{}{"recorded_at": rec.Format(time.RFC3339Nano)}
+			if ev.BleConnected != nil {
+				st["ble_connected"] = *ev.BleConnected
+			}
 			if ev.BatteryPercent != nil {
 				st["battery_percent"] = *ev.BatteryPercent
 			}
