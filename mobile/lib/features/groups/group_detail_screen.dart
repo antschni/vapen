@@ -56,7 +56,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   }
 
   Future<(DateTime from, DateTime to, String tz)> _overviewQuery() async {
-    final tz = await FlutterTimezone.getLocalTimezone();
+    final tz = (await FlutterTimezone.getLocalTimezone()).identifier;
     final now = DateTime.now();
     final to = now.toUtc();
     final startOfToday = DateTime(now.year, now.month, now.day);
@@ -241,9 +241,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
                 },
                 onShare: () {
                   final url = _inviteUrl(inviteCode);
-                  Share.share(
-                    'Tritt meiner Vapen-Gruppe „$title“ bei: ${url ?? inviteCode}',
-                    subject: 'Einladung zu $title',
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: 'Tritt meiner Vapen-Gruppe „$title“ bei: ${url ?? inviteCode}',
+                      subject: 'Einladung zu $title',
+                    ),
                   );
                 },
               ),

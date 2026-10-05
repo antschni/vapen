@@ -58,7 +58,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
     try {
       final api = ref.read(apiClientProvider);
-      final tz = await FlutterTimezone.getLocalTimezone();
+      final tz = (await FlutterTimezone.getLocalTimezone()).identifier;
       final nowLocal = DateTime.now();
       final now = nowLocal.toUtc();
       final startOfToday = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);

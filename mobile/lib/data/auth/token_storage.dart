@@ -10,10 +10,7 @@ class TokenStorage {
 
   /// Survives process death more reliably than the default Keystore cipher.
   static const _encrypted = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-      resetOnError: false,
-    ),
+    aOptions: AndroidOptions(resetOnError: false),
   );
 
   /// Previous installs wrote here. Reads fall back once and copy into [_encrypted].

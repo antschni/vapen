@@ -73,7 +73,7 @@ class _BleExplorerScreenState extends ConsumerState<BleExplorerScreen> {
           IconButton(
             onPressed: () async {
               final path = await bridge.host.explorerExportLog();
-              await Share.shareXFiles([XFile(path)]);
+              await SharePlus.instance.share(ShareParams(files: [XFile(path)]));
             },
             icon: const Icon(Icons.share),
           ),

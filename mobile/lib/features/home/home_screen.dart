@@ -70,7 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _loadStats() async {
     final api = ref.read(apiClientProvider);
     final now = DateTime.now().toUtc();
-    final tz = await FlutterTimezone.getLocalTimezone();
+    final tz = (await FlutterTimezone.getLocalTimezone()).identifier;
     final localNow = now.toLocal();
     final startOfToday = DateTime(localNow.year, localNow.month, localNow.day);
     try {

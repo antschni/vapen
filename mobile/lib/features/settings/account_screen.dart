@@ -46,7 +46,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   Future<void> _saveProfile() async {
     setState(() => _savingProfile = true);
     try {
-      final tz = await FlutterTimezone.getLocalTimezone();
+      final tz = (await FlutterTimezone.getLocalTimezone()).identifier;
       final user = await ref.read(apiClientProvider).patchMe(
             displayName: _displayName.text.trim(),
             timezone: tz,

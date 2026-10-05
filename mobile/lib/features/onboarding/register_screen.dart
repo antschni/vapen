@@ -40,7 +40,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _submitting = true;
     });
     try {
-      final tz = await FlutterTimezone.getLocalTimezone();
+      final tz = (await FlutterTimezone.getLocalTimezone()).identifier;
       await ref.read(sessionProvider.notifier).register(
             email: _email.text.trim(),
             password: _password.text,
