@@ -4,6 +4,7 @@ export const de = {
     tagline: "Dein Vaping-Dashboard",
   },
   nav: {
+    general: "Allgemein",
     overview: "Übersicht",
     usage: "Nutzung",
     devices: "Geräte",
@@ -89,6 +90,8 @@ export const de = {
       chartSeries: "Vape-Zeit und Züge",
       chartHeatmap: "Wochentag × Stunde",
       comparePrevious: "Vergleich zur Vorperiode",
+      vsPrevious: "vs. Vorperiode",
+      loadedCount: (count: string) => `${count} geladen`,
       puffsDelta: "Züge",
       durationDelta: "Vape-Zeit",
       puffTable: "Einzelne Züge",
@@ -127,6 +130,11 @@ export const de = {
       median: "Median",
       p90: "90. Perzentil",
       max: "Maximum",
+      avgDuration: "Ø Zugdauer",
+      lastUsed: "Zuletzt genutzt",
+      neverUsed: "Noch nie genutzt",
+      noTokens: "Noch keine Tokens erstellt.",
+      tokensHint: "Tokens erlauben externen Quellen, Züge für dieses Gerät zu melden.",
     },
     groups: {
       title: "Gruppen",
@@ -152,6 +160,7 @@ export const de = {
       copyLink: "Link kopieren",
       rotateCode: "Code erneuern",
       leave: "Gruppe verlassen",
+      leaveHint: "Du verlierst den Zugriff auf diese Gruppe und ihre Statistiken.",
       deleteGroup: "Gruppe löschen",
       deleteGroupConfirm: "Gruppe unwiderruflich löschen?",
       removeMember: "Entfernen",
@@ -170,6 +179,9 @@ export const de = {
     },
     privacy: {
       title: "Datenschutz",
+      subtitle: "Lege fest, was andere Mitglieder deiner Gruppen von dir sehen.",
+      previewGroup: "Gruppe für Vorschau",
+      perGroupHint: "Überschreibt die Standard-Einstellungen nur in dieser Gruppe.",
       defaults: "Standard-Einstellungen",
       defaultsHint:
         "Gilt in allen Gruppen, sofern du nichts anderes festlegst.",
@@ -208,7 +220,10 @@ export const de = {
     },
     account: {
       title: "Konto",
+      subtitle: "Verwalte dein Profil, deine Anmeldedaten und deine Daten.",
       profile: "Profil",
+      profileHint: "So wirst du in Gruppen und Ranglisten angezeigt.",
+      passwordHint: "Mindestens 12 Zeichen.",
       password: "Passwort ändern",
       currentPassword: "Aktuelles Passwort",
       newPassword: "Neues Passwort",
@@ -248,6 +263,8 @@ export const de = {
     cancel: "Abbrechen",
     back: "Zurück",
     close: "Schließen",
+    copied: "In die Zwischenablage kopiert.",
+    dangerZone: "Gefahrenzone",
   },
 } as const;
 

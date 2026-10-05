@@ -1,142 +1,185 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import type { Snippet } from 'svelte';
 	import type { SessionUser } from '#lib/session-user.js';
 	import { de } from '#lib/i18n/de.js';
 	import Logo from '#lib/components/Logo.svelte';
+	import Avatar from '#lib/components/ui/avatar.svelte';
 	import Button from '#lib/components/ui/button.svelte';
 	import { ModeWatcher, toggleMode } from 'mode-watcher';
 	import {
 		LayoutDashboard,
-		BarChart3,
+		ChartColumn,
 		Smartphone,
 		Users,
 		Shield,
-		UserCircle,
+		UserRound,
 		LogOut,
 		Menu,
 		Moon,
-		Sun
+		Sun,
+		X
 	} from '@lucide/svelte';
 	import { cn } from '#lib/utils.js';
 
-	let { children, user }: { children: import('svelte').Snippet; user: SessionUser } = $props();
+	let { children, user }: { children: Snippet; user: SessionUser } = $props();
 
 	let mobileOpen = $state(false);
 
-	type NavItem =
-		| { kind: 'route'; route: '/(app)'; label: string; icon: typeof LayoutDashboard }
-		| {
-				kind: 'path';
-				path: 'usage' | 'devices' | 'groups' | 'settings/privacy' | 'settings/account';
-				label: string;
-				icon: typeof LayoutDashboard;
-		  };
+	type AppPath = 'usage' | 'devices' | 'groups' | 'settings/privacy' | 'settings/account';
+	type NavItem = {
+		path: AppPath | null;
+		label: string;
+		icon: typeof LayoutDashboard;
+	};
 
-	const nav: NavItem[] = [
-		{ kind: 'route', route: '/(app)', label: de.nav.overview, icon: LayoutDashboard },
-		{ kind: 'path', path: 'usage', label: de.nav.usage, icon: BarChart3 },
-		{ kind: 'path', path: 'devices', label: de.nav.devices, icon: Smartphone },
-		{ kind: 'path', path: 'groups', label: de.nav.groups, icon: Users },
-		{ kind: 'path', path: 'settings/privacy', label: de.nav.privacy, icon: Shield },
-		{ kind: 'path', path: 'settings/account', label: de.nav.account, icon: UserCircle }
+	const sections: { label: string; items: NavItem[] }[] = [
+		{
+			label: de.nav.general,
+			items: [
+				{ path: null, label: de.nav.overview, icon: LayoutDashboard },
+				{ path: 'usage', label: de.nav.usage, icon: ChartColumn },
+				{ path: 'devices', label: de.nav.devices, icon: Smartphone },
+				{ path: 'groups', label: de.nav.groups, icon: Users }
+			]
+		},
+		{
+			label: de.nav.settings,
+			items: [
+				{ path: 'settings/privacy', label: de.nav.privacy, icon: Shield },
+				{ path: 'settings/account', label: de.nav.account, icon: UserRound }
+			]
+		}
 	];
 
 	function navHref(item: NavItem): string {
-		return item.kind === 'route' ? resolve(item.route) : resolve(item.path);
+		return item.path === null ? resolve('/(app)') : resolve(item.path);
 	}
 
 	function isActive(item: NavItem, pathname: string): boolean {
-		if (item.kind === 'route') return pathname === '/';
+		if (item.path === null) return pathname === '/';
 		const href = `/${item.path}`;
 		return pathname === href || pathname.startsWith(`${href}/`);
 	}
+
+	function close() {
+		mobileOpen = false;
+	}
 </script>
+
+<svelte:window
+	onkeydown={(event) => {
+		if (event.key === 'Escape') close();
+	}}
+/>
 
 <ModeWatcher disableHeadScriptInjection />
 
-<div class="min-h-dvh bg-background">
+<div class="min-h-dvh bg-surface lg:flex">
 	<header
-		class="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:hidden"
+		class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/70 bg-card/80 px-3 backdrop-blur-md lg:hidden"
 	>
-		<Button
-			variant="ghost"
-			size="icon"
-			type="button"
-			aria-label={de.nav.menu}
-			onclick={() => mobileOpen = !mobileOpen}
-		><Menu class="h-5 w-5" /></Button>
-
-		<a href={resolve('/(app)')} class="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring">
+		<Button variant="ghost" size="icon" aria-label={de.nav.menu} onclick={() => (mobileOpen = true)}>
+			<Menu />
+		</Button>
+		<a href={resolve('/(app)')} class="rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30">
 			<Logo size="sm" />
 		</a>
-		<div class="ml-auto flex items-center gap-2">
-			<Button variant="ghost" size="icon" type="button" aria-label={de.nav.toggleTheme} onclick={toggleMode}>
-				<Sun class="h-5 w-5 dark:hidden" />
-				<Moon class="hidden h-5 w-5 dark:block" />
-			</Button>
-		</div>
+		<Button variant="ghost" size="icon" class="ml-auto" aria-label={de.nav.toggleTheme} onclick={toggleMode}>
+			<Sun class="dark:hidden" />
+			<Moon class="hidden dark:block" />
+		</Button>
 	</header>
 
-	<div class="flex">
-		<aside
-			class={cn(
-				'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card shadow-sm transition-transform lg:static lg:translate-x-0',
-				mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-			)}
-		>
+	{#if mobileOpen}
+		<button
+			type="button"
+			class="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] lg:hidden"
+			aria-label={de.common.close}
+			onclick={close}
+		></button>
+	{/if}
+
+	<aside
+		class={cn(
+			'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border/70 bg-card transition-transform duration-200 ease-out',
+			'lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0',
+			mobileOpen ? 'translate-x-0 shadow-raised' : '-translate-x-full'
+		)}
+	>
+		<div class="flex h-14 items-center justify-between px-4 lg:h-16 lg:px-5">
 			<a
 				href={resolve('/(app)')}
-				class="hidden h-14 items-center border-b px-5 lg:flex"
-				onclick={() => (mobileOpen = false)}
+				class="rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
+				onclick={close}
 			>
 				<Logo size="sm" />
 			</a>
-			<nav class="flex flex-1 flex-col gap-1 p-3" aria-label={de.nav.settings}>
-				{#each nav as item (item.kind === 'route' ? item.route : item.path)}
-					<a
-						href={navHref(item)}
-						class={cn(
-							'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-							isActive(item, page.url.pathname)
-								? 'bg-primary/10 text-primary'
-								: 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-						)}
-						onclick={() => mobileOpen = false}
-					><item.icon class="h-4 w-4 shrink-0" />{item.label}</a>
-				{/each}
-			</nav>
-			<div class="border-t p-3">
-				<p class="mb-2 truncate px-3 text-xs text-muted-foreground" title={user.email}>
-					{user.display_name}
-				</p>
-				<div class="mb-2 hidden lg:block">
-					<Button variant="ghost" size="sm" class="w-full justify-start gap-2" type="button" onclick={toggleMode}>
-						<Sun class="h-4 w-4 dark:hidden" />
-						<Moon class="hidden h-4 w-4 dark:block" />
-						{de.nav.toggleTheme}
-					</Button>
+			<Button variant="ghost" size="icon-sm" class="lg:hidden" aria-label={de.common.close} onclick={close}>
+				<X />
+			</Button>
+		</div>
+
+		<nav class="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-3" aria-label={de.nav.menu}>
+			{#each sections as section (section.label)}
+				<div>
+					<p class="mb-1.5 px-2.5 text-[11px] font-medium tracking-wider text-muted-foreground/80 uppercase">
+						{section.label}
+					</p>
+					<ul class="space-y-0.5">
+						{#each section.items as item (item.label)}
+							{@const active = isActive(item, page.url.pathname)}
+							<li>
+								<a
+									href={navHref(item)}
+									aria-current={active ? 'page' : undefined}
+									class={cn(
+										'flex h-9 items-center gap-3 rounded-lg px-2.5 text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30',
+										active
+											? 'bg-primary/[0.08] text-primary'
+											: 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+									)}
+									onclick={close}
+								>
+									<item.icon class="size-4 shrink-0" />
+									{item.label}
+								</a>
+							</li>
+						{/each}
+					</ul>
 				</div>
+			{/each}
+		</nav>
+
+		<div class="border-t border-border/70 p-3">
+			<div class="flex items-center gap-2.5 rounded-lg px-1.5 py-1.5">
+				<Avatar name={user.display_name} size="sm" />
+				<div class="min-w-0 flex-1">
+					<p class="truncate text-sm font-medium leading-5">{user.display_name}</p>
+					<p class="truncate text-xs text-muted-foreground" title={user.email}>{user.email}</p>
+				</div>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="hidden lg:inline-flex"
+					aria-label={de.nav.toggleTheme}
+					title={de.nav.toggleTheme}
+					onclick={toggleMode}
+				>
+					<Sun class="dark:hidden" />
+					<Moon class="hidden dark:block" />
+				</Button>
 				<form method="POST" action="/logout">
-					<Button variant="outline" class="w-full justify-start gap-2" type="submit">
-						<LogOut class="h-4 w-4" />
-						{de.nav.logout}
+					<Button variant="ghost" size="icon-sm" type="submit" aria-label={de.nav.logout} title={de.nav.logout}>
+						<LogOut />
 					</Button>
 				</form>
 			</div>
-		</aside>
+		</div>
+	</aside>
 
-		{#if mobileOpen}
-			<button
-				type="button"
-				class="fixed inset-0 z-40 bg-black/40 lg:hidden"
-				aria-label={de.common.close}
-				onclick={() => mobileOpen = false}
-			></button>
-		{/if}
-
-		<main class="min-h-dvh flex-1 bg-muted/20 p-4 md:p-6 lg:p-8">
-			<div class="mx-auto w-full max-w-6xl">{@render children()}</div>
-		</main>
-	</div>
+	<main class="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8 lg:px-10 lg:py-10">
+		<div class="mx-auto w-full max-w-6xl">{@render children()}</div>
+	</main>
 </div>

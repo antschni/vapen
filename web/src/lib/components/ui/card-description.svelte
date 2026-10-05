@@ -3,7 +3,7 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { Snippet } from 'svelte';
 
-	type Props = HTMLAttributes<HTMLHeadingElement> & {
+	type Props = HTMLAttributes<HTMLParagraphElement> & {
 		class?: string;
 		children?: Snippet;
 	};
@@ -11,6 +11,6 @@
 	let { class: className, children, ...rest }: Props = $props();
 </script>
 
-<h3 class={cn('text-[15px] leading-6 font-semibold tracking-tight', className)} {...rest}>
+<p class={cn('text-sm text-muted-foreground', className)} {...rest}>
 	{@render children?.()}
-</h3>
+</p>

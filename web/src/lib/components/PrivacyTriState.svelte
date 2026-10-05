@@ -1,31 +1,45 @@
 <script lang="ts">
-	import Label from '#lib/components/ui/label.svelte';
 	import type { PrivacyFlag } from '#lib/privacy.js';
 	import { de } from '#lib/i18n/de.js';
+
+	type TriValue = 'inherit' | 'on' | 'off';
 
 	let {
 		flag,
 		name,
-		value = $bindable<'inherit' | 'on' | 'off'>('inherit')
+		value = $bindable<TriValue>('inherit')
 	}: {
 		flag: PrivacyFlag;
 		name: string;
-		value?: 'inherit' | 'on' | 'off';
+		value?: TriValue;
 	} = $props();
 
 	const meta = $derived(de.pages.privacy.flags[flag]);
+
+	const options: { value: TriValue; label: string }[] = [
+		{ value: 'inherit', label: de.pages.privacy.inherit },
+		{ value: 'on', label: de.pages.privacy.on },
+		{ value: 'off', label: de.pages.privacy.off }
+	];
 </script>
 
-<div class="space-y-2 rounded-lg border border-border p-4">
-	<Label class="font-medium">{meta.label}</Label>
-	<p class="text-xs text-muted-foreground">{meta.description}</p>
-	<select
-		{name}
-		class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-		bind:value={value}
+<div class="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+	<div class="min-w-0">
+		<p class="text-sm font-medium">{meta.label}</p>
+		<p class="mt-0.5 text-xs text-muted-foreground">{meta.description}</p>
+	</div>
+	<div
+		class="inline-flex shrink-0 self-start rounded-lg bg-muted p-0.5 sm:self-center"
+		role="radiogroup"
+		aria-label={meta.label}
 	>
-		<option value="inherit">{de.pages.privacy.inherit}</option>
-		<option value="on">{de.pages.privacy.on}</option>
-		<option value="off">{de.pages.privacy.off}</option>
-	</select>
+		{#each options as option (option.value)}
+			<label
+				class="relative cursor-pointer rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground has-checked:bg-card has-checked:text-foreground has-checked:shadow-card has-focus-visible:ring-[3px] has-focus-visible:ring-ring/30"
+			>
+				<input type="radio" class="sr-only" {name} value={option.value} bind:group={value} />
+				{option.label}
+			</label>
+		{/each}
+	</div>
 </div>

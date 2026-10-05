@@ -18,19 +18,17 @@
 	const members = $derived(presence?.members ?? []);
 </script>
 
-<div class="space-y-2">
-	<h3 class="text-sm font-medium text-muted-foreground">{de.live.widgetTitle}</h3>
-	{#if members.length === 0}
-		<p class="text-sm text-muted-foreground">{de.live.noMembers}</p>
-	{:else}
-		<div class="space-y-2">
-			{#each members.slice(0, 4) as member (member.user_id)}
-				<LiveMemberCard
-					displayName={member.display_name}
-					vapingSince={member.vaping_since}
-					lastPuffAt={member.last_puff_at}
-				/>
-			{/each}
-		</div>
-	{/if}
-</div>
+{#if members.length === 0}
+	<p class="py-6 text-center text-sm text-muted-foreground">{de.live.noMembers}</p>
+{:else}
+	<div class="divide-y divide-border/60">
+		{#each members.slice(0, 5) as member (member.user_id)}
+			<LiveMemberCard
+				variant="row"
+				displayName={member.display_name}
+				vapingSince={member.vaping_since}
+				lastPuffAt={member.last_puff_at}
+			/>
+		{/each}
+	</div>
+{/if}

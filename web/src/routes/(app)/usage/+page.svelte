@@ -5,17 +5,23 @@
 	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { Clock, Download, Wind } from '@lucide/svelte';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
 	import LiveStatsPulse from '#lib/components/LiveStatsPulse.svelte';
+	import KpiCard from '#lib/components/KpiCard.svelte';
 	import BarSeriesChart from '#lib/components/charts/BarSeriesChart.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import HeatmapChart from '#lib/components/charts/HeatmapChart.svelte';
+	import Badge from '#lib/components/ui/badge.svelte';
 	import Button from '#lib/components/ui/button.svelte';
+	import { buttonVariants } from '#lib/components/ui/button-variants.js';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
 	import CardHeader from '#lib/components/ui/card-header.svelte';
 	import CardTitle from '#lib/components/ui/card-title.svelte';
+	import CardDescription from '#lib/components/ui/card-description.svelte';
 	import Label from '#lib/components/ui/label.svelte';
+	import Select from '#lib/components/ui/select.svelte';
 	import { formatDurationMs, formatNumber } from '#lib/format.js';
 	import { de } from '#lib/i18n/de.js';
 	import { notify } from '#lib/notifications.svelte.js';
@@ -131,6 +137,7 @@
 	}
 
 	const histogram = $derived(histogramFromPuffs(allPuffs));
+	const histogramMax = $derived(histogram.reduce((m, b) => Math.max(m, b.count), 1));
 </script>
 
 <svelte:head>
@@ -139,210 +146,229 @@
 
 <LiveRefresh />
 
-<PageHeader title={de.pages.usage.title} liveStats />
+<PageHeader title={de.pages.usage.title} liveStats>
+	{#snippet actions()}
+		<a href={exportHref} class={buttonVariants({ variant: 'outline', size: 'sm' })}>
+			<Download />
+			{de.pages.usage.exportCsv}
+		</a>
+	{/snippet}
+</PageHeader>
 
-<Card>
-	<CardHeader>
-		<CardTitle>{de.pages.usage.filters}</CardTitle>
-	</CardHeader>
-	<CardContent>
-		<form method="GET" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" onsubmit={applyFilters}>
-			<div class="space-y-2">
-				<Label for="preset">{de.pages.usage.preset}</Label>
-				<select
-					id="preset"
-					name="preset"
-					bind:value={preset}
-					class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-				>
+<div class="space-y-6">
+	<Card class="p-4">
+		<form
+			method="GET"
+			class="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
+			onsubmit={applyFilters}
+		>
+			<div class="space-y-1.5">
+				<Label for="preset" class="text-xs text-muted-foreground">{de.pages.usage.preset}</Label>
+				<Select id="preset" name="preset" bind:value={preset}>
 					<option value="today">{de.pages.usage.presetToday}</option>
 					<option value="7d">{de.pages.usage.preset7d}</option>
 					<option value="30d">{de.pages.usage.preset30d}</option>
 					<option value="90d">{de.pages.usage.preset90d}</option>
 					<option value="year">{de.pages.usage.presetYear}</option>
-				</select>
+				</Select>
 			</div>
-			<div class="space-y-2">
-				<Label for="bucket">{de.pages.usage.bucket}</Label>
-				<select
-					id="bucket"
-					name="bucket"
-					bind:value={bucket}
-					class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-				>
+			<div class="space-y-1.5">
+				<Label for="bucket" class="text-xs text-muted-foreground">{de.pages.usage.bucket}</Label>
+				<Select id="bucket" name="bucket" bind:value={bucket}>
 					<option value="hour">{de.pages.usage.bucketHour}</option>
 					<option value="day">{de.pages.usage.bucketDay}</option>
 					<option value="week">{de.pages.usage.bucketWeek}</option>
 					<option value="month">{de.pages.usage.bucketMonth}</option>
-				</select>
+				</Select>
 			</div>
-			<div class="space-y-2">
-				<Label for="device_id">{de.pages.usage.device}</Label>
-				<select
-					id="device_id"
-					name="device_id"
-					bind:value={deviceId}
-					class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-				>
+			<div class="space-y-1.5">
+				<Label for="device_id" class="text-xs text-muted-foreground">{de.pages.usage.device}</Label>
+				<Select id="device_id" name="device_id" bind:value={deviceId}>
 					<option value="">{de.pages.usage.deviceAll}</option>
 					{#each data.devices as device (device.id)}
 						<option value={device.id}>{device.name}</option>
 					{/each}
-				</select>
+				</Select>
 			</div>
-			<div class="space-y-2">
-				<Label for="user_id">{de.pages.usage.person}</Label>
-				<select
-					id="user_id"
-					name="user_id"
-					bind:value={userId}
-					class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-				>
+			<div class="space-y-1.5">
+				<Label for="user_id" class="text-xs text-muted-foreground">{de.pages.usage.person}</Label>
+				<Select id="user_id" name="user_id" bind:value={userId}>
 					<option value="">{de.pages.usage.personSelf}</option>
 					{#each data.detailMembers as member (member.id)}
 						<option value={member.id}>{member.name}</option>
 					{/each}
-				</select>
+				</Select>
 			</div>
-			<div class="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2">
-				<Button type="submit">{de.pages.usage.applyFilters}</Button>
-				<a
-					href={exportHref}
-					class="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent"
-				>
-					{de.pages.usage.exportCsv}
-				</a>
-			</div>
+			<Button type="submit" class="sm:col-span-2 lg:col-span-1">{de.pages.usage.applyFilters}</Button>
 		</form>
-	</CardContent>
-</Card>
-
-<LiveStatsPulse class="mt-6 space-y-6">
-{#if data.stats}
-	<div class="grid gap-4 sm:grid-cols-2">
-		<Card>
-			<CardHeader>
-				<CardTitle>{de.pages.usage.comparePrevious}</CardTitle>
-			</CardHeader>
-			<CardContent class="text-sm">
-				<p>
-					{de.pages.usage.puffsDelta}:
-					{puffDelta !== null ? `${puffDelta >= 0 ? '+' : ''}${formatNumber(puffDelta)}` : '—'}
-				</p>
-				<p class="mt-1">
-					{de.pages.usage.durationDelta}:
-					{durationDelta !== null
-						? `${durationDelta >= 0 ? '+' : ''}${formatDurationMs(Math.abs(durationDelta))}`
-						: '—'}
-				</p>
-			</CardContent>
-		</Card>
-	</div>
-{/if}
-
-<div class="grid gap-6 lg:grid-cols-2">
-	<Card>
-		<CardHeader>
-			<CardTitle>{de.pages.usage.chartSeries}</CardTitle>
-		</CardHeader>
-		<CardContent>
-			{#if chartPoints.length === 0}
-				<p class="text-sm text-muted-foreground">{de.empty.noData}</p>
-			{:else}
-				<BarSeriesChart animateLive points={chartPoints} ariaLabel={de.pages.usage.chartSeries} />
-			{/if}
-		</CardContent>
 	</Card>
-	<Card>
-		<CardHeader>
-			<CardTitle>{de.pages.usage.chartHeatmap}</CardTitle>
-		</CardHeader>
-		<CardContent>
-			{#if data.heatmap.length === 0}
-				<p class="text-sm text-muted-foreground">{de.empty.noData}</p>
-			{:else}
-				<HeatmapChart cells={data.heatmap} ariaLabel={de.pages.usage.chartHeatmap} />
-			{/if}
-		</CardContent>
-	</Card>
-</div>
-</LiveStatsPulse>
 
-<Card class="mt-6">
-	<CardHeader>
-		<CardTitle>{de.pages.usage.puffTable}</CardTitle>
-	</CardHeader>
-	<CardContent>
-		{#if allPuffs.length === 0}
-			<p class="text-sm text-muted-foreground">{de.pages.usage.noPuffs}</p>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
-					<thead>
-						<tr class="border-b text-left text-muted-foreground">
-							<th class="pb-2 pr-4">{de.pages.usage.startedAt}</th>
-							<th class="pb-2 pr-4">{de.pages.usage.duration}</th>
-							<th class="pb-2">{de.pages.usage.source}</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each allPuffs as puff (puff.id)}
-							<tr class="border-b border-border/50">
-								<td class="py-2 pr-4">
-									{format(new Date(puff.started_at), 'dd.MM.yyyy HH:mm:ss', { locale: dateFnsDe })}
-								</td>
-								<td class="py-2 pr-4">{formatDurationMs(puff.duration_ms)}</td>
-								<td class="py-2">
-									{puff.source === 'live' ? de.pages.usage.sourceLive : de.pages.usage.sourceHistory}
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-			{#if histogram.length > 0}
-				<p class="mt-4 text-xs text-muted-foreground">{de.pages.usage.histogramNote}</p>
-				<ul class="mt-2 space-y-1 text-xs">
-					{#each histogram as bin (bin.lower)}
-						<li>{formatDurationMs(bin.lower)} – {bin.upper ? formatDurationMs(bin.upper) : '∞'}: {bin.count}</li>
-					{/each}
-				</ul>
-			{/if}
-			{#if nextCursor}
-				<form
-					method="POST"
-					action="?/loadMore"
-					class="mt-4"
-					use:enhance={() => {
-						loadingMore = true;
-						return async ({ result }) => {
-							loadingMore = false;
-							if (result.type === 'success' && result.data) {
-								const d = result.data as { items: Puff[]; next_cursor: string | null };
-								extraPuffs = [...extraPuffs, ...d.items];
-								nextCursor = d.next_cursor;
-								return;
+	<LiveStatsPulse class="space-y-6 rounded-xl">
+		{#if data.stats}
+			<div class="grid gap-4 sm:grid-cols-2">
+				<KpiCard
+					animateLive
+					icon={Wind}
+					title={de.pages.usage.puffsDelta}
+					value={formatNumber(data.stats.totals.puff_count)}
+					trend={puffDelta !== null
+						? {
+								label: `${puffDelta >= 0 ? '+' : ''}${formatNumber(puffDelta)} ${de.pages.usage.vsPrevious}`,
+								positive: puffDelta <= 0,
+								up: puffDelta > 0
 							}
-							const message =
-								result.type === 'failure' && result.data && typeof result.data.message === 'string'
-									? result.data.message
-									: de.errors.generic;
-							notify(message, 'error');
-						};
-					}}
-				>
-					<input type="hidden" name="cursor" value={nextCursor} />
-					<input type="hidden" name="from" value={data.filters.fromIso} />
-					<input type="hidden" name="to" value={data.filters.toIso} />
-					{#if data.filters.deviceId}
-						<input type="hidden" name="device_id" value={data.filters.deviceId} />
-					{/if}
-					{#if data.filters.userId}
-						<input type="hidden" name="user_id" value={data.filters.userId} />
-					{/if}
-					<Button type="submit" variant="outline" disabled={loadingMore}>{de.pages.usage.loadMore}</Button>
-				</form>
-			{/if}
+						: undefined}
+				/>
+				<KpiCard
+					animateLive
+					icon={Clock}
+					title={de.pages.usage.durationDelta}
+					value={formatDurationMs(data.stats.totals.total_duration_ms)}
+					trend={durationDelta !== null
+						? {
+								label: `${durationDelta >= 0 ? '+' : '−'}${formatDurationMs(Math.abs(durationDelta))} ${de.pages.usage.vsPrevious}`,
+								positive: durationDelta <= 0,
+								up: durationDelta > 0
+							}
+						: undefined}
+				/>
+			</div>
 		{/if}
-	</CardContent>
-</Card>
+
+		<div class="grid gap-4 lg:grid-cols-2">
+			<Card>
+				<CardHeader>
+					<CardTitle>{de.pages.usage.chartSeries}</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{#if chartPoints.length === 0}
+						<p class="py-12 text-center text-sm text-muted-foreground">{de.empty.noData}</p>
+					{:else}
+						<BarSeriesChart animateLive points={chartPoints} ariaLabel={de.pages.usage.chartSeries} />
+					{/if}
+				</CardContent>
+			</Card>
+			<Card>
+				<CardHeader>
+					<CardTitle>{de.pages.usage.chartHeatmap}</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{#if data.heatmap.length === 0}
+						<p class="py-12 text-center text-sm text-muted-foreground">{de.empty.noData}</p>
+					{:else}
+						<HeatmapChart cells={data.heatmap} ariaLabel={de.pages.usage.chartHeatmap} />
+					{/if}
+				</CardContent>
+			</Card>
+		</div>
+	</LiveStatsPulse>
+
+	<div class={['grid gap-4', histogram.length > 0 && 'lg:grid-cols-3']}>
+		<Card class="overflow-hidden lg:col-span-2">
+			<CardHeader>
+				<CardTitle>{de.pages.usage.puffTable}</CardTitle>
+				{#if allPuffs.length > 0}
+					<CardDescription>{de.pages.usage.loadedCount(formatNumber(allPuffs.length))}</CardDescription>
+				{/if}
+			</CardHeader>
+			{#if allPuffs.length === 0}
+				<CardContent>
+					<p class="py-8 text-center text-sm text-muted-foreground">{de.pages.usage.noPuffs}</p>
+				</CardContent>
+			{:else}
+				<div class="max-h-[28rem] overflow-auto border-t border-border/70">
+					<table class="w-full text-sm">
+						<thead class="sticky top-0 bg-card/95 backdrop-blur">
+							<tr class="text-left text-xs font-medium text-muted-foreground">
+								<th class="px-5 py-2.5 font-medium">{de.pages.usage.startedAt}</th>
+								<th class="px-5 py-2.5 font-medium">{de.pages.usage.duration}</th>
+								<th class="px-5 py-2.5 text-right font-medium">{de.pages.usage.source}</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-border/60">
+							{#each allPuffs as puff (puff.id)}
+								<tr class="transition-colors hover:bg-muted/40">
+									<td class="px-5 py-2.5 whitespace-nowrap tabular-nums">
+										{format(new Date(puff.started_at), 'dd.MM.yyyy · HH:mm:ss', { locale: dateFnsDe })}
+									</td>
+									<td class="px-5 py-2.5 tabular-nums">{formatDurationMs(puff.duration_ms)}</td>
+									<td class="px-5 py-2.5 text-right">
+										<Badge variant={puff.source === 'live' ? 'success' : 'secondary'}>
+											{puff.source === 'live' ? de.pages.usage.sourceLive : de.pages.usage.sourceHistory}
+										</Badge>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+				{#if nextCursor}
+					<form
+						method="POST"
+						action="?/loadMore"
+						class="flex justify-center border-t border-border/70 p-3"
+						use:enhance={() => {
+							loadingMore = true;
+							return async ({ result }) => {
+								loadingMore = false;
+								if (result.type === 'success' && result.data) {
+									const d = result.data as { items: Puff[]; next_cursor: string | null };
+									extraPuffs = [...extraPuffs, ...d.items];
+									nextCursor = d.next_cursor;
+									return;
+								}
+								const message =
+									result.type === 'failure' && result.data && typeof result.data.message === 'string'
+										? result.data.message
+										: de.errors.generic;
+								notify(message, 'error');
+							};
+						}}
+					>
+						<input type="hidden" name="cursor" value={nextCursor} />
+						<input type="hidden" name="from" value={data.filters.fromIso} />
+						<input type="hidden" name="to" value={data.filters.toIso} />
+						{#if data.filters.deviceId}
+							<input type="hidden" name="device_id" value={data.filters.deviceId} />
+						{/if}
+						{#if data.filters.userId}
+							<input type="hidden" name="user_id" value={data.filters.userId} />
+						{/if}
+						<Button type="submit" variant="ghost" size="sm" disabled={loadingMore}>
+							{loadingMore ? de.common.loading : de.pages.usage.loadMore}
+						</Button>
+					</form>
+				{/if}
+			{/if}
+		</Card>
+
+		{#if histogram.length > 0}
+			<Card class="self-start">
+				<CardHeader>
+					<CardTitle>{de.pages.usage.duration}</CardTitle>
+					<CardDescription>{de.pages.usage.histogramNote}</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<ul class="space-y-3">
+						{#each histogram as bin (bin.lower)}
+							<li>
+								<div class="mb-1 flex justify-between text-xs">
+									<span class="text-muted-foreground">
+										{formatDurationMs(bin.lower)} – {bin.upper ? formatDurationMs(bin.upper) : '∞'}
+									</span>
+									<span class="font-medium tabular-nums">{bin.count}</span>
+								</div>
+								<div class="h-1.5 overflow-hidden rounded-full bg-muted">
+									<div
+										class="h-full rounded-full bg-primary/70"
+										style:width="{(bin.count / histogramMax) * 100}%"
+									></div>
+								</div>
+							</li>
+						{/each}
+					</ul>
+				</CardContent>
+			</Card>
+		{/if}
+	</div>
+</div>

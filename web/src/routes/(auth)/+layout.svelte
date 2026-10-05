@@ -5,12 +5,12 @@
 	let { children } = $props();
 </script>
 
-<div class="auth-backdrop flex min-h-dvh flex-col items-center justify-center p-4">
+<div class="auth-backdrop flex min-h-dvh flex-col items-center justify-center px-4 py-10">
 	<div class="mb-8 flex flex-col items-center text-center">
 		<Logo size="lg" class="justify-center" />
-		<p class="mt-3 text-sm text-muted-foreground">{de.app.tagline}</p>
+		<p class="mt-2 text-sm text-muted-foreground">{de.app.tagline}</p>
 	</div>
-	<div class="w-full max-w-md">
+	<div class="w-full max-w-sm">
 		{@render children()}
 	</div>
 </div>

@@ -1,34 +1,44 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+	import { Lock, Settings } from '@lucide/svelte';
 	import LivePresenceGrid from '#lib/components/LivePresenceGrid.svelte';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
-	import LiveStatsBadge from '#lib/components/LiveStatsBadge.svelte';
 	import LiveStatsPulse from '#lib/components/LiveStatsPulse.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import Avatar from '#lib/components/ui/avatar.svelte';
 	import Badge from '#lib/components/ui/badge.svelte';
+	import { buttonVariants } from '#lib/components/ui/button-variants.js';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
 	import CardHeader from '#lib/components/ui/card-header.svelte';
 	import CardTitle from '#lib/components/ui/card-title.svelte';
 	import { formatDurationMs, formatNumber } from '#lib/format.js';
 	import { de } from '#lib/i18n/de.js';
-	import { resolve } from '$app/paths';
+	import { roleLabel } from '#lib/roles.js';
+	import { cn } from '#lib/utils.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	function roleLabel(role: string): string {
-		if (role === 'owner') return de.pages.groups.roleOwner;
-		if (role === 'admin') return de.pages.groups.roleAdmin;
-		return de.pages.groups.roleMember;
-	}
+	const ranges = [
+		{ value: 'today', label: de.pages.groups.rangeToday },
+		{ value: '7d', label: de.pages.groups.range7d },
+		{ value: '30d', label: de.pages.groups.range30d }
+	] as const;
 
 	function rangeHref(r: 'today' | '7d' | '30d'): string {
 		return `${resolve('/(app)/groups/[id]', { id: data.groupId })}?range=${r}`;
 	}
 
 	function hasUsage(member: PageData['overview']['members'][number]): boolean {
-		return Boolean(
-			member.visibility.usage_summary && member.usage && 'puff_count' in member.usage
-		);
+		return Boolean(member.visibility.usage_summary && member.usage && 'puff_count' in member.usage);
+	}
+
+	function rankClass(rank: number): string {
+		if (rank === 1) return 'bg-amber-400/20 text-amber-700 dark:text-amber-300';
+		if (rank === 2) return 'bg-slate-400/20 text-slate-700 dark:text-slate-300';
+		if (rank === 3) return 'bg-orange-400/20 text-orange-700 dark:text-orange-300';
+		return 'bg-muted text-muted-foreground';
 	}
 </script>
 
@@ -38,112 +48,126 @@
 
 <LiveRefresh />
 
-<div class="flex flex-wrap items-center justify-between gap-3">
-	<div class="min-w-0 flex-1">
-		<p class="text-sm text-muted-foreground"><a href={resolve('groups')} class="hover:underline">{de.common.back}</a></p>
-		<h1 class="text-2xl font-bold tracking-tight">{data.groupName}</h1>
-	</div>
-	<div class="flex flex-wrap items-center gap-2">
-		<LiveStatsBadge />
-	{#if data.role === 'owner' || data.role === 'admin'}
-		<a
-			href={resolve('/(app)/groups/[id]/settings', { id: data.groupId })}
-			class="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent"
-		>
-			{de.pages.groups.settings}
-		</a>
-	{/if}
+<PageHeader title={data.groupName} liveStats back={{ href: resolve('groups'), label: de.pages.groups.title }}>
+	{#snippet actions()}
+		{#if data.role === 'owner' || data.role === 'admin'}
+			<a
+				href={resolve('/(app)/groups/[id]/settings', { id: data.groupId })}
+				class={buttonVariants({ variant: 'outline', size: 'sm' })}
+			>
+				<Settings />
+				{de.pages.groups.settings}
+			</a>
+		{/if}
+	{/snippet}
+</PageHeader>
+
+<div class="space-y-6">
+	<Card>
+		<CardHeader>
+			<CardTitle>{de.pages.groups.liveGrid}</CardTitle>
+		</CardHeader>
+		<CardContent>
+			<LivePresenceGrid groupId={data.groupId} />
+		</CardContent>
+	</Card>
+
+	<div class="grid items-start gap-6 lg:grid-cols-5">
+		<LiveStatsPulse class="rounded-xl lg:col-span-3">
+			<Card>
+				<CardHeader>
+					<CardTitle>{de.pages.groups.leaderboard}</CardTitle>
+					{#snippet actions()}
+						<nav class="inline-flex rounded-lg bg-muted p-0.5" aria-label={de.pages.groups.leaderboard}>
+							{#each ranges as range (range.value)}
+								<a
+									href={rangeHref(range.value)}
+									aria-current={data.range === range.value ? 'page' : undefined}
+									class={cn(
+										'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+										data.range === range.value
+											? 'bg-card text-foreground shadow-card'
+											: 'text-muted-foreground hover:text-foreground'
+									)}
+								>
+									{range.label}
+								</a>
+							{/each}
+						</nav>
+					{/snippet}
+				</CardHeader>
+				<CardContent>
+					{#if data.overview.leaderboard.length === 0}
+						<p class="py-8 text-center text-sm text-muted-foreground">{de.empty.noData}</p>
+					{:else}
+						<ol class="space-y-1">
+							{#each data.overview.leaderboard as entry (entry.user_id)}
+								<li class="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/40">
+									<span
+										class={cn(
+											'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums',
+											rankClass(entry.rank)
+										)}
+									>
+										{entry.rank}
+									</span>
+									<Avatar name={entry.display_name} size="sm" />
+									<span class="min-w-0 flex-1 truncate text-sm font-medium">{entry.display_name}</span>
+									<span class="text-right text-sm tabular-nums">
+										<span class="font-medium">{formatNumber(entry.puff_count)}</span>
+										<span class="text-muted-foreground"> Züge</span>
+										<span class="block text-xs text-muted-foreground">{formatDurationMs(entry.total_duration_ms)}</span>
+									</span>
+								</li>
+							{/each}
+						</ol>
+					{/if}
+				</CardContent>
+			</Card>
+		</LiveStatsPulse>
+
+		<Card class="lg:col-span-2">
+			<CardHeader>
+				<CardTitle>{de.pages.groups.members}</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<ul class="divide-y divide-border/60">
+					{#each data.overview.members as member (member.user_id)}
+						<li class="flex gap-3 py-3 first:pt-0 last:pb-0">
+							<Avatar name={member.display_name} size="sm" class="mt-0.5" />
+							<div class="min-w-0 flex-1 space-y-0.5">
+								<div class="flex items-center gap-2">
+									<p class="truncate text-sm font-medium">{member.display_name}</p>
+									{#if member.role !== 'member'}
+										<Badge variant="secondary">{roleLabel(member.role)}</Badge>
+									{/if}
+								</div>
+								<p class="flex items-center gap-1 text-xs text-muted-foreground">
+									{#if hasUsage(member)}
+										{de.pages.groups.usageSummary}: {formatNumber(member.usage!.puff_count)} Züge · {formatDurationMs(
+											member.usage!.total_duration_ms
+										)}
+									{:else if !member.visibility.usage_summary}
+										<Lock class="size-3" />
+										{de.pages.groups.usageSummary} {de.empty.private}
+									{/if}
+								</p>
+								<p class="flex items-center gap-1 text-xs text-muted-foreground">
+									{#if member.visibility.device_stats && member.device && 'model' in member.device}
+										{de.pages.groups.deviceSummary}: {member.device.model}
+										{#if member.device.battery_percent !== undefined}
+											· {member.device.battery_percent} %
+										{/if}
+									{:else if !member.visibility.device_stats}
+										<Lock class="size-3" />
+										{de.pages.groups.deviceSummary} {de.empty.private}
+									{/if}
+								</p>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</CardContent>
+		</Card>
 	</div>
 </div>
-
-<Card class="mt-6">
-	<CardContent class="pt-6">
-		<LivePresenceGrid groupId={data.groupId} />
-	</CardContent>
-</Card>
-
-<LiveStatsPulse class="mt-6 block">
-<Card>
-	<CardHeader class="flex flex-row flex-wrap items-center justify-between gap-2">
-		<CardTitle>{de.pages.groups.leaderboard}</CardTitle>
-		<div class="flex gap-1">
-			<a
-				href={rangeHref('today')}
-				class="rounded-md px-2 py-1 text-xs {data.range === 'today'
-					? 'bg-accent'
-					: 'text-muted-foreground hover:bg-accent/50'}"
-			>
-				{de.pages.groups.rangeToday}
-			</a>
-			<a
-				href={rangeHref('7d')}
-				class="rounded-md px-2 py-1 text-xs {data.range === '7d'
-					? 'bg-accent'
-					: 'text-muted-foreground hover:bg-accent/50'}"
-			>
-				{de.pages.groups.range7d}
-			</a>
-			<a
-				href={rangeHref('30d')}
-				class="rounded-md px-2 py-1 text-xs {data.range === '30d'
-					? 'bg-accent'
-					: 'text-muted-foreground hover:bg-accent/50'}"
-			>
-				{de.pages.groups.range30d}
-			</a>
-		</div>
-	</CardHeader>
-	<CardContent>
-		{#if data.overview.leaderboard.length === 0}
-			<p class="text-sm text-muted-foreground">{de.empty.noData}</p>
-		{:else}
-			<ol class="space-y-2">
-				{#each data.overview.leaderboard as entry (entry.user_id)}
-					<li class="flex items-center justify-between rounded border p-3 text-sm">
-						<span>
-							<span class="font-medium">#{entry.rank}</span>
-							{entry.display_name}
-						</span>
-						<span class="text-muted-foreground">
-							{formatNumber(entry.puff_count)} Züge · {formatDurationMs(entry.total_duration_ms)}
-						</span>
-					</li>
-				{/each}
-			</ol>
-		{/if}
-	</CardContent>
-</Card>
-</LiveStatsPulse>
-
-<Card class="mt-6">
-	<CardHeader>
-		<CardTitle>{de.pages.groups.members}</CardTitle>
-	</CardHeader>
-	<CardContent class="space-y-4">
-		{#each data.overview.members as member (member.user_id)}
-			<div class="rounded-lg border p-4">
-				<div class="flex flex-wrap items-center gap-2">
-					<p class="font-medium">{member.display_name}</p>
-					<Badge variant="secondary">{roleLabel(member.role)}</Badge>
-				</div>
-				{#if hasUsage(member)}
-					<p class="mt-2 text-sm text-muted-foreground">
-						{de.pages.groups.usageSummary}: {formatNumber((member.usage!).puff_count)} Züge · {formatDurationMs((member.usage!).total_duration_ms)}
-					</p>
-				{:else if !member.visibility.usage_summary}
-					<p class="mt-2 text-sm text-muted-foreground">{de.empty.private}</p>
-				{/if}
-				{#if member.visibility.device_stats && member.device && 'model' in member.device}
-					<p class="mt-1 text-sm text-muted-foreground">
-						{de.pages.groups.deviceSummary}: {member.device.model}
-						{#if member.device.battery_percent !== undefined}
-							· {member.device.battery_percent} %
-						{/if}
-					</p>
-				{:else if !member.visibility.device_stats}
-					<p class="mt-1 text-sm text-muted-foreground">{de.empty.private}</p>
-				{/if}
-			</div>
-		{/each}
-	</CardContent>
-</Card>

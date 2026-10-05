@@ -5,13 +5,16 @@
 	import { tv, type VariantProps } from 'tailwind-variants';
 
 	const badgeVariants = tv({
-		base: 'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring',
+		base: 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] leading-4 font-medium whitespace-nowrap [&_svg]:size-3',
 		variants: {
 			variant: {
-				default: 'border-transparent bg-primary text-primary-foreground',
-				secondary: 'border-transparent bg-secondary text-secondary-foreground',
-				outline: 'text-foreground',
-				destructive: 'border-transparent bg-destructive text-destructive-foreground'
+				default: 'bg-primary/10 text-primary dark:bg-primary/15',
+				solid: 'bg-primary text-primary-foreground',
+				secondary: 'bg-muted text-muted-foreground',
+				outline: 'border border-border text-muted-foreground',
+				success: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+				warning: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+				destructive: 'bg-destructive/10 text-destructive'
 			}
 		},
 		defaultVariants: {
