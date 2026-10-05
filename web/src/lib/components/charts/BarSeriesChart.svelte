@@ -34,7 +34,7 @@
 			<div class="border-t border-border"></div>
 		</div>
 		<div class="relative flex h-full gap-1 sm:gap-1.5">
-			{#each points as point, i (point.label)}
+			{#each points as point, i (i)}
 				{@const pct = (point.durationMs / maxDuration) * 100}
 				<div class="group flex min-w-0 flex-1 flex-col">
 					<div class="relative flex-1">
@@ -73,7 +73,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each points as point (point.label)}
+			{#each points as point, i (i)}
 				<tr>
 					<td>{point.label}</td>
 					<td>{formatValue(point)}</td>

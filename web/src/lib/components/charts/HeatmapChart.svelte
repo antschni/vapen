@@ -27,12 +27,12 @@
 <div class="overflow-x-auto" role="img" aria-label={ariaLabel}>
 	<div class="grid min-w-[30rem] grid-cols-[1.75rem_repeat(24,minmax(0,1fr))] gap-[3px] text-[10px]">
 		<div></div>
-		{#each hours as hour (hour)}
+		{#each hours as hour (`h-${hour}`)}
 			<div class="text-center text-muted-foreground tabular-nums">{hour % 3 === 0 ? hour : ''}</div>
 		{/each}
 		{#each [1, 2, 3, 4, 5, 6, 7] as wd (wd)}
 			<div class="flex items-center text-muted-foreground">{weekdayLabels[wd - 1]}</div>
-			{#each hours as hour (hour)}
+			{#each hours as hour (`${wd}-${hour}`)}
 				{@const cell = grid.map[`${wd}-${hour}`]}
 				{@const count = cell?.puff_count ?? 0}
 				<div
