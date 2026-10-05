@@ -40,8 +40,15 @@ class AuthInterceptor extends Interceptor {
       await _refreshSingleFlight();
       final response = await dio.fetch(err.requestOptions);
       return handler.resolve(response);
+    } on VapenApiException catch (e) {
+      if (e.problem.status == 401 || e.problem.status == 400 || e.problem.status == 403) {
+        onLogout();
+      }
+      return handler.next(err);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) onLogout();
+      return handler.next(err);
     } catch (_) {
-      onLogout();
       return handler.next(err);
     }
   }

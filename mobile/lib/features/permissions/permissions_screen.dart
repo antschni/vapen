@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../data/devices/account_devices.dart';
 import '../../data/permissions/required_permissions.dart';
 import '../../l10n/app_localizations.dart';
 import '../../data/native/tracking_bridge.dart';
@@ -38,7 +39,9 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
       Permission.locationWhenInUse,
     ].request();
     await ref.read(requiredPermissionsProvider.notifier).refresh();
-    if (context.mounted) context.go('/pairing');
+    if (!context.mounted) return;
+    final hasDevice = await accountHasDevice(ref);
+    if (context.mounted) context.go(hasDevice ? '/home' : '/pairing');
   }
 
   @override

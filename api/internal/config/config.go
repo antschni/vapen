@@ -25,8 +25,8 @@ func Load() (Config, error) {
 	cfg := Config{
 		ListenAddr:         envOr("LISTEN_ADDR", ":8080"),
 		PublicBaseURL:      envOr("PUBLIC_BASE_URL", "http://localhost:8080"),
-		AccessTokenTTL:     durationEnv("ACCESS_TOKEN_TTL", 15*time.Minute),
-		RefreshTokenTTL:    durationEnv("REFRESH_TOKEN_TTL", 720*time.Hour),
+		AccessTokenTTL:     durationEnv("ACCESS_TOKEN_TTL", 30*24*time.Hour),
+		RefreshTokenTTL:    durationEnv("REFRESH_TOKEN_TTL", 180*24*time.Hour),
 		LogLevel:           envOr("LOG_LEVEL", "info"),
 		RefreshGracePeriod: 30 * time.Second,
 	}

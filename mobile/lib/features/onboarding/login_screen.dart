@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:vapen_api/vapen_api.dart';
 
 import '../../data/auth/session_notifier.dart';
+import '../../data/devices/account_devices.dart';
 import '../../l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -37,7 +38,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _email.text.trim(),
             password: _password.text,
           );
-      if (mounted) context.go('/permissions');
+      if (!mounted) return;
+      context.go(await routeAfterAuth(ref));
     } on VapenApiException catch (e) {
       setState(() => _error = e.problem.code == 'invalid_credentials' ? l10n.invalidCredentials : l10n.genericError);
     } catch (_) {

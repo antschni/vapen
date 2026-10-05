@@ -81,7 +81,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/permissions';
       }
 
-      if (session.isAuthenticated && authRoutes.contains(loc)) return '/home';
+      // Login and register choose /permissions, /pairing, or /home themselves.
+      if (session.isAuthenticated && authRoutes.contains(loc)) return null;
       if (session.isAuthenticated && onSetup) return '/home';
       return null;
     },

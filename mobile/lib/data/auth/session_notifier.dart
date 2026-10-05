@@ -75,8 +75,10 @@ class SessionNotifier extends Notifier<SessionState> {
     try {
       final baseUrl = await _resolvedServerUrl();
       final setupComplete = await _resolveServerSetupComplete();
-      final token = await _storage.readAccessToken();
-      if (token == null) {
+      var token = await _storage.readAccessToken();
+      final refresh = await _storage.readRefreshToken();
+      final cachedUser = await _storage.readUser();
+      if ((token == null || token.isEmpty) && (refresh == null || refresh.isEmpty)) {
         state = SessionState(
           baseUrl: baseUrl,
           serverSetupComplete: setupComplete,
@@ -84,9 +86,57 @@ class SessionNotifier extends Notifier<SessionState> {
         );
         return;
       }
+
+      final exp = await _storage.readAccessExpiresAt();
+      final accessStale = token == null ||
+          token.isEmpty ||
+          (exp != null && !exp.isAfter(DateTime.now().add(const Duration(minutes: 1))));
+      if (accessStale && refresh != null && refresh.isNotEmpty) {
+        try {
+          final pair = await _refreshSession(baseUrl, refresh);
+          if (pair == null) {
+            await _storage.clearSession();
+            state = SessionState(
+              baseUrl: baseUrl,
+              serverSetupComplete: setupComplete,
+              loading: false,
+            );
+            return;
+          }
+          token = pair.accessToken;
+          state = SessionState(
+            baseUrl: baseUrl,
+            accessToken: pair.accessToken,
+            user: pair.user,
+            serverSetupComplete: true,
+            loading: false,
+          );
+          return;
+        } catch (_) {
+          _restoreCached(
+            baseUrl: baseUrl,
+            token: token,
+            user: cachedUser,
+            setupComplete: setupComplete,
+          );
+          return;
+        }
+      }
+
+      if (token == null || token.isEmpty) {
+        state = SessionState(
+          baseUrl: baseUrl,
+          serverSetupComplete: setupComplete,
+          loading: false,
+        );
+        return;
+      }
+
       try {
-        final client = VapenApiClient(baseUrl: baseUrl, accessToken: token);
-        final user = await client.getMe().timeout(_restoreTimeout);
+        final user = await VapenApiClient(baseUrl: baseUrl, accessToken: token)
+            .getMe()
+            .timeout(_restoreTimeout);
+        await _storage.saveUser(user);
         state = SessionState(
           baseUrl: baseUrl,
           accessToken: token,
@@ -94,12 +144,49 @@ class SessionNotifier extends Notifier<SessionState> {
           serverSetupComplete: true,
           loading: false,
         );
-      } catch (_) {
-        await _storage.clearSession();
-        state = SessionState(
+      } on VapenApiException catch (e) {
+        if (e.problem.status == 401 && refresh != null && refresh.isNotEmpty) {
+          try {
+            final pair = await _refreshSession(baseUrl, refresh);
+            if (pair == null) {
+              await _storage.clearSession();
+              state = SessionState(
+                baseUrl: baseUrl,
+                serverSetupComplete: setupComplete,
+                loading: false,
+              );
+              return;
+            }
+            state = SessionState(
+              baseUrl: baseUrl,
+              accessToken: pair.accessToken,
+              user: pair.user,
+              serverSetupComplete: true,
+              loading: false,
+            );
+            return;
+          } catch (_) {
+            _restoreCached(
+              baseUrl: baseUrl,
+              token: token,
+              user: cachedUser,
+              setupComplete: setupComplete,
+            );
+            return;
+          }
+        }
+        _restoreCached(
           baseUrl: baseUrl,
-          serverSetupComplete: setupComplete,
-          loading: false,
+          token: token,
+          user: cachedUser,
+          setupComplete: setupComplete,
+        );
+      } catch (_) {
+        _restoreCached(
+          baseUrl: baseUrl,
+          token: token,
+          user: cachedUser,
+          setupComplete: setupComplete,
         );
       }
     } catch (_) {
@@ -108,6 +195,47 @@ class SessionNotifier extends Notifier<SessionState> {
         serverSetupComplete: false,
         loading: false,
       );
+    }
+  }
+
+  /// Keeps a stored login when the server is briefly unreachable.
+  /// Only an explicit auth rejection clears the session.
+  void _restoreCached({
+    required String baseUrl,
+    required String? token,
+    required User? user,
+    required bool setupComplete,
+  }) {
+    if (token != null && token.isNotEmpty && user != null) {
+      state = SessionState(
+        baseUrl: baseUrl,
+        accessToken: token,
+        user: user,
+        serverSetupComplete: true,
+        loading: false,
+      );
+      return;
+    }
+    state = SessionState(
+      baseUrl: baseUrl,
+      serverSetupComplete: setupComplete,
+      loading: false,
+    );
+  }
+
+  /// Returns the new pair, null when the refresh token is rejected, or throws on network errors.
+  Future<TokenPair?> _refreshSession(String baseUrl, String refreshToken) async {
+    try {
+      final pair = await VapenApiClient(baseUrl: baseUrl)
+          .refresh(RefreshRequest(refreshToken: refreshToken))
+          .timeout(_restoreTimeout);
+      await _persistPair(baseUrl, pair);
+      return pair;
+    } on VapenApiException catch (e) {
+      if (e.problem.status == 401 || e.problem.status == 400 || e.problem.status == 403) {
+        return null;
+      }
+      rethrow;
     }
   }
 
@@ -133,13 +261,7 @@ class SessionNotifier extends Notifier<SessionState> {
     }
     final client = VapenApiClient(baseUrl: normalized);
     final pair = await client.login(LoginRequest(email: email, password: password));
-    await _storage.saveSession(
-      baseUrl: normalized,
-      accessToken: pair.accessToken,
-      refreshToken: pair.refreshToken,
-      accessExpiresAt: pair.accessTokenExpiresAt,
-      refreshExpiresAt: pair.refreshTokenExpiresAt,
-    );
+    await _persistPair(normalized, pair);
     state = SessionState(
       baseUrl: normalized,
       accessToken: pair.accessToken,
@@ -168,13 +290,7 @@ class SessionNotifier extends Notifier<SessionState> {
         timezone: timezone,
       ),
     );
-    await _storage.saveSession(
-      baseUrl: normalized,
-      accessToken: pair.accessToken,
-      refreshToken: pair.refreshToken,
-      accessExpiresAt: pair.accessTokenExpiresAt,
-      refreshExpiresAt: pair.refreshTokenExpiresAt,
-    );
+    await _persistPair(normalized, pair);
     state = SessionState(
       baseUrl: normalized,
       accessToken: pair.accessToken,
@@ -182,6 +298,17 @@ class SessionNotifier extends Notifier<SessionState> {
       serverSetupComplete: true,
       loading: false,
     );
+  }
+
+  Future<void> _persistPair(String baseUrl, TokenPair pair) async {
+    await _storage.saveSession(
+      baseUrl: baseUrl,
+      accessToken: pair.accessToken,
+      refreshToken: pair.refreshToken,
+      accessExpiresAt: pair.accessTokenExpiresAt,
+      refreshExpiresAt: pair.refreshTokenExpiresAt,
+    );
+    await _storage.saveUser(pair.user);
   }
 
   /// Persists [baseUrl]. Logs out and clears native device credentials when the URL changes while signed in.

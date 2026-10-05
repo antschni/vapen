@@ -6,6 +6,7 @@ import 'package:vapen_api/vapen_api.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../../data/auth/session_notifier.dart';
+import '../../data/devices/account_devices.dart';
 import '../../l10n/app_localizations.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -44,7 +45,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             displayName: _displayName.text.trim(),
             timezone: tz,
           );
-      if (mounted) context.go('/permissions');
+      if (!mounted) return;
+      context.go(await routeAfterAuth(ref));
     } on VapenApiException {
       setState(() => _error = l10n.genericError);
     } catch (_) {
