@@ -8,7 +8,7 @@ Vapen tracks the usage of an **Elfbar Master** e-cigarette. A mobile app reads p
 |---|---|---|
 | [`api/`](api/) | REST API, auth, statistics, groups, privacy, live events | Go, PostgreSQL |
 | [`mobile/`](mobile/) | Android app with background BLE tracking (iOS optional) | Flutter UI, native Kotlin service |
-| [`web/`](web/) | Dashboard | SvelteKit 2, Svelte 5 |
+| [`web/`](web/) | Dashboard | SvelteKit 3, Svelte 5 |
 | `deploy/`, `docker-compose.yml`, `.env.example` | Deployment (PostgreSQL, API, web, Caddy) | Docker Compose |
 
 ```mermaid

@@ -4,6 +4,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/duration_format.dart';
+import '../../core/vapen_logo.dart';
 import '../../data/api/api_providers.dart';
 import '../../data/native/vapen_native.g.dart';
 import '../../l10n/app_localizations.dart';
@@ -90,7 +91,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final bridge = ref.watch(trackingBridgeProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.homeTitle),
+        title: Row(
+          children: [
+            const VapenLogo(size: 28),
+            const SizedBox(width: 12),
+            Text(l10n.homeTitle),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Aktualisieren',

@@ -31,7 +31,7 @@ USER vapen
 EXPOSE 3000
 ENV PORT=3000
 ENV HOST=0.0.0.0
-# Liveness for Coolify/Traefik. GET /health needs no auth (see web/src/routes/health).
-HEALTHCHECK --interval=10s --timeout=5s --start-period=40s --retries=5 \
-  CMD wget -q --spider http://127.0.0.1:3000/health || exit 1
-CMD ["node", "build"]
+# Liveness: /health and /healthz skip auth in hooks.server.ts. Use $PORT (Coolify may override).
+HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=5 \
+  CMD wget -qO- "http://127.0.0.1:${PORT:-3000}/health" | grep -qx ok || exit 1
+CMD ["node", "build/index.js"]

@@ -4,7 +4,7 @@
 # 2) Environment: JWT_ED25519_PRIVATE_KEY (go run ./cmd/vapen-api keygen from api/).
 #    Optional but recommended: ORIGIN=https://vapen.example.com, PUBLIC_BASE_URL same (no :3000).
 # 3) "No available server": Traefik skips containers Docker marks unhealthy.
-#    api probes GET /healthz, web probes GET /health (wget). Both need the start_period to pass.
+#    api probes GET /healthz, web probes GET /health (respects $PORT). Both need the start_period to pass.
 #    Advanced: do NOT enable "Connect To Predefined Network" unless you know why (breaks routing).
 # API is reached via Coolify/Traefik (api domain) or web BFF; no host port publish (8080 often taken on shared hosts).
 # Local dev: add `ports: ["8080:8080"]` under api in docker-compose.override.yml (see .gitignore).
@@ -61,11 +61,15 @@ services:
     expose:
       - "3000"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/health"]
+      test:
+        [
+          "CMD-SHELL",
+          'wget -qO- "http://127.0.0.1:$${PORT:-3000}/health" | grep -qx ok || exit 1',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 60s
     environment:
       # Coolify: path suffix for generated SERVICE_URL_WEB_3000 (do not use that var as ORIGIN — it may be "/").
       SERVICE_URL_WEB_3000: /

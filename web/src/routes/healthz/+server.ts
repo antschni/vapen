@@ -1,8 +1,6 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { healthResponse } from "#lib/server/health.js";
 
-/** Liveness probe for Docker / Coolify (no API or auth). */
+/** Alias for orchestrators that expect `/healthz` (same as the Go API). */
 export const GET: RequestHandler = () => healthResponse();
-
-/** Some probes (e.g. wget --spider) use HEAD instead of GET. */
 export const HEAD: RequestHandler = () => healthResponse();

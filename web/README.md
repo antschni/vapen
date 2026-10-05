@@ -48,6 +48,11 @@ The dashboard is installable as a PWA (`@vite-pwa/sveltekit`): web manifest, ser
 - Icons and source art: `static/pwa/` (regenerate PNGs from `icon.svg` with `npx @vite-pwa/assets-generator -r static -p minimal pwa/icon.svg`).
 - After deploy, use Chrome DevTools → Application → Manifest / Service workers to verify installability.
 
+## Health checks
+
+- `GET /health` and `GET /healthz` return `200` with body `ok` (no auth, no API calls).
+- Docker/Coolify probes should hit `/health` on the container’s **`PORT`** (default `3000`).
+
 ## Architecture
 
 - **BFF**: `hooks.server.ts` refreshes JWTs and attaches `locals.api`.

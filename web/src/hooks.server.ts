@@ -27,7 +27,20 @@ const securityHeaders: Record<string, string> = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 };
 
+const livenessPaths = new Set(["/health", "/healthz"]);
+
+function withSecurityHeaders(response: Response): Response {
+  for (const [key, value] of Object.entries(securityHeaders)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
+  if (livenessPaths.has(event.url.pathname)) {
+    return withSecurityHeaders(await resolve(event));
+  }
+
   const forwardedFor = getClientAddress(event);
   const session = await getAccessTokenFromCookies(event.cookies, forwardedFor);
 
@@ -75,9 +88,5 @@ export const handle: Handle = async ({ event, resolve }) => {
     },
   });
 
-  for (const [key, value] of Object.entries(securityHeaders)) {
-    response.headers.set(key, value);
-  }
-
-  return response;
+  return withSecurityHeaders(response);
 };

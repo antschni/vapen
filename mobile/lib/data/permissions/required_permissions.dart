@@ -18,16 +18,22 @@ class RequiredPermissionsNotifier extends Notifier<RequiredPermissionsState> {
   }
 
   Future<void> refresh() async {
-    if (!Platform.isAndroid) {
-      state = const RequiredPermissionsState(loading: false, granted: true);
-      return;
+    try {
+      if (!Platform.isAndroid) {
+        state = const RequiredPermissionsState(loading: false, granted: true);
+        return;
+      }
+      final statuses = await [
+        Permission.bluetoothScan.status,
+        Permission.bluetoothConnect.status,
+      ].wait.timeout(const Duration(seconds: 8));
+      state = RequiredPermissionsState(
+        loading: false,
+        granted: statuses[0].isGranted && statuses[1].isGranted,
+      );
+    } catch (_) {
+      state = const RequiredPermissionsState(loading: false, granted: false);
     }
-    final scan = await Permission.bluetoothScan.status;
-    final connect = await Permission.bluetoothConnect.status;
-    state = RequiredPermissionsState(
-      loading: false,
-      granted: scan.isGranted && connect.isGranted,
-    );
   }
 }
 

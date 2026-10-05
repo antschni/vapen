@@ -127,10 +127,8 @@ class SessionNotifier extends Notifier<SessionState> {
     required String email,
     required String password,
   }) async {
-    state = state.copyWith(loading: true);
     final normalized = normalizeBaseUrl(state.baseUrl ?? await _resolvedServerUrl());
     if (!state.serverSetupComplete) {
-      state = state.copyWith(loading: false);
       throw StateError('server_not_configured');
     }
     final client = VapenApiClient(baseUrl: normalized);
@@ -157,10 +155,8 @@ class SessionNotifier extends Notifier<SessionState> {
     required String displayName,
     required String timezone,
   }) async {
-    state = state.copyWith(loading: true);
     final normalized = normalizeBaseUrl(state.baseUrl ?? await _resolvedServerUrl());
     if (!state.serverSetupComplete) {
-      state = state.copyWith(loading: false);
       throw StateError('server_not_configured');
     }
     final client = VapenApiClient(baseUrl: normalized);
