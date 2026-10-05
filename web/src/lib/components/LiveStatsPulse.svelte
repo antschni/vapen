@@ -14,7 +14,7 @@
 	let pulse = $state(false);
 
 	$effect(() => {
-		live.tick;
+		void live.tick;
 		pulse = true;
 		const timer = setTimeout(() => {
 			pulse = false;

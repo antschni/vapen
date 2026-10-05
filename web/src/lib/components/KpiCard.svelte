@@ -25,8 +25,8 @@
 
 	$effect(() => {
 		if (!animateLive) return;
-		live.tick;
-		value;
+		void live.tick;
+		void value;
 		valueFlash = true;
 		const timer = setTimeout(() => {
 			valueFlash = false;

@@ -66,7 +66,7 @@
 
 	function applyFilters(event: SubmitEvent) {
 		event.preventDefault();
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		params.set('preset', preset);
 		params.set('bucket', bucket);
 		if (deviceId) params.set('device_id', deviceId);
