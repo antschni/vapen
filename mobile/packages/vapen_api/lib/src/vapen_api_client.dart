@@ -9,7 +9,13 @@ class VapenApiClient {
     required String baseUrl,
     Dio? dio,
     String? accessToken,
-  })  : _dio = dio ?? Dio(),
+  })  : _dio = dio ??
+            Dio(
+              BaseOptions(
+                connectTimeout: const Duration(seconds: 15),
+                receiveTimeout: const Duration(seconds: 15),
+              ),
+            ),
         _baseUrl = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl {
     _dio.options.baseUrl = '$_baseUrl/api/v1';
     _dio.options.headers['Accept'] = 'application/json';

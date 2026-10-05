@@ -69,33 +69,43 @@ class SessionNotifier extends Notifier<SessionState> {
     return false;
   }
 
+  static const _restoreTimeout = Duration(seconds: 20);
+
   Future<void> _restore() async {
-    final baseUrl = await _resolvedServerUrl();
-    final setupComplete = await _resolveServerSetupComplete();
-    final token = await _storage.readAccessToken();
-    if (token == null) {
-      state = SessionState(
-        baseUrl: baseUrl,
-        serverSetupComplete: setupComplete,
-        loading: false,
-      );
-      return;
-    }
     try {
-      final client = VapenApiClient(baseUrl: baseUrl, accessToken: token);
-      final user = await client.getMe();
-      state = SessionState(
-        baseUrl: baseUrl,
-        accessToken: token,
-        user: user,
-        serverSetupComplete: true,
-        loading: false,
-      );
+      final baseUrl = await _resolvedServerUrl();
+      final setupComplete = await _resolveServerSetupComplete();
+      final token = await _storage.readAccessToken();
+      if (token == null) {
+        state = SessionState(
+          baseUrl: baseUrl,
+          serverSetupComplete: setupComplete,
+          loading: false,
+        );
+        return;
+      }
+      try {
+        final client = VapenApiClient(baseUrl: baseUrl, accessToken: token);
+        final user = await client.getMe().timeout(_restoreTimeout);
+        state = SessionState(
+          baseUrl: baseUrl,
+          accessToken: token,
+          user: user,
+          serverSetupComplete: true,
+          loading: false,
+        );
+      } catch (_) {
+        await _storage.clearSession();
+        state = SessionState(
+          baseUrl: baseUrl,
+          serverSetupComplete: setupComplete,
+          loading: false,
+        );
+      }
     } catch (_) {
-      await _storage.clearSession();
       state = SessionState(
-        baseUrl: baseUrl,
-        serverSetupComplete: setupComplete,
+        baseUrl: defaultBaseUrl(),
+        serverSetupComplete: false,
         loading: false,
       );
     }
