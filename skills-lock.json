@@ -1,0 +1,545 @@
+{
+  "version": 1,
+  "skills": {
+    "accessibility-as-code": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/accessibility-as-code/SKILL.md",
+      "computedHash": "44135e419dd50980edf7013f5979623bdae5477072a20077462dcdcb75fe56f0"
+    },
+    "adaptive-layout": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/adaptive-layout/SKILL.md",
+      "computedHash": "17321f0200374a2ffacb935e6fbd60c90b3d53fc2b0df9be9d68b091729041e1"
+    },
+    "ads-and-iap-monetization": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/ads-and-iap-monetization/SKILL.md",
+      "computedHash": "1895eb888624b480667fee00745297e6a346d090e02b3bca914fa8d74fd94c90"
+    },
+    "app-startup-and-bootstrap": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/app-startup-and-bootstrap/SKILL.md",
+      "computedHash": "7e68c18ce9f12b0809a268d84574553b5ccec1b94c49a237a523d8b54f1c032d"
+    },
+    "ci-pipeline-and-gates": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/ci-pipeline-and-gates/SKILL.md",
+      "computedHash": "e128d3bff4e339820616c2acbcc5429fed2b52f53c2b5d3a1f814f104b8222fa"
+    },
+    "codegen-and-toolchain": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/codegen-and-toolchain/SKILL.md",
+      "computedHash": "39cedde51a523dc925c967aa240604d60849fb5be64882fc0eceb3cf21cb42cf"
+    },
+    "custom-canvas-and-gestures": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/custom-canvas-and-gestures/SKILL.md",
+      "computedHash": "64c7da873689087ffdf8a65284eac3cad865c0734dc097d505c47b3652e7b920"
+    },
+    "dart3-idioms-and-coding-standards": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/dart3-idioms-and-coding-standards/SKILL.md",
+      "computedHash": "fa4dc375756421171cd5561f5efabc5797f01712ee397f14025b4b247c89a25e"
+    },
+    "dartdoc-conventions": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/dartdoc-conventions/SKILL.md",
+      "computedHash": "ffc3177cf1b4d0c9641bdefdca23718bc8a689247a1fb4570668c2d00bc66e09"
+    },
+    "data-export-and-restore": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/data-export-and-restore/SKILL.md",
+      "computedHash": "eb7229a8ccc630bf6644aa7f3d8be7c23fd15eac81ef8c484f3cac081a0560aa"
+    },
+    "dependency-hygiene": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/dependency-hygiene/SKILL.md",
+      "computedHash": "0503f3c1022bd2be3dc1f65c352d8346fc30c63026b99e468e5048b079b495d6"
+    },
+    "design-system-structure": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/design-system-structure/SKILL.md",
+      "computedHash": "151f4ebabfa4a7b402b9076706636a6ff062adee2d0b5829735fa730728ab159"
+    },
+    "error-handling-typed-results": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/error-handling-typed-results/SKILL.md",
+      "computedHash": "0533344b6f4541ae1b5321bcb6f0bbdd1f91156058cc7699a7fea2f8474d1a05"
+    },
+    "flutter-architecture": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-architecture/SKILL.md",
+      "computedHash": "eb6f43eae482ca580a30361ffe86ef757a9460b9e1dc3531be9ae7835fbed9c1"
+    },
+    "flutter-conventions-index": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-conventions-index/SKILL.md",
+      "computedHash": "67606ace219e97a97dcc7c147bfbb9ed7f7cf6789af932a46bae176c5a0f6182"
+    },
+    "flutter-performance": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-performance/SKILL.md",
+      "computedHash": "b9f5c4d2885e7a8ebcae6b34f37b104937f81a92a089619430a12b6e419a3826"
+    },
+    "forms-and-input": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/forms-and-input/SKILL.md",
+      "computedHash": "d79971256cc949641b94a11db949c5bbe43fb652d82903b8da7d67e9e2bc3c34"
+    },
+    "golang-benchmark": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-benchmark/SKILL.md",
+      "computedHash": "89cd4ecbd074024fbd882fbf25c20290243fb9bbb8433d39459d6a1fd9c7196f"
+    },
+    "golang-cli": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-cli/SKILL.md",
+      "computedHash": "ef5cdec1957cc54977c009522c2c80757ee2640075d8a18cdcd1e945e5ed4daf"
+    },
+    "golang-code-style": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-code-style/SKILL.md",
+      "computedHash": "22a3619eac6483791d5712d66fb7c5a58c72885d08d35a0ff387203eb925626b"
+    },
+    "golang-concurrency": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-concurrency/SKILL.md",
+      "computedHash": "dd112f0d3b3eb19d9e42a99320cb02165b211cbb9edb7aa355390cfbdc6cfd8d"
+    },
+    "golang-context": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-context/SKILL.md",
+      "computedHash": "0a99bb01a1afcbb790e50e8afee749f04d6325b6aac0b0900c576795c44bdeba"
+    },
+    "golang-continuous-integration": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-continuous-integration/SKILL.md",
+      "computedHash": "ea0261ec89108cbb2230256c284d2dc292e5cc28c52444ac30b102a7b55fd8b7"
+    },
+    "golang-data-structures": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-data-structures/SKILL.md",
+      "computedHash": "d13dac71643267db918f2108730009bd61fc8ee5f9f663e67b5a472bf82b501e"
+    },
+    "golang-database": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-database/SKILL.md",
+      "computedHash": "3f66e6126e2cbccf558c2d87edc8446df33482bf0247cb679664330974700981"
+    },
+    "golang-dependency-injection": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-dependency-injection/SKILL.md",
+      "computedHash": "fcd40e9e5832ee7a1999a1305fe2b3e5d0d781fe23d5adeef484b54cec00554d"
+    },
+    "golang-dependency-management": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-dependency-management/SKILL.md",
+      "computedHash": "a868bebdb6a238070bfbc6139e302350178b3576448933fa00ef66dda2992966"
+    },
+    "golang-design-patterns": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-design-patterns/SKILL.md",
+      "computedHash": "5cb9797b1060924aa4c7363c24ffba4f23ad2c8e8aee5fb2724ce88ddb3f434e"
+    },
+    "golang-documentation": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-documentation/SKILL.md",
+      "computedHash": "8c14496c2aca7a534f6867113ee316c7ed71fe77d7a68d6a389fe0c2ecff46a2"
+    },
+    "golang-error-handling": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-error-handling/SKILL.md",
+      "computedHash": "70b03b07e53337211b721207dc2ce3121454de13aad02e808325c25e80ff2312"
+    },
+    "golang-google-wire": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-google-wire/SKILL.md",
+      "computedHash": "2c31c7dfe1f1a096b9e62cbaa06648713d82904b80d9aebf6ac7c64448920eee"
+    },
+    "golang-gopls": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-gopls/SKILL.md",
+      "computedHash": "3eb5bf338089d00c814b66e284015f863a0312ba8ac64b0483a99b67acd32e8e"
+    },
+    "golang-graphql": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-graphql/SKILL.md",
+      "computedHash": "c97ee5f857ecd88a0f2aaa210ca6ab9b8d134442d56b62b2a6a60530384097be"
+    },
+    "golang-grpc": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-grpc/SKILL.md",
+      "computedHash": "27e966abf8372f0a6e33c0b024f71f54b0ebae4595b8b84606d40cd830b79f11"
+    },
+    "golang-how-to": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-how-to/SKILL.md",
+      "computedHash": "9dd467385a09c70df7f8df12cd7150fdb1d32ceef03aad1de134e3fca03ab038"
+    },
+    "golang-lint": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-lint/SKILL.md",
+      "computedHash": "de0a45cd53e3abeabb448ce98fa4ca823a2ecd26ff288fa4c80dbf93fced6b08"
+    },
+    "golang-modernize": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-modernize/SKILL.md",
+      "computedHash": "815cc74dabc78063cec594a1e8f59bd607d2a22066235a9e9a5a07ce69f1dc42"
+    },
+    "golang-naming": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-naming/SKILL.md",
+      "computedHash": "ce29f7a20de4ada901f144590610be5d79ccefd99fd1dc98b6c189819f09093e"
+    },
+    "golang-observability": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-observability/SKILL.md",
+      "computedHash": "7a3e7a32d9b6db90abc594fdea632a48f66513e5a87687efd284cd92a00b23be"
+    },
+    "golang-performance": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-performance/SKILL.md",
+      "computedHash": "548c7e02341f3fdbcc6ceb35182607d00063961c4e29e15ce78b3548b39f6ebe"
+    },
+    "golang-pkg-go-dev": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-pkg-go-dev/SKILL.md",
+      "computedHash": "e5b9491f4e0395d61bf2dfb4e72a33d3c53d9ef9567c79dbc048837ae2ab4b99"
+    },
+    "golang-popular-libraries": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-popular-libraries/SKILL.md",
+      "computedHash": "69fd26e95390bf471804c3486f67ab071512afee64299d7b8d1029dba0a32d3f"
+    },
+    "golang-project-layout": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-project-layout/SKILL.md",
+      "computedHash": "3459bdab6fbcd4ce8261cecd25b20fd456f81186a095b30ec6f5b8fedde48022"
+    },
+    "golang-refactoring": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-refactoring/SKILL.md",
+      "computedHash": "1bb8021b8f01129f275df3d842ac137c94faf7666743bde174b56eff136db895"
+    },
+    "golang-safety": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-safety/SKILL.md",
+      "computedHash": "19bb8d61c3cd9c00cd5e8a05a2aad1f9273063e03ded4d76dc8e9059b06d8e63"
+    },
+    "golang-samber-do": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-samber-do/SKILL.md",
+      "computedHash": "b2e340187dd6f344ef0c59a56b8230e74011124ff097f7035a2c39b899070232"
+    },
+    "golang-samber-hot": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-samber-hot/SKILL.md",
+      "computedHash": "ca9acbede679233d77266ec32e68905fd90a7078d1ef089e00fe1cebc5a5b4bd"
+    },
+    "golang-samber-lo": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-samber-lo/SKILL.md",
+      "computedHash": "1f4c092856f4ac953fd02a8f5269763b43e03380055af513d576b556dc591b4d"
+    },
+    "golang-samber-mo": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-samber-mo/SKILL.md",
+      "computedHash": "f047d7fd77d067e5298b662b24644e20be234e7146f57ec49fc5aca9769a9d69"
+    },
+    "golang-samber-oops": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-samber-oops/SKILL.md",
+      "computedHash": "8bc631ed77537240d47a83fccc8486e38523e8215fa2bd16e024184faaecf7ac"
+    },
+    "golang-samber-ro": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-samber-ro/SKILL.md",
+      "computedHash": "e0c944331dbb373d1f2f5ee12ca354e252c5320d86c8b8c53b78c0c4ac08eecd"
+    },
+    "golang-samber-slog": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-samber-slog/SKILL.md",
+      "computedHash": "a496f81268622e2bed38ce5b8364ed4a78a871e9c51478cbaf34259967469154"
+    },
+    "golang-security": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-security/SKILL.md",
+      "computedHash": "29b81afb21c8c63d4d2f8e1673d6bac9a423a283158e816c58b67240a0137ef6"
+    },
+    "golang-spf13-cobra": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-spf13-cobra/SKILL.md",
+      "computedHash": "045257bca07859040a4d5e7e7caa77129cb64049aaf1d9022e6aedf1c96e3766"
+    },
+    "golang-spf13-viper": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-spf13-viper/SKILL.md",
+      "computedHash": "894ddef2770410f634da9a7e96d0b5c0b3f67875875285a87bc165ef462ec363"
+    },
+    "golang-stay-updated": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-stay-updated/SKILL.md",
+      "computedHash": "0cf93f293a4846b91f67169bb2e1f54a7932e093ce71a8d0a9ddffbf7943115a"
+    },
+    "golang-stretchr-testify": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-stretchr-testify/SKILL.md",
+      "computedHash": "7e53aa522a74e4ef168602e2fa49a0fd10880f78d70b239e7c3832408dd33b55"
+    },
+    "golang-structs-interfaces": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-structs-interfaces/SKILL.md",
+      "computedHash": "e361ce7c94394b83207756cdb2338e31b80507969762a89e53e0c0e0d2c63571"
+    },
+    "golang-swagger": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-swagger/SKILL.md",
+      "computedHash": "d9b1159f2b764a1f1c0e2dd2efd73d98be29ad674a697157810f9a81b4152c97"
+    },
+    "golang-testing": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-testing/SKILL.md",
+      "computedHash": "00d5857979ab02cb7ebcad4a10c991155bd9207fa2fffee55015e1fb31904fd4"
+    },
+    "golang-troubleshooting": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-troubleshooting/SKILL.md",
+      "computedHash": "0641c6171c08f5a140270097b3f8a8e9434a6637a32286c0eee7bb6f04f05b2f"
+    },
+    "golang-uber-dig": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-uber-dig/SKILL.md",
+      "computedHash": "6b18edfc8f59d3af8817437ae93fe0db01995a154a92915becb526a12058aed5"
+    },
+    "golang-uber-fx": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-uber-fx/SKILL.md",
+      "computedHash": "c0ae4d26ce226f31dc97777042f68ab9d2f549c1515b8d066e9b26e84c71563c"
+    },
+    "i18n-rtl-l10n": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/i18n-rtl-l10n/SKILL.md",
+      "computedHash": "c808cd95937bddd9e0b1f6dc9972a2354a8ed5cae6c72cfc2532d29bdccc4c9c"
+    },
+    "lint-and-style-config": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/lint-and-style-config/SKILL.md",
+      "computedHash": "1f6b167a2b3f7b43bdfd94c961111de1692a94f8a0a39bbdac9fc01b47f24890"
+    },
+    "local-notifications-scheduler": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/local-notifications-scheduler/SKILL.md",
+      "computedHash": "25fbef041928a3b74e13292bc90fa2edcff042a1d43458ddedaa784bfbd78c93"
+    },
+    "motion-and-haptics": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/motion-and-haptics/SKILL.md",
+      "computedHash": "ec94e365f4d0121cfa7067fc280ffdb4ad1de6d6bb9907f07fc9751071f938c5"
+    },
+    "naming-conventions": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/naming-conventions/SKILL.md",
+      "computedHash": "52555e35eeea423934862ad6587d724f1ba660870f677e5d8691892ce6b530ea"
+    },
+    "navigation-and-routing": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/navigation-and-routing/SKILL.md",
+      "computedHash": "5f4b3e9d4cba712e6e154c99771cc56a6b384ad8df9bf841f99be915efac8722"
+    },
+    "persistence-drift": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/persistence-drift/SKILL.md",
+      "computedHash": "b42d07ce479303c1c1e2188d04e0154a6bd71527c74985e5dabee98680571218"
+    },
+    "project-structure-and-packages": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/project-structure-and-packages/SKILL.md",
+      "computedHash": "4babd05a76c8a98b22a0e70c4861590a42eb817fed4add635e73a82aa6cb06fb"
+    },
+    "release-and-store-shipping": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/release-and-store-shipping/SKILL.md",
+      "computedHash": "1c151f75323a2c4462c89f93ef79a059e59bae063cb07c9ac546d8c9e66d3638"
+    },
+    "run-codegen": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/run-codegen/SKILL.md",
+      "computedHash": "2a3ff3bb97b35ccbb995daf5d2e876b1c240d11ff84fcd848ac38c85cd314ed4"
+    },
+    "run-goldens-rebaseline": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/run-goldens-rebaseline/SKILL.md",
+      "computedHash": "ffec714c28b81619c18b29fba831cfe5b7694014de43099753f2eb07a98b13d5"
+    },
+    "run-migration": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/run-migration/SKILL.md",
+      "computedHash": "2983f6620b77ee7c4fc7f5a6c5892b74d6da51acce99f41377df225aebe9c055"
+    },
+    "scaffold-feature-module": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/scaffold-feature-module/SKILL.md",
+      "computedHash": "ff7334e7caed0452849c69311e46aa9940f3425ad825b48cdddd3a55c166ab2e"
+    },
+    "seeded-determinism-and-golden-vectors": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/seeded-determinism-and-golden-vectors/SKILL.md",
+      "computedHash": "b59b3e4ef07b25d663c6927110847e88a909c2f0b56383ff86fee17d08be9d8a"
+    },
+    "service-boundary-and-native": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/service-boundary-and-native/SKILL.md",
+      "computedHash": "4312a202c2daf3ccafbac1a829b4530dde5dbef0334838cbe029cdfae19f5467"
+    },
+    "state-management-riverpod": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/state-management-riverpod/SKILL.md",
+      "computedHash": "d0adc98ae4d78a6b97af95a0aef0c71dabbafd8c787abaa1c92d46cbdc78428c"
+    },
+    "svelte-runes": {
+      "source": "full-stack-skills/svelte-skills",
+      "sourceType": "github",
+      "skillPath": "skills/svelte-runes/SKILL.md",
+      "computedHash": "63e2c6f3fbf02385e3895715d83ae9fc62ffb7e7a1e4f8b9ae3b33ba92d2570a"
+    },
+    "svelte-runtime": {
+      "source": "full-stack-skills/svelte-skills",
+      "sourceType": "github",
+      "skillPath": "skills/svelte-runtime/SKILL.md",
+      "computedHash": "c58b84dd5710db6a641f9d1e2d1a327939a60886f9a3ad75c550385440edd294"
+    },
+    "svelte-template-syntax": {
+      "source": "full-stack-skills/svelte-skills",
+      "sourceType": "github",
+      "skillPath": "skills/svelte-template-syntax/SKILL.md",
+      "computedHash": "5237f875b3f026294297eb9bb5c26a9bd61d5f69e38d5c10291d153b416deeba"
+    },
+    "sveltekit-advanced": {
+      "source": "full-stack-skills/svelte-skills",
+      "sourceType": "github",
+      "skillPath": "skills/sveltekit-advanced/SKILL.md",
+      "computedHash": "fb5945f1a6b1830d31102b18f7a33fb8598a957ba078419e63f456fde9824a96"
+    },
+    "sveltekit-config": {
+      "source": "full-stack-skills/svelte-skills",
+      "sourceType": "github",
+      "skillPath": "skills/sveltekit-config/SKILL.md",
+      "computedHash": "06db4565516b322ce72f6773ec919aa86e04cfb57e68cbf42c935c982017cf20"
+    },
+    "sveltekit-data": {
+      "source": "full-stack-skills/svelte-skills",
+      "sourceType": "github",
+      "skillPath": "skills/sveltekit-data/SKILL.md",
+      "computedHash": "833cbf0243c2d63e3224beb1fc3fb8f44cae1ece2e9deba7871053e8402a36ad"
+    },
+    "testing-strategy": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/testing-strategy/SKILL.md",
+      "computedHash": "5dcd9a8f7b60a8ca893384f3bf5772b25a497479fb18422d4fc0acd34dccd3cf"
+    },
+    "ui-states-and-feedback": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-states-and-feedback/SKILL.md",
+      "computedHash": "d578a7335343568bbccd2de405a6655c74069350b3bbfa55643aaa97d198bb65"
+    },
+    "value-objects-money-and-units": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/value-objects-money-and-units/SKILL.md",
+      "computedHash": "d044d5adc379c8f8ed1ce402c24af12d07096c9790df26af84c3dc4623f7d378"
+    },
+    "widget-composition": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/widget-composition/SKILL.md",
+      "computedHash": "3c7469799a9a73e930cc6e58df0f42e250e2cdf38167c4c0519aba4d257efa28"
+    },
+    "widget-golden-and-a11y-testing": {
+      "source": "zakariaf/Flutter-Skills",
+      "sourceType": "github",
+      "skillPath": "skills/widget-golden-and-a11y-testing/SKILL.md",
+      "computedHash": "e966c29061160cc274c58489f25f93eaa725c83b49dd9e1dc79443061b69a3fe"
+    }
+  }
+}
