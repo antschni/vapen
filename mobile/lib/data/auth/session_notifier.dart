@@ -323,7 +323,6 @@ class SessionNotifier extends Notifier<SessionState> {
     final changed = normalizeBaseUrl(previous) != normalized;
 
     if (changed && state.isAuthenticated) {
-      await ref.read(trackingBridgeProvider).host.clearCredentials();
       await logout();
     }
 
@@ -356,6 +355,7 @@ class SessionNotifier extends Notifier<SessionState> {
     );
   }
 
+  /// Signs out and stops native uploads, so the next account never receives this account's puffs.
   Future<void> logout() async {
     final baseUrl = state.baseUrl;
     final token = state.accessToken;
@@ -366,6 +366,12 @@ class SessionNotifier extends Notifier<SessionState> {
         // ignore
       }
     }
+    try {
+      await ref.read(trackingBridgeProvider).host.clearCredentials();
+    } catch (_) {
+      // Native side unavailable; nothing to clear.
+    }
+    await _storage.clearActiveDeviceId();
     await clearSession();
   }
 }

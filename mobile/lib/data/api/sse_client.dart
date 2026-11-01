@@ -17,39 +17,53 @@ class GroupLiveSseClient {
 
   Stream<Map<String, dynamic>> connect() async* {
     final origin = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
-    final uri = Uri.parse('$origin/api/v1/groups/$groupId/live');
+    final uri = Uri.parse('$origin/api/v1/groups/${Uri.encodeComponent(groupId)}/live');
     final request = http.Request('GET', uri);
     request.headers['Authorization'] = 'Bearer $accessToken';
     request.headers['Accept'] = 'text/event-stream';
     final client = http.Client();
-    final response = await client.send(request);
-    if (response.statusCode != 200) {
-      client.close();
-      throw StateError('SSE failed: ${response.statusCode}');
-    }
-    String? eventName;
-    final buffer = StringBuffer();
-    await for (final chunk in response.stream.transform(utf8.decoder)) {
-      buffer.write(chunk);
-      final lines = buffer.toString().split('\n');
-      buffer.clear();
-      if (lines.isNotEmpty && !chunk.endsWith('\n')) {
-        buffer.write(lines.removeLast());
+    // finally also runs when the listener cancels, so the connection never leaks.
+    try {
+      final response = await client.send(request);
+      if (response.statusCode != 200) {
+        throw StateError('SSE failed: ${response.statusCode}');
       }
-      for (final line in lines) {
-        if (line.startsWith('event:')) {
-          eventName = line.substring(6).trim();
-        } else if (line.startsWith('data:')) {
-          final data = line.substring(5).trim();
-          if (eventName != null && data.isNotEmpty) {
-            yield {'event': eventName, 'data': jsonDecode(data) as Map<String, dynamic>};
+      String? eventName;
+      final buffer = StringBuffer();
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        buffer.write(chunk);
+        final lines = buffer.toString().split('\n');
+        buffer.clear();
+        // The last piece is an incomplete line ('' when the chunk ended on '\n').
+        // Treating that '' as a blank line would drop the event split across chunks.
+        buffer.write(lines.removeLast());
+        for (final raw in lines) {
+          final line = raw.endsWith('\r') ? raw.substring(0, raw.length - 1) : raw;
+          if (line.startsWith('event:')) {
+            eventName = line.substring(6).trim();
+          } else if (line.startsWith('data:')) {
+            final data = line.substring(5).trim();
+            final decoded = data.isEmpty ? null : _tryDecodeObject(data);
+            if (eventName != null && decoded != null) {
+              yield {'event': eventName, 'data': decoded};
+            }
+          } else if (line.isEmpty) {
+            eventName = null;
           }
-        } else if (line.isEmpty) {
-          eventName = null;
         }
       }
+    } finally {
+      client.close();
     }
-    client.close();
+  }
+
+  static Map<String, dynamic>? _tryDecodeObject(String data) {
+    try {
+      final decoded = jsonDecode(data);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } on FormatException {
+      return null;
+    }
   }
 }
 

@@ -18,6 +18,8 @@ class AuthInterceptor extends Interceptor {
 
   Completer<void>? _refreshCompleter;
 
+  static const _retriedKey = 'auth_retried';
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     final token = await storage.readAccessToken();
@@ -33,11 +35,13 @@ class AuthInterceptor extends Interceptor {
       return handler.next(err);
     }
     final path = err.requestOptions.path;
-    if (path.contains('/auth/')) {
+    // A retried request that still gets 401 must not trigger another refresh (endless loop).
+    if (path.contains('/auth/') || err.requestOptions.extra[_retriedKey] == true) {
       return handler.next(err);
     }
     try {
       await _refreshSingleFlight();
+      err.requestOptions.extra[_retriedKey] = true;
       final response = await dio.fetch(err.requestOptions);
       return handler.resolve(response);
     } on VapenApiException catch (e) {
@@ -57,7 +61,9 @@ class AuthInterceptor extends Interceptor {
     if (_refreshCompleter != null) {
       return _refreshCompleter!.future;
     }
-    _refreshCompleter = Completer<void>();
+    final completer = _refreshCompleter = Completer<void>();
+    // Without a waiter, a failed refresh would surface as an unhandled async error.
+    completer.future.ignore();
     try {
       final refresh = await storage.readRefreshToken();
       final baseUrl = await storage.readBaseUrl();
@@ -73,9 +79,9 @@ class AuthInterceptor extends Interceptor {
         accessExpiresAt: pair.accessTokenExpiresAt,
         refreshExpiresAt: pair.refreshTokenExpiresAt,
       );
-      _refreshCompleter!.complete();
+      completer.complete();
     } catch (e, st) {
-      _refreshCompleter!.completeError(e, st);
+      completer.completeError(e, st);
       rethrow;
     } finally {
       _refreshCompleter = null;

@@ -23,7 +23,7 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
   UsageTotals? _today;
   UsageStats? _week;
   bool _statsLoaded = false;
@@ -33,6 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadStats();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _bridge = ref.read(trackingBridgeProvider);
@@ -43,8 +44,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _bridge?.trackingState.removeListener(_onTrackingStateChanged);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The app may sit in the background for hours (or past midnight); refresh "heute" on return.
+    if (state == AppLifecycleState.resumed) _refresh();
   }
 
   void _onTrackingStateChanged() {
@@ -70,14 +78,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _loadStats() async {
     final api = ref.read(apiClientProvider);
     final now = DateTime.now().toUtc();
-    final tz = (await FlutterTimezone.getLocalTimezone()).identifier;
     final localNow = now.toLocal();
     final startOfToday = DateTime(localNow.year, localNow.month, localNow.day);
     try {
+      final tz = (await FlutterTimezone.getLocalTimezone()).identifier;
       final results = await Future.wait([
         api.getUsageStats(from: startOfToday.toUtc(), to: now, bucket: 'day', tz: tz),
         api.getUsageStats(
-          from: startOfToday.subtract(const Duration(days: 6)).toUtc(),
+          from: DateTime(localNow.year, localNow.month, localNow.day - 6).toUtc(),
           to: now,
           bucket: 'day',
           tz: tz,
@@ -95,11 +103,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  /// Server count, same query as the web app's "Heute". The device's own counter is only a fallback
+  /// while the server is unreachable — it uses the vape's clock and can include puffs not yet uploaded.
   int _displayTodayPuffs(TrackingState? state) {
-    final local = state?.todayPuffCount?.toInt() ?? 0;
-    final api = _today?.puffCount;
-    if (api == null) return local;
-    return api > local ? api : local;
+    return _today?.puffCount ?? state?.todayPuffCount?.toInt() ?? 0;
   }
 
   @override
@@ -133,7 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final pending = state?.pendingUploads?.toInt() ?? 0;
           final displayPuffs = _displayTodayPuffs(state);
           final syncHint = _syncHint(
-            displayPuffs: displayPuffs,
+            devicePuffs: state?.todayPuffCount?.toInt() ?? 0,
             apiPuffs: _today?.puffCount,
             pending: pending,
           );
@@ -203,18 +210,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   String? _syncHint({
-    required int displayPuffs,
+    required int devicePuffs,
     required int? apiPuffs,
     required int pending,
   }) {
-    if (displayPuffs <= 0) return null;
-    if ((apiPuffs ?? 0) == 0 && pending > 0) {
-      return 'Züge am Gerät erkannt — $pending warten auf Upload';
+    if (apiPuffs == null || devicePuffs <= apiPuffs) return null;
+    if (pending > 0) {
+      return 'Gerät zählt heute $devicePuffs Züge — $pending warten auf Upload';
     }
-    if ((apiPuffs ?? 0) == 0 && pending == 0) {
-      return 'Züge am Gerät — Server noch nicht synchronisiert (nach unten ziehen)';
-    }
-    return null;
+    return 'Gerät zählt heute $devicePuffs Züge, Server $apiPuffs (nach unten ziehen zum Aktualisieren)';
   }
 
   String _connectionLabel(AppLocalizations l10n, TrackingConnectionState? s) {
@@ -724,7 +728,7 @@ class _WeekCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final days = List.generate(7, (i) => today.subtract(Duration(days: 6 - i)));
+    final days = List.generate(7, (i) => DateTime(today.year, today.month, today.day - (6 - i)));
     final counts = <int>[];
     for (final day in days) {
       var count = 0;

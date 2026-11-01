@@ -20,6 +20,10 @@ class _BleExplorerScreenState extends ConsumerState<BleExplorerScreen> {
 
   @override
   void dispose() {
+    if (_scanning) {
+      // Otherwise the BLE scan keeps running in the background.
+      ref.read(trackingBridgeProvider).host.explorerStopScan().catchError((_) {});
+    }
     _marker.dispose();
     super.dispose();
   }

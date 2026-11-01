@@ -34,6 +34,9 @@ class GroupDetailScreen extends ConsumerStatefulWidget {
 class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   StreamSubscription<Map<String, dynamic>>? _sub;
   Timer? _ticker;
+  Timer? _reconnectTimer;
+  int _reconnectAttempts = 0;
+  int _overviewRequest = 0;
   List<Map<String, dynamic>> _liveMembers = [];
   Group? _group;
   bool _groupLoading = true;
@@ -62,13 +65,15 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
     final startOfToday = DateTime(now.year, now.month, now.day);
     final from = switch (_leaderboardRange) {
       _LeaderboardRange.today => startOfToday,
-      _LeaderboardRange.week => startOfToday.subtract(const Duration(days: 6)),
-      _LeaderboardRange.month => startOfToday.subtract(const Duration(days: 29)),
+      _LeaderboardRange.week => DateTime(now.year, now.month, now.day - 6),
+      _LeaderboardRange.month => DateTime(now.year, now.month, now.day - 29),
     };
     return (from.toUtc(), to, tz);
   }
 
   Future<void> _loadOverview() async {
+    // Quick range switches can resolve out of order; only the latest request may win.
+    final request = ++_overviewRequest;
     setState(() => _overviewLoading = true);
     try {
       final (from, to, tz) = await _overviewQuery();
@@ -78,13 +83,13 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
             to: to,
             tz: tz,
           );
-      if (!mounted) return;
+      if (!mounted || request != _overviewRequest) return;
       setState(() {
         _overview = overview;
         _overviewLoading = false;
       });
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || request != _overviewRequest) return;
       setState(() => _overviewLoading = false);
     }
   }
@@ -112,23 +117,33 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
 
   Future<void> _refresh() async {
     await Future.wait([_loadGroup(), _loadOverview()]);
+    if (_sub == null) {
+      _reconnectTimer?.cancel();
+      _reconnectAttempts = 0;
+      unawaited(_connectLive());
+    }
   }
 
-  void _connectLive() {
+  Future<void> _connectLive() async {
     if (_sub != null) return;
     final session = ref.read(sessionProvider);
     final baseUrl = session.baseUrl;
-    final token = session.accessToken;
-    if (baseUrl == null || token == null) return;
+    // Storage holds the token refreshed by AuthInterceptor; session state may be stale.
+    final token = await ref.read(tokenStorageProvider).readAccessToken() ?? session.accessToken;
+    if (!mounted || _sub != null || baseUrl == null || token == null) return;
     final client = GroupLiveSseClient(baseUrl: baseUrl, accessToken: token, groupId: widget.groupId);
     _sub = client.connect().listen(
       (event) {
         if (!mounted) return;
+        _reconnectAttempts = 0;
+        final data = event['data'];
+        if (data is! Map<String, dynamic>) return;
         if (event['event'] == 'snapshot') {
-          final data = event['data'] as Map<String, dynamic>;
-          setState(() => _liveMembers = (data['members'] as List).cast<Map<String, dynamic>>());
+          final members = data['members'];
+          if (members is! List) return;
+          setState(() => _liveMembers = members.whereType<Map<String, dynamic>>().toList());
         } else if (event['event'] == 'member_update') {
-          final update = event['data'] as Map<String, dynamic>;
+          final update = data;
           setState(() {
             final idx = _liveMembers.indexWhere((m) => m['user_id'] == update['user_id']);
             if (idx >= 0) {
@@ -139,8 +154,25 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
           });
         }
       },
-      onError: (_) {},
+      onError: (_) => _scheduleReconnect(),
+      onDone: _scheduleReconnect,
+      cancelOnError: true,
     );
+  }
+
+  /// Network drops, server restarts and expired tokens end the stream; retry with backoff.
+  void _scheduleReconnect() {
+    _sub = null;
+    if (!mounted) return;
+    _reconnectTimer?.cancel();
+    final seconds = 2 << _reconnectAttempts.clamp(0, 5); // 2 s … 64 s
+    _reconnectAttempts++;
+    _reconnectTimer = Timer(Duration(seconds: seconds), () async {
+      if (!mounted) return;
+      // An authenticated API call lets AuthInterceptor refresh an expired access token first.
+      await _loadGroup();
+      await _connectLive();
+    });
   }
 
   Future<void> _copyToClipboard(String text, AppLocalizations l10n) async {
@@ -159,6 +191,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _reconnectTimer?.cancel();
     _sub?.cancel();
     super.dispose();
   }
@@ -324,13 +357,17 @@ class _MembersHeader extends StatelessWidget {
 
 class _LiveEntry {
   _LiveEntry(Map<String, dynamic> m)
-      : userId = m['user_id'] as String?,
-        name = m['display_name'] as String? ?? '—',
-        lastPuff = m['last_puff_at'] != null ? DateTime.parse(m['last_puff_at'] as String) : null,
+      : userId = _str(m['user_id']),
+        name = _str(m['display_name']) ?? '—',
+        lastPuff = _time(m['last_puff_at']),
         status = deriveLiveStatus(
-          vapingSince: m['vaping_since'] != null ? DateTime.parse(m['vaping_since'] as String) : null,
-          lastPuffAt: m['last_puff_at'] != null ? DateTime.parse(m['last_puff_at'] as String) : null,
+          vapingSince: _time(m['vaping_since']),
+          lastPuffAt: _time(m['last_puff_at']),
         );
+
+  // SSE payloads are untyped; a malformed field must not crash the build.
+  static String? _str(Object? v) => v is String ? v : null;
+  static DateTime? _time(Object? v) => v is String ? DateTime.tryParse(v) : null;
 
   final String? userId;
   final String name;

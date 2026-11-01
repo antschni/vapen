@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
 import 'core/join_link.dart';
-import 'data/auth/session_notifier.dart';
 import 'data/native/tracking_bridge.dart';
 import 'l10n/app_localizations.dart';
 
@@ -32,27 +33,32 @@ class VapenApp extends ConsumerStatefulWidget {
 
 class _VapenAppState extends ConsumerState<VapenApp> {
   final _appLinks = AppLinks();
+  StreamSubscription<Uri>? _linkSub;
 
   @override
   void initState() {
     super.initState();
-    _appLinks.uriLinkStream.listen(_onJoinInviteUri);
-    _appLinks.getInitialLink().then((uri) {
-      if (uri != null) _onJoinInviteUri(uri);
-    });
+    // uriLinkStream also emits the launch link; getInitialLink would handle it twice.
+    _linkSub = _appLinks.uriLinkStream.listen(_onJoinInviteUri);
   }
 
-  Future<void> _onJoinInviteUri(Uri uri) async {
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  /// Any website can open an invite link, so never switch servers or join here.
+  /// The join screen asks the user before acting on a foreign server.
+  void _onJoinInviteUri(Uri uri) {
     final invite = JoinInviteLink.tryParse(uri);
     if (invite == null || !invite.isAllowedOrigin(isRelease: kReleaseMode)) return;
-
-    try {
-      await ref.read(sessionProvider.notifier).updateServerEndpoint(invite.origin);
-    } catch (_) {
-      // Server unreachable; still show join screen with the code.
-    }
     if (!mounted) return;
-    ref.read(routerProvider).go('/groups/join?code=${invite.code}');
+    final target = Uri(
+      path: '/groups/join',
+      queryParameters: {'code': invite.code, 'server': invite.origin},
+    );
+    ref.read(routerProvider).go(target.toString());
   }
 
   @override

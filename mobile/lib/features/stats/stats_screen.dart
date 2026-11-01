@@ -62,8 +62,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       final nowLocal = DateTime.now();
       final now = nowLocal.toUtc();
       final startOfToday = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
-      final weekFrom = startOfToday.subtract(const Duration(days: 6)).toUtc();
-      final monthFrom = startOfToday.subtract(const Duration(days: 29)).toUtc();
+      final weekFrom = DateTime(startOfToday.year, startOfToday.month, startOfToday.day - 6).toUtc();
+      final monthFrom = DateTime(startOfToday.year, startOfToday.month, startOfToday.day - 29).toUtc();
       final results = await Future.wait([
         api.getUsageStats(from: weekFrom, to: now, bucket: 'day', tz: tz),
         api.getUsageStats(from: monthFrom, to: now, bucket: 'day', tz: tz),
@@ -380,7 +380,8 @@ class _BarChart extends StatelessWidget {
     final scheme = theme.colorScheme;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final dates = List.generate(days, (i) => today.subtract(Duration(days: days - 1 - i)));
+    // Calendar days, not 24 h blocks, so DST weeks keep midnight dates.
+    final dates = List.generate(days, (i) => DateTime(today.year, today.month, today.day - (days - 1 - i)));
     final points = <UsageSeriesPoint?>[];
     for (final d in dates) {
       UsageSeriesPoint? match;

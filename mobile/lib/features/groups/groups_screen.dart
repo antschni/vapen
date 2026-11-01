@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:vapen_api/vapen_api.dart';
 
+import '../../core/join_link.dart';
 import '../../core/ui/widgets.dart';
 import '../../data/api/api_providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -84,7 +85,8 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
 
   Future<void> _scanQr() async {
     if (!mounted) return;
-    await showModalBottomSheet(
+    var handled = false;
+    final invite = await showModalBottomSheet<JoinInviteLink>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => Padding(
@@ -107,14 +109,14 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                 height: 320,
                 child: MobileScanner(
                   onDetect: (capture) {
+                    // onDetect fires repeatedly; a second pop would close the route below the sheet.
+                    if (handled) return;
                     final raw = capture.barcodes.firstOrNull?.rawValue;
-                    if (raw == null) return;
-                    final uri = Uri.tryParse(raw);
-                    final code = uri?.pathSegments.lastOrNull;
-                    if (code != null && code.length == 10) {
-                      Navigator.pop(ctx);
-                      _run(() => ref.read(apiClientProvider).joinGroup(code));
-                    }
+                    final uri = raw == null ? null : Uri.tryParse(raw);
+                    final invite = uri == null ? null : JoinInviteLink.tryParse(uri);
+                    if (invite == null) return;
+                    handled = true;
+                    Navigator.pop(ctx, invite);
                   },
                 ),
               ),
@@ -123,6 +125,15 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
         ),
       ),
     );
+    if (invite == null || !mounted) return;
+    // A scanned code could come from anyone: let the join screen show the server and ask first.
+    await context.push(
+      Uri(
+        path: '/groups/join',
+        queryParameters: {'code': invite.code, 'server': invite.origin},
+      ).toString(),
+    );
+    if (mounted) _load();
   }
 
   Future<void> _showAddSheet() async {

@@ -4,6 +4,11 @@ import 'config.dart';
 class JoinInviteLink {
   const JoinInviteLink({required this.origin, required this.code});
 
+  /// Server invite codes are 10 Crockford base32 characters.
+  static final _codePattern = RegExp(r'^[A-Za-z0-9]{10}$');
+
+  static bool isValidCode(String code) => _codePattern.hasMatch(code);
+
   final String origin;
   final String code;
 
@@ -13,7 +18,7 @@ class JoinInviteLink {
     final joinIndex = segments.indexOf('join');
     if (joinIndex < 0 || joinIndex + 1 >= segments.length) return null;
     final code = segments[joinIndex + 1];
-    if (code.length != 10) return null;
+    if (!isValidCode(code)) return null;
 
     final defaultPort = uri.scheme == 'https' ? 443 : 80;
     final portSuffix = uri.hasPort && uri.port != defaultPort ? ':${uri.port}' : '';

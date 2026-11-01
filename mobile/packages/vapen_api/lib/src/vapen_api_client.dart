@@ -19,10 +19,11 @@ class VapenApiClient {
         _baseUrl = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl {
     _dio.options.baseUrl = '$_baseUrl/api/v1';
     _dio.options.headers['Accept'] = 'application/json';
-    if (accessToken != null) {
-      setAccessToken(accessToken);
-    }
+    // Always set: a shared Dio must not keep a previous session's token (e.g. after a server switch).
+    setAccessToken(accessToken);
   }
+
+  static String _seg(String value) => Uri.encodeComponent(value);
 
   final Dio _dio;
   final String _baseUrl;
@@ -101,7 +102,7 @@ class VapenApiClient {
 
   Future<Map<String, dynamic>> getDeviceStats(String deviceId, {String? bucket}) async {
     final response = await _request(
-      () => _dio.get('/stats/devices/$deviceId', queryParameters: {
+      () => _dio.get('/stats/devices/${_seg(deviceId)}', queryParameters: {
         if (bucket != null) 'bucket': bucket,
       }),
     );
@@ -132,13 +133,13 @@ class VapenApiClient {
   }
 
   Future<Device> getDevice(String id) async {
-    final response = await _request(() => _dio.get('/devices/$id'));
+    final response = await _request(() => _dio.get('/devices/${_seg(id)}'));
     return Device.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<Device> patchDevice(String id, {String? name}) async {
     final response = await _request(
-      () => _dio.patch('/devices/$id', data: {
+      () => _dio.patch('/devices/${_seg(id)}', data: {
         if (name != null) 'name': name,
       }),
     );
@@ -146,12 +147,12 @@ class VapenApiClient {
   }
 
   Future<void> deleteDevice(String id) async {
-    await _request(() => _dio.delete('/devices/$id'));
+    await _request(() => _dio.delete('/devices/${_seg(id)}'));
   }
 
   Future<IngestTokenCreated> createIngestToken(String deviceId, String name) async {
     final response = await _request(
-      () => _dio.post('/devices/$deviceId/ingest-tokens', data: {'name': name}),
+      () => _dio.post('/devices/${_seg(deviceId)}/ingest-tokens', data: {'name': name}),
     );
     return IngestTokenCreated.fromJson(response.data as Map<String, dynamic>);
   }
@@ -194,27 +195,27 @@ class VapenApiClient {
   }
 
   Future<Group> getGroup(String id) async {
-    final response = await _request(() => _dio.get('/groups/$id'));
+    final response = await _request(() => _dio.get('/groups/${_seg(id)}'));
     return Group.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<GroupMember> patchGroupMember(String groupId, String userId, String role) async {
     final response = await _request(
-      () => _dio.patch('/groups/$groupId/members/$userId', data: {'role': role}),
+      () => _dio.patch('/groups/${_seg(groupId)}/members/${_seg(userId)}', data: {'role': role}),
     );
     return GroupMember.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<void> removeGroupMember(String groupId, String userId) async {
-    await _request(() => _dio.delete('/groups/$groupId/members/$userId'));
+    await _request(() => _dio.delete('/groups/${_seg(groupId)}/members/${_seg(userId)}'));
   }
 
   Future<void> leaveGroup(String groupId) async {
-    await _request(() => _dio.post('/groups/$groupId/leave'));
+    await _request(() => _dio.post('/groups/${_seg(groupId)}/leave'));
   }
 
   Future<void> deleteGroup(String groupId) async {
-    await _request(() => _dio.delete('/groups/$groupId'));
+    await _request(() => _dio.delete('/groups/${_seg(groupId)}'));
   }
 
   Future<GroupOverview> getGroupOverview(
@@ -224,7 +225,7 @@ class VapenApiClient {
     String? tz,
   }) async {
     final response = await _request(
-      () => _dio.get('/groups/$id/overview', queryParameters: {
+      () => _dio.get('/groups/${_seg(id)}/overview', queryParameters: {
         if (from != null) 'from': from.toUtc().toIso8601String(),
         if (to != null) 'to': to.toUtc().toIso8601String(),
         if (tz != null) 'tz': tz,
@@ -234,13 +235,13 @@ class VapenApiClient {
   }
 
   Future<GroupPrivacy> getGroupPrivacy(String id) async {
-    final response = await _request(() => _dio.get('/groups/$id/privacy'));
+    final response = await _request(() => _dio.get('/groups/${_seg(id)}/privacy'));
     return GroupPrivacy.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<GroupPrivacy> putGroupPrivacy(String id, Map<String, dynamic> overrides) async {
     final response = await _request(
-      () => _dio.put('/groups/$id/privacy', data: {'overrides': overrides}),
+      () => _dio.put('/groups/${_seg(id)}/privacy', data: {'overrides': overrides}),
     );
     return GroupPrivacy.fromJson(response.data as Map<String, dynamic>);
   }

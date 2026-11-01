@@ -25,4 +25,15 @@ void main() {
       isNull,
     );
   });
+
+  test('tryParse rejects codes with non-alphanumeric characters', () {
+    expect(
+      JoinInviteLink.tryParse(Uri.parse('https://a.example/join/abc%26x%3D1234')),
+      isNull,
+    );
+    expect(
+      JoinInviteLink.tryParse(Uri.parse('https://a.example/join/abcde-ghij')),
+      isNull,
+    );
+  });
 }

@@ -48,10 +48,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             timezone: tz,
           );
       if (!mounted) return;
-      context.go(await routeAfterAuth(ref));
+      // The router may already have replaced this screen while routeAfterAuth awaits.
+      final target = await routeAfterAuth(ref);
+      if (!mounted) return;
+      context.go(target);
     } on VapenApiException {
+      if (!mounted) return;
       setState(() => _error = l10n.genericError);
     } catch (_) {
+      if (!mounted) return;
       setState(() => _error = l10n.genericError);
     } finally {
       if (mounted) setState(() => _submitting = false);

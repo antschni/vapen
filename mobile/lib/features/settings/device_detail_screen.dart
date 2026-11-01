@@ -81,15 +81,27 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen> {
     );
     if (ok != true || !mounted) return;
     setState(() => _deleting = true);
+    // Read providers before awaiting: ref is unusable once the user leaves the screen.
+    final bridge = ref.read(trackingBridgeProvider);
+    final storage = ref.read(tokenStorageProvider);
+    final api = ref.read(apiClientProvider);
     try {
-      final bridge = ref.read(trackingBridgeProvider);
-      await ref.read(apiClientProvider).deleteDevice(widget.deviceId);
-      final activeId = _activeDeviceId ??
-          await ref.read(tokenStorageProvider).readActiveDeviceId() ??
-          await bridge.host.getActiveDeviceId();
-      if (activeId == widget.deviceId) {
-        await bridge.host.clearCredentials();
-        await ref.read(tokenStorageProvider).clearActiveDeviceId();
+      try {
+        await api.deleteDevice(widget.deviceId);
+      } on VapenApiException catch (e) {
+        // Already gone (e.g. retry after a partial failure): still clear local credentials.
+        if (e.problem.status != 404) rethrow;
+      }
+      try {
+        final activeId = _activeDeviceId ??
+            await storage.readActiveDeviceId() ??
+            await bridge.host.getActiveDeviceId();
+        if (activeId == widget.deviceId) {
+          await bridge.host.clearCredentials();
+          await storage.clearActiveDeviceId();
+        }
+      } catch (_) {
+        // Best effort: the server already revoked this device's ingest tokens.
       }
       if (mounted) context.pop(true);
     } catch (_) {

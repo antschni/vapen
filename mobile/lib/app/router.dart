@@ -176,7 +176,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/groups/join',
-        builder: (context, state) => JoinGroupScreen(initialCode: state.uri.queryParameters['code']),
+        builder: (context, state) => JoinGroupScreen(
+          initialCode: state.uri.queryParameters['code'],
+          serverOrigin: state.uri.queryParameters['server'],
+        ),
       ),
       GoRoute(
         path: '/groups/:id',
@@ -190,7 +193,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/join/:code',
-        redirect: (_, state) => '/groups/join?code=${state.pathParameters['code']}',
+        redirect: (_, state) => Uri(
+          path: '/groups/join',
+          queryParameters: {'code': state.pathParameters['code']},
+        ).toString(),
       ),
     ],
   );

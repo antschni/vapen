@@ -33,7 +33,12 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
 
   Future<void> _pair() async {
     final l10n = AppLocalizations.of(context)!;
+    // Read providers before awaiting: ref is unusable once the user leaves the screen.
     final bridge = ref.read(trackingBridgeProvider);
+    final api = ref.read(apiClientProvider);
+    final storage = ref.read(tokenStorageProvider);
+    final baseUrl = ref.read(sessionProvider).baseUrl;
+    Device? created;
     setState(() {
       _busy = true;
       _error = null;
@@ -46,18 +51,17 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
       } else {
         final result = await bridge.host.associateDevice();
         if (!result.success || result.address == null) {
-          setState(() => _error = result.errorMessage ?? l10n.genericError);
+          if (mounted) setState(() => _error = result.errorMessage ?? l10n.genericError);
           return;
         }
         hardwareId = hardwareIdFromBleAddress(result.address!);
         bridge.host.setSimulationEnabled(false);
       }
-      final api = ref.read(apiClientProvider);
-      final device = await api.createDevice(
+      if (baseUrl == null) throw StateError('server_not_configured');
+      final device = created = await api.createDevice(
         CreateDeviceRequest(model: 'elfbar_master', name: 'Meine Elfbar', hardwareId: hardwareId),
       );
       final token = await api.createIngestToken(device.id, 'Android Vapen');
-      final baseUrl = ref.read(sessionProvider).baseUrl!;
       await bridge.host.setCredentials(
         NativeCredentials(
           baseUrl: baseUrl,
@@ -66,10 +70,21 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
           hardwareId: device.hardwareId,
         ),
       );
+      await storage.saveActiveDeviceId(device.id);
+      created = null;
       await bridge.host.startTracking();
-      await ref.read(tokenStorageProvider).saveActiveDeviceId(device.id);
       if (mounted) context.go('/home');
     } catch (e) {
+      // Roll back a half-registered device, otherwise retries hit the server's unique hardware_id.
+      final orphan = created;
+      if (orphan != null) {
+        try {
+          await api.deleteDevice(orphan.id);
+        } catch (_) {
+          // Device stays listed under Devices and can be removed there.
+        }
+      }
+      if (!mounted) return;
       setState(() => _error = e.toString().contains('SocketException') || e.toString().contains('Connection')
           ? 'Server nicht erreichbar — URL und Netzwerk prüfen.'
           : l10n.genericError);
