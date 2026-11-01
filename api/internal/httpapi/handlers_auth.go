@@ -3,8 +3,8 @@ package httpapi
 import (
 	"context"
 	"errors"
-	"net/http"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5/pgconn"
 
@@ -12,24 +12,36 @@ import (
 	"github.com/antschni/vapen/api/internal/openapi"
 )
 
+const (
+	minPasswordLen = 12
+	maxPasswordLen = 128
+)
+
+func validPassword(p string) bool {
+	return len(p) >= minPasswordLen && len(p) <= maxPasswordLen
+}
+
+func validDisplayName(name string) bool {
+	n := utf8.RuneCountInString(name)
+	return n >= 2 && n <= 40
+}
+
 func (s *Server) AuthRegister(ctx context.Context, request openapi.AuthRegisterRequestObject) (openapi.AuthRegisterResponseObject, error) {
 	body := request.Body
 	if body == nil {
 		return nil, errValidation("Request body is required")
 	}
 	email := strings.TrimSpace(string(body.Email))
-	if len(body.Password) < 12 || len(body.Password) > 128 {
+	if !validPassword(body.Password) {
 		return nil, errValidation("password must be 12 to 128 characters")
+	}
+	if !validDisplayName(body.DisplayName) {
+		return nil, errValidation("display_name must be 2 to 40 characters")
 	}
 	if !validTimezone(body.Timezone) {
 		return nil, errValidation("invalid timezone")
 	}
-	ip := ""
-	if r, ok := ctx.Value(http.LocalAddrContextKey).(interface{}); ok {
-		_ = r
-	}
-	_ = ip
-	if !s.loginEmail.Allow(email) {
+	if !s.registerIP.Allow(clientIPFrom(ctx)) || !s.loginEmail.Allow(strings.ToLower(email)) {
 		return nil, errRateLimited()
 	}
 	pair, u, err := s.auth.Register(ctx, email, body.Password, body.DisplayName, body.Timezone)
@@ -50,6 +62,12 @@ func (s *Server) AuthLogin(ctx context.Context, request openapi.AuthLoginRequest
 		return nil, errValidation("Request body is required")
 	}
 	email := strings.TrimSpace(string(body.Email))
+	if !s.loginIP.Allow(clientIPFrom(ctx)) || !s.loginEmail.Allow(strings.ToLower(email)) {
+		return nil, errRateLimited()
+	}
+	if len(body.Password) > maxPasswordLen {
+		return nil, errInvalidCredentials()
+	}
 	pair, err := s.auth.Login(ctx, email, body.Password)
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
@@ -69,6 +87,9 @@ func (s *Server) AuthRefresh(ctx context.Context, request openapi.AuthRefreshReq
 	if body == nil {
 		return nil, errValidation("Request body is required")
 	}
+	if !s.refreshIP.Allow(clientIPFrom(ctx)) {
+		return nil, errRateLimited()
+	}
 	pair, err := s.auth.Refresh(ctx, body.RefreshToken)
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) || errors.Is(err, auth.ErrTokenReuse) {
@@ -84,11 +105,10 @@ func (s *Server) AuthRefresh(ctx context.Context, request openapi.AuthRefreshReq
 }
 
 func (s *Server) AuthLogout(ctx context.Context, _ openapi.AuthLogoutRequestObject) (openapi.AuthLogoutResponseObject, error) {
-	uid, sid, ok := mustUser(ctx)
+	_, sid, ok := mustUser(ctx)
 	if !ok {
 		return nil, errUnauthorized("Unauthorized")
 	}
-	_ = uid
 	if err := s.auth.Logout(ctx, sid); err != nil {
 		return nil, err
 	}

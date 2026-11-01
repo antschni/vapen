@@ -66,28 +66,6 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 	return i, err
 }
 
-const getRefreshTokenByGraceHash = `-- name: GetRefreshTokenByGraceHash :one
-SELECT id, session_id, token_hash, expires_at, created_at, rotated_at, revoked_at, grace_token_hash, grace_expires_at FROM refresh_tokens
-WHERE grace_token_hash = $1 AND grace_expires_at > now() AND revoked_at IS NULL
-`
-
-func (q *Queries) GetRefreshTokenByGraceHash(ctx context.Context, graceTokenHash []byte) (RefreshToken, error) {
-	row := q.db.QueryRow(ctx, getRefreshTokenByGraceHash, graceTokenHash)
-	var i RefreshToken
-	err := row.Scan(
-		&i.ID,
-		&i.SessionID,
-		&i.TokenHash,
-		&i.ExpiresAt,
-		&i.CreatedAt,
-		&i.RotatedAt,
-		&i.RevokedAt,
-		&i.GraceTokenHash,
-		&i.GraceExpiresAt,
-	)
-	return i, err
-}
-
 const getRefreshTokenByHash = `-- name: GetRefreshTokenByHash :one
 SELECT id, session_id, token_hash, expires_at, created_at, rotated_at, revoked_at, grace_token_hash, grace_expires_at FROM refresh_tokens WHERE token_hash = $1 AND revoked_at IS NULL
 `
@@ -121,6 +99,36 @@ func (q *Queries) GetSession(ctx context.Context, id pgtype.UUID) (Session, erro
 		&i.UserID,
 		&i.CreatedAt,
 		&i.RevokedAt,
+	)
+	return i, err
+}
+
+const markRefreshTokenRotated = `-- name: MarkRefreshTokenRotated :one
+UPDATE refresh_tokens
+SET rotated_at = now(), grace_expires_at = $2
+WHERE id = $1 AND rotated_at IS NULL AND revoked_at IS NULL
+RETURNING id, session_id, token_hash, expires_at, created_at, rotated_at, revoked_at, grace_token_hash, grace_expires_at
+`
+
+type MarkRefreshTokenRotatedParams struct {
+	ID             pgtype.UUID        `json:"id"`
+	GraceExpiresAt pgtype.Timestamptz `json:"grace_expires_at"`
+}
+
+// Claims the token for rotation; returns no row when a concurrent request rotated it first.
+func (q *Queries) MarkRefreshTokenRotated(ctx context.Context, arg MarkRefreshTokenRotatedParams) (RefreshToken, error) {
+	row := q.db.QueryRow(ctx, markRefreshTokenRotated, arg.ID, arg.GraceExpiresAt)
+	var i RefreshToken
+	err := row.Scan(
+		&i.ID,
+		&i.SessionID,
+		&i.TokenHash,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.RotatedAt,
+		&i.RevokedAt,
+		&i.GraceTokenHash,
+		&i.GraceExpiresAt,
 	)
 	return i, err
 }
@@ -174,43 +182,4 @@ UPDATE refresh_tokens SET revoked_at = now() WHERE session_id = $1 AND revoked_a
 func (q *Queries) RevokeSessionRefreshTokens(ctx context.Context, sessionID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, revokeSessionRefreshTokens, sessionID)
 	return err
-}
-
-const rotateRefreshToken = `-- name: RotateRefreshToken :one
-UPDATE refresh_tokens
-SET token_hash = $2, expires_at = $3, rotated_at = now(),
-    grace_token_hash = $4, grace_expires_at = $5
-WHERE id = $1
-RETURNING id, session_id, token_hash, expires_at, created_at, rotated_at, revoked_at, grace_token_hash, grace_expires_at
-`
-
-type RotateRefreshTokenParams struct {
-	ID             pgtype.UUID        `json:"id"`
-	TokenHash      []byte             `json:"token_hash"`
-	ExpiresAt      pgtype.Timestamptz `json:"expires_at"`
-	GraceTokenHash []byte             `json:"grace_token_hash"`
-	GraceExpiresAt pgtype.Timestamptz `json:"grace_expires_at"`
-}
-
-func (q *Queries) RotateRefreshToken(ctx context.Context, arg RotateRefreshTokenParams) (RefreshToken, error) {
-	row := q.db.QueryRow(ctx, rotateRefreshToken,
-		arg.ID,
-		arg.TokenHash,
-		arg.ExpiresAt,
-		arg.GraceTokenHash,
-		arg.GraceExpiresAt,
-	)
-	var i RefreshToken
-	err := row.Scan(
-		&i.ID,
-		&i.SessionID,
-		&i.TokenHash,
-		&i.ExpiresAt,
-		&i.CreatedAt,
-		&i.RotatedAt,
-		&i.RevokedAt,
-		&i.GraceTokenHash,
-		&i.GraceExpiresAt,
-	)
-	return i, err
 }

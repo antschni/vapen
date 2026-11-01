@@ -171,9 +171,11 @@ WHERE user_id = $1
   AND started_at < $3
   AND ($5::uuid IS NULL OR device_id = $5)
   AND ($6::text IS NULL OR source = $6)
+  AND ($7::int IS NULL OR duration_ms >= $7)
+  AND ($8::int IS NULL OR duration_ms <= $8)
   AND (
-    $7::timestamptz IS NULL
-    OR (started_at, id) > ($7, $8::uuid)
+    $9::timestamptz IS NULL
+    OR (started_at, id) > ($9, $10::uuid)
   )
 ORDER BY started_at ASC, id ASC
 LIMIT $4
@@ -186,6 +188,8 @@ type ListPuffsAscParams struct {
 	Limit           int32              `json:"limit"`
 	DeviceID        pgtype.UUID        `json:"device_id"`
 	Source          pgtype.Text        `json:"source"`
+	MinDurationMs   pgtype.Int4        `json:"min_duration_ms"`
+	MaxDurationMs   pgtype.Int4        `json:"max_duration_ms"`
 	CursorStartedAt pgtype.Timestamptz `json:"cursor_started_at"`
 	CursorID        pgtype.UUID        `json:"cursor_id"`
 }
@@ -198,6 +202,8 @@ func (q *Queries) ListPuffsAsc(ctx context.Context, arg ListPuffsAscParams) ([]P
 		arg.Limit,
 		arg.DeviceID,
 		arg.Source,
+		arg.MinDurationMs,
+		arg.MaxDurationMs,
 		arg.CursorStartedAt,
 		arg.CursorID,
 	)

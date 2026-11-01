@@ -39,6 +39,13 @@ func (s *Server) CreateDevice(ctx context.Context, request openapi.CreateDeviceR
 	if body == nil {
 		return nil, errValidation("body required")
 	}
+	if body.Model != "elfbar_master" {
+		return nil, errValidation("unsupported model")
+	}
+	if !validLen(body.Name, 1, 80) || !validLen(body.HardwareId, 1, 128) ||
+		(body.FirmwareVersion != nil && !validLen(*body.FirmwareVersion, 1, 64)) {
+		return nil, errValidation("name, hardware_id or firmware_version has invalid length")
+	}
 	existing, err := s.q.GetDeviceByUserHardware(ctx, store.GetDeviceByUserHardwareParams{
 		UserID:     pgUUID(userID),
 		HardwareID: body.HardwareId,
@@ -85,6 +92,9 @@ func (s *Server) PatchDevice(ctx context.Context, request openapi.PatchDeviceReq
 	if body == nil {
 		return nil, errValidation("body required")
 	}
+	if !validLen(body.Name, 1, 80) {
+		return nil, errValidation("name must be 1 to 80 characters")
+	}
 	d, err := s.q.UpdateDeviceName(ctx, store.UpdateDeviceNameParams{
 		ID:     pgUUID(uuid.UUID(request.Id)),
 		Name:   body.Name,
@@ -101,10 +111,15 @@ func (s *Server) DeleteDevice(ctx context.Context, request openapi.DeleteDeviceR
 	if !ok {
 		return nil, errUnauthorized("Unauthorized")
 	}
-	devID := pgUUID(uuid.UUID(request.Id))
-	_ = s.q.RevokeAllDeviceTokens(ctx, devID)
-	if err := s.q.DeleteDevice(ctx, store.DeleteDeviceParams{ID: devID, UserID: pgUUID(userID)}); err != nil {
+	dev, err := s.q.GetDeviceByID(ctx, pgUUID(uuid.UUID(request.Id)))
+	if err != nil || uuidFromPG(dev.UserID) != userID {
 		return nil, errNotFound()
+	}
+	if err := s.q.RevokeAllDeviceTokens(ctx, dev.ID); err != nil {
+		return nil, err
+	}
+	if err := s.q.DeleteDevice(ctx, store.DeleteDeviceParams{ID: dev.ID, UserID: pgUUID(userID)}); err != nil {
+		return nil, err
 	}
 	return openapi.DeleteDevice204Response{}, nil
 }
@@ -150,8 +165,8 @@ func (s *Server) CreateIngestToken(ctx context.Context, request openapi.CreateIn
 		return nil, errNotFound()
 	}
 	body := request.Body
-	if body == nil {
-		return nil, errValidation("name required")
+	if body == nil || !validLen(body.Name, 1, 80) {
+		return nil, errValidation("name must be 1 to 80 characters")
 	}
 	plain, hash, err := auth.NewDeviceToken()
 	if err != nil {

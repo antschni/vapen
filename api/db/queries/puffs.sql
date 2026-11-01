@@ -33,6 +33,8 @@ WHERE user_id = $1
   AND started_at < $3
   AND (sqlc.narg('device_id')::uuid IS NULL OR device_id = sqlc.narg('device_id'))
   AND (sqlc.narg('source')::text IS NULL OR source = sqlc.narg('source'))
+  AND (sqlc.narg('min_duration_ms')::int IS NULL OR duration_ms >= sqlc.narg('min_duration_ms'))
+  AND (sqlc.narg('max_duration_ms')::int IS NULL OR duration_ms <= sqlc.narg('max_duration_ms'))
   AND (
     sqlc.narg('cursor_started_at')::timestamptz IS NULL
     OR (started_at, id) > (sqlc.narg('cursor_started_at'), sqlc.narg('cursor_id')::uuid)

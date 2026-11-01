@@ -24,6 +24,17 @@ type authInfo struct {
 
 type ctxKey struct{}
 
+type clientIPKey struct{}
+
+func withClientIP(ctx context.Context, ip string) context.Context {
+	return context.WithValue(ctx, clientIPKey{}, ip)
+}
+
+func clientIPFrom(ctx context.Context) string {
+	ip, _ := ctx.Value(clientIPKey{}).(string)
+	return ip
+}
+
 func withAuth(ctx context.Context, a authInfo) context.Context {
 	return context.WithValue(ctx, ctxKey{}, a)
 }

@@ -21,15 +21,11 @@ VALUES ($1, $2, $3, $4) RETURNING *;
 -- name: GetRefreshTokenByHash :one
 SELECT * FROM refresh_tokens WHERE token_hash = $1 AND revoked_at IS NULL;
 
--- name: GetRefreshTokenByGraceHash :one
-SELECT * FROM refresh_tokens
-WHERE grace_token_hash = $1 AND grace_expires_at > now() AND revoked_at IS NULL;
-
--- name: RotateRefreshToken :one
+-- name: MarkRefreshTokenRotated :one
+-- Claims the token for rotation; returns no row when a concurrent request rotated it first.
 UPDATE refresh_tokens
-SET token_hash = $2, expires_at = $3, rotated_at = now(),
-    grace_token_hash = $4, grace_expires_at = $5
-WHERE id = $1
+SET rotated_at = now(), grace_expires_at = $2
+WHERE id = $1 AND rotated_at IS NULL AND revoked_at IS NULL
 RETURNING *;
 
 -- name: RevokeRefreshToken :exec

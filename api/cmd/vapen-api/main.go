@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -73,10 +74,12 @@ func main() {
 
 	srv := httpapi.NewServer(cfg, pool, authSvc, hub)
 	strict := openapi.NewStrictHandlerWithOptions(srv, []openapi.StrictMiddlewareFunc{srv.StrictMiddleware()}, openapi.StrictHTTPServerOptions{
+		RequestErrorHandlerFunc:  httpapi.WriteRequestError,
 		ResponseErrorHandlerFunc: httpapi.WriteAPIError,
 	})
 	apiHandler := openapi.HandlerWithOptions(strict, openapi.StdHTTPServerOptions{
-		BaseURL: "",
+		BaseURL:          "",
+		ErrorHandlerFunc: httpapi.WriteRequestError,
 	})
 
 	mux := http.NewServeMux()
@@ -96,10 +99,12 @@ func main() {
 
 	httpSrv := &http.Server{
 		Addr:              cfg.ListenAddr,
-		Handler:           securityHeaders(mux),
+		Handler:           securityHeaders(cors(cfg.CORSAllowedOrigins, http.MaxBytesHandler(mux, maxRequestBody))),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
-		IdleTimeout:       120 * time.Second,
+		// The SSE handler lifts this deadline for its own connection.
+		WriteTimeout: 60 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
 	go func() {
@@ -125,10 +130,46 @@ func defaultMigrationsDir() string {
 	return filepath.Join(filepath.Dir(exe), "db", "migrations")
 }
 
+// maxRequestBody bounds every request body; the largest legitimate one is an ingest batch.
+const maxRequestBody = 1 << 20
+
 func securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("X-Frame-Options", "DENY")
+		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// cors allows browser calls from the configured origins only; with none configured it is a no-op.
+func cors(origins []string, next http.Handler) http.Handler {
+	if len(origins) == 0 {
+		return next
+	}
+	allowed := make(map[string]bool, len(origins))
+	for _, o := range origins {
+		allowed[strings.TrimSuffix(o, "/")] = true
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin == "" || !allowed[origin] {
+			next.ServeHTTP(w, r)
+			return
+		}
+		h := w.Header()
+		h.Set("Access-Control-Allow-Origin", origin)
+		h.Add("Vary", "Origin")
+		if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
+			h.Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE")
+			h.Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+			h.Set("Access-Control-Max-Age", "600")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }

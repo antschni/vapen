@@ -31,6 +31,9 @@ func (s *Server) IngestEvents(ctx context.Context, request openapi.IngestEventsR
 	if uuid.UUID(body.DeviceId) != a.DeviceID {
 		return nil, errForbidden()
 	}
+	if len(body.Events) > 500 {
+		return nil, errValidation("at most 500 events per request")
+	}
 	now := time.Now().UTC()
 	maxFuture := now.Add(5 * time.Minute)
 	var accepted, duplicates int

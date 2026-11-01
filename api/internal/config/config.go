@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/base64"
 	"fmt"
+	"net/netip"
 	"os"
 	"strings"
 	"time"
@@ -16,7 +17,7 @@ type Config struct {
 	AccessTokenTTL       time.Duration
 	RefreshTokenTTL      time.Duration
 	CORSAllowedOrigins   []string
-	TrustedProxies       []string
+	TrustedProxies       []netip.Prefix
 	LogLevel             string
 	RefreshGracePeriod   time.Duration
 }
@@ -25,7 +26,7 @@ func Load() (Config, error) {
 	cfg := Config{
 		ListenAddr:         envOr("LISTEN_ADDR", ":8080"),
 		PublicBaseURL:      envOr("PUBLIC_BASE_URL", "http://localhost:8080"),
-		AccessTokenTTL:     durationEnv("ACCESS_TOKEN_TTL", 30*24*time.Hour),
+		AccessTokenTTL:     durationEnv("ACCESS_TOKEN_TTL", 15*time.Minute),
 		RefreshTokenTTL:    durationEnv("REFRESH_TOKEN_TTL", 180*24*time.Hour),
 		LogLevel:           envOr("LOG_LEVEL", "info"),
 		RefreshGracePeriod: 30 * time.Second,
@@ -47,10 +48,14 @@ func Load() (Config, error) {
 	}
 	cfg.JWTPrivateKey = key
 	if v := os.Getenv("CORS_ALLOWED_ORIGINS"); v != "" {
-		cfg.CORSAllowedOrigins = strings.Split(v, ",")
+		cfg.CORSAllowedOrigins = splitList(v)
 	}
-	if v := os.Getenv("TRUSTED_PROXIES"); v != "" {
-		cfg.TrustedProxies = strings.Split(v, ",")
+	for _, p := range splitList(os.Getenv("TRUSTED_PROXIES")) {
+		prefix, err := parsePrefix(p)
+		if err != nil {
+			return cfg, fmt.Errorf("TRUSTED_PROXIES: invalid entry %q", p)
+		}
+		cfg.TrustedProxies = append(cfg.TrustedProxies, prefix)
 	}
 	return cfg, nil
 }
@@ -72,4 +77,28 @@ func durationEnv(key string, def time.Duration) time.Duration {
 		return def
 	}
 	return d
+}
+
+func splitList(v string) []string {
+	var out []string
+	for _, p := range strings.Split(v, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// parsePrefix accepts a CIDR or a single IP address.
+func parsePrefix(s string) (netip.Prefix, error) {
+	if strings.Contains(s, "/") {
+		p, err := netip.ParsePrefix(s)
+		return p.Masked(), err
+	}
+	addr, err := netip.ParseAddr(s)
+	if err != nil {
+		return netip.Prefix{}, err
+	}
+	addr = addr.Unmap()
+	return netip.PrefixFrom(addr, addr.BitLen()), nil
 }

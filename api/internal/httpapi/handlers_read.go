@@ -46,6 +46,12 @@ func (s *Server) ListPuffs(ctx context.Context, request openapi.ListPuffsRequest
 	if request.Params.Limit != nil {
 		limit = *request.Params.Limit
 	}
+	if limit < 1 || limit > 500 {
+		return nil, errValidation("limit must be between 1 and 500")
+	}
+	if !validDurationFilter(request.Params.MinDurationMs) || !validDurationFilter(request.Params.MaxDurationMs) {
+		return nil, errValidation("duration filters must be between 0 and 60000")
+	}
 	cursorAt, cursorID, err := puffCursorParams(request.Params.Cursor)
 	if err != nil {
 		return nil, errValidation("invalid cursor")
@@ -71,6 +77,8 @@ func (s *Server) ListPuffs(ctx context.Context, request openapi.ListPuffsRequest
 			Limit:           params.Limit,
 			DeviceID:        params.DeviceID,
 			Source:          params.Source,
+			MinDurationMs:   params.MinDurationMs,
+			MaxDurationMs:   params.MaxDurationMs,
 			CursorStartedAt: params.CursorStartedAt,
 			CursorID:        params.CursorID,
 		})
@@ -85,7 +93,7 @@ func (s *Server) ListPuffs(ctx context.Context, request openapi.ListPuffsRequest
 		items = append(items, puffToAPI(p))
 	}
 	var next *string
-	if len(rows) == limit {
+	if len(rows) > 0 && len(rows) == limit {
 		last := rows[len(rows)-1]
 		next = ptr(formatPuffCursor(last.StartedAt.Time, uuidFromPG(last.ID)))
 	}
@@ -107,11 +115,16 @@ func puffSourceParam(source *openapi.PuffSource) *string {
 	return &value
 }
 
+func validDurationFilter(n *int) bool {
+	return n == nil || (*n >= 0 && *n <= 60000)
+}
+
+// pgIntPtr expects n to be range-checked by the caller.
 func pgIntPtr(n *int) pgtype.Int4 {
 	if n == nil {
 		return pgtype.Int4{}
 	}
-	return pgtype.Int4{Int32: int32(*n), Valid: true}
+	return pgtype.Int4{Int32: int32(*n), Valid: true} // #nosec G115 -- callers bound n
 }
 
 func formatPuffCursor(started time.Time, id uuid.UUID) string {
@@ -173,6 +186,9 @@ func (s *Server) GetUsageStats(ctx context.Context, request openapi.GetUsageStat
 	if request.Params.Tz != nil {
 		tz = *request.Params.Tz
 	}
+	if !validTimezone(tz) {
+		return nil, errValidation("invalid timezone")
+	}
 	now := time.Now().UTC()
 	from := startOfDay(now.AddDate(0, 0, -6), tz)
 	to := now
@@ -181,6 +197,9 @@ func (s *Server) GetUsageStats(ctx context.Context, request openapi.GetUsageStat
 	}
 	if request.Params.To != nil {
 		to = request.Params.To.UTC()
+	}
+	if !validStatsRange(from, to) {
+		return nil, errValidation("from must be before to and the range at most 366 days")
 	}
 	bucket := "day"
 	if request.Params.Bucket != nil {
@@ -221,6 +240,9 @@ func (s *Server) GetDeviceStats(ctx context.Context, request openapi.GetDeviceSt
 	if request.Params.Tz != nil {
 		tz = *request.Params.Tz
 	}
+	if !validTimezone(tz) {
+		return nil, errValidation("invalid timezone")
+	}
 	now := time.Now().UTC()
 	from := now.Add(-7 * 24 * time.Hour)
 	to := now
@@ -229,6 +251,9 @@ func (s *Server) GetDeviceStats(ctx context.Context, request openapi.GetDeviceSt
 	}
 	if request.Params.To != nil {
 		to = request.Params.To.UTC()
+	}
+	if !validStatsRange(from, to) {
+		return nil, errValidation("from must be before to and the range at most 366 days")
 	}
 	bucket := openapi.Hour
 	if request.Params.Bucket != nil {

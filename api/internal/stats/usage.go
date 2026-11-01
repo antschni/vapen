@@ -69,24 +69,37 @@ WHERE user_id = $1
 
 func TotalsByUser(ctx context.Context, pool *pgxpool.Pool, userIDs []uuid.UUID, from, to time.Time, tz string) (map[uuid.UUID]openapi.UsageTotals, error) {
 	out := make(map[uuid.UUID]openapi.UsageTotals, len(userIDs))
-	for _, id := range userIDs {
-		totals, err := scanTotals(ctx, pool, `
+	if len(userIDs) == 0 {
+		return out, nil
+	}
+	rows, err := pool.Query(ctx, `
 SELECT
+  user_id,
   count(*)::int,
   coalesce(sum(duration_ms),0)::bigint,
   coalesce(avg(duration_ms),0)::int,
   coalesce(max(duration_ms),0)::int,
   count(distinct (started_at AT TIME ZONE $4)::date)::int
 FROM puffs
-WHERE user_id = $1
+WHERE user_id = ANY($1)
   AND started_at >= $2
-  AND started_at < $3`, id, from, to, tz)
-		if err != nil {
+  AND started_at < $3
+GROUP BY user_id`, userIDs, from, to, tz)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id uuid.UUID
+		var totals openapi.UsageTotals
+		var sum int64
+		if err := rows.Scan(&id, &totals.PuffCount, &sum, &totals.AvgDurationMs, &totals.MaxDurationMs, &totals.ActiveDays); err != nil {
 			return nil, err
 		}
+		totals.TotalDurationMs = int(sum)
 		out[id] = totals
 	}
-	return out, nil
+	return out, rows.Err()
 }
 
 func normalizeBucket(bucket string) string {

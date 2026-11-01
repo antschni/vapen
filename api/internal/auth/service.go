@@ -49,7 +49,13 @@ func (s *Service) JWT() *JWT { return s.jwt }
 func (s *Service) Register(ctx context.Context, email, password, displayName, timezone string) (TokenPair, *store.User, error) {
 	hash := HashPassword(password)
 	userID := uuid.Must(uuid.NewV7())
-	u, err := s.q.CreateUser(ctx, store.CreateUserParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return TokenPair{}, nil, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	qtx := s.q.WithTx(tx)
+	u, err := qtx.CreateUser(ctx, store.CreateUserParams{
 		ID:           pgUUID(userID),
 		Email:        email,
 		DisplayName:  displayName,
@@ -59,7 +65,7 @@ func (s *Service) Register(ctx context.Context, email, password, displayName, ti
 	if err != nil {
 		return TokenPair{}, nil, err
 	}
-	_, _ = s.q.UpsertPrivacyDefaults(ctx, store.UpsertPrivacyDefaultsParams{
+	_, err = qtx.UpsertPrivacyDefaults(ctx, store.UpsertPrivacyDefaultsParams{
 		UserID:            pgUUID(userID),
 		ShareLiveStatus:   true,
 		ShareUsageSummary: true,
@@ -67,6 +73,12 @@ func (s *Service) Register(ctx context.Context, email, password, displayName, ti
 		ShareDeviceStats:  false,
 		ShowInLeaderboard: true,
 	})
+	if err != nil {
+		return TokenPair{}, nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return TokenPair{}, nil, err
+	}
 	pair, err := s.createSession(ctx, userID)
 	return pair, &u, err
 }
@@ -128,83 +140,51 @@ func (s *Service) issueTokens(ctx context.Context, userID, sid uuid.UUID) (Token
 	}, nil
 }
 
+// Refresh rotates a refresh token. Each issued token is its own row: rotation marks the presented
+// row as rotated and inserts a fresh one. A rotated token presented again within the grace period
+// (concurrent requests, lost response) gets a new pair; after that it counts as reuse and the whole
+// session is revoked.
 func (s *Service) Refresh(ctx context.Context, refreshToken string) (TokenPair, error) {
 	if err := ValidateRefreshPrefix(refreshToken); err != nil {
 		return TokenPair{}, ErrInvalidCredentials
 	}
-	hash := HashOpaqueToken(refreshToken)
-	rt, err := s.q.GetRefreshTokenByHash(ctx, hash)
+	rt, err := s.q.GetRefreshTokenByHash(ctx, HashOpaqueToken(refreshToken))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			gr, err2 := s.q.GetRefreshTokenByGraceHash(ctx, hash)
-			if err2 != nil {
-				if errors.Is(err2, pgx.ErrNoRows) {
-					return TokenPair{}, ErrInvalidCredentials
-				}
-				return TokenPair{}, err2
-			}
-			return s.rotateFromToken(ctx, gr, hash)
+			return TokenPair{}, ErrInvalidCredentials
 		}
 		return TokenPair{}, err
 	}
-	if rt.ExpiresAt.Time.Before(time.Now()) {
+	now := time.Now()
+	if rt.ExpiresAt.Time.Before(now) {
 		return TokenPair{}, ErrInvalidCredentials
 	}
 	sess, err := s.q.GetSession(ctx, rt.SessionID)
 	if err != nil || sess.RevokedAt.Valid {
 		return TokenPair{}, ErrInvalidCredentials
 	}
-	return s.rotateFromToken(ctx, rt, hash)
-}
-
-func (s *Service) rotateFromToken(ctx context.Context, rt store.RefreshToken, presentedHash []byte) (TokenPair, error) {
-	if rt.RotatedAt.Valid {
-		if rt.GraceExpiresAt.Valid && rt.GraceExpiresAt.Time.After(time.Now()) &&
-			len(rt.GraceTokenHash) > 0 && equalBytes(rt.GraceTokenHash, presentedHash) {
-			sess, err := s.q.GetSession(ctx, rt.SessionID)
-			if err != nil || sess.RevokedAt.Valid {
-				return TokenPair{}, ErrInvalidCredentials
-			}
+	if !rt.RotatedAt.Valid {
+		_, err = s.q.MarkRefreshTokenRotated(ctx, store.MarkRefreshTokenRotatedParams{
+			ID:             rt.ID,
+			GraceExpiresAt: pgTime(now.UTC().Add(s.cfg.RefreshGracePeriod)),
+		})
+		if err == nil {
 			return s.issueTokens(ctx, uuidFromPG(sess.UserID), uuidFromPG(rt.SessionID))
 		}
-		_ = s.q.RevokeSessionRefreshTokens(ctx, rt.SessionID)
-		_ = s.q.RevokeSession(ctx, rt.SessionID)
-		return TokenPair{}, ErrTokenReuse
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return TokenPair{}, err
+		}
+		// A concurrent request rotated this token first; fall through to the grace check.
+		if rt, err = s.q.GetRefreshTokenByHash(ctx, rt.TokenHash); err != nil {
+			return TokenPair{}, ErrInvalidCredentials
+		}
 	}
-	sess, err := s.q.GetSession(ctx, rt.SessionID)
-	if err != nil || sess.RevokedAt.Valid {
-		return TokenPair{}, ErrInvalidCredentials
+	if rt.GraceExpiresAt.Valid && rt.GraceExpiresAt.Time.After(now) {
+		return s.issueTokens(ctx, uuidFromPG(sess.UserID), uuidFromPG(rt.SessionID))
 	}
-	userID := uuidFromPG(sess.UserID)
-	sid := uuidFromPG(rt.SessionID)
-	access, exp, err := s.jwt.Issue(userID, sid)
-	if err != nil {
-		return TokenPair{}, err
-	}
-	newPlain, newHash, err := NewRefreshToken()
-	if err != nil {
-		return TokenPair{}, err
-	}
-	rtExp := time.Now().UTC().Add(s.cfg.RefreshTokenTTL)
-	graceUntil := time.Now().UTC().Add(s.cfg.RefreshGracePeriod)
-	_, err = s.q.RotateRefreshToken(ctx, store.RotateRefreshTokenParams{
-		ID:             rt.ID,
-		TokenHash:      newHash,
-		ExpiresAt:      pgTime(rtExp),
-		GraceTokenHash: presentedHash,
-		GraceExpiresAt: pgTime(graceUntil),
-	})
-	if err != nil {
-		return TokenPair{}, err
-	}
-	return TokenPair{
-		AccessToken:           access,
-		AccessTokenExpiresAt:  exp,
-		RefreshToken:          newPlain,
-		RefreshTokenExpiresAt: rtExp,
-		SessionID:             sid,
-		UserID:                userID,
-	}, nil
+	_ = s.q.RevokeSessionRefreshTokens(ctx, rt.SessionID)
+	_ = s.q.RevokeSession(ctx, rt.SessionID)
+	return TokenPair{}, ErrTokenReuse
 }
 
 func (s *Service) Logout(ctx context.Context, sessionID uuid.UUID) error {
@@ -240,16 +220,4 @@ func pgTime(t time.Time) pgtype.Timestamptz {
 func uuidFromPG(u pgtype.UUID) uuid.UUID {
 	id, _ := uuid.Parse(u.String())
 	return id
-}
-
-func equalBytes(a, b []byte) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }

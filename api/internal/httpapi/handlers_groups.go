@@ -46,26 +46,33 @@ func (s *Server) CreateGroup(ctx context.Context, request openapi.CreateGroupReq
 		return nil, errUnauthorized("Unauthorized")
 	}
 	body := request.Body
-	if body == nil {
-		return nil, errValidation("name required")
+	if body == nil || !validLen(body.Name, 1, 60) {
+		return nil, errValidation("name must be 1 to 60 characters")
 	}
 	code, err := grouppkg.NewInviteCode()
 	if err != nil {
 		return nil, err
 	}
 	gid := uuid.Must(uuid.NewV7())
-	g, err := s.q.CreateGroup(ctx, store.CreateGroupParams{
-		ID:         pgUUID(gid),
-		Name:       body.Name,
-		OwnerID:    pgUUID(userID),
-		InviteCode: code,
+	var g store.Group
+	err = s.inTx(ctx, func(q *store.Queries) error {
+		var err error
+		g, err = q.CreateGroup(ctx, store.CreateGroupParams{
+			ID:         pgUUID(gid),
+			Name:       body.Name,
+			OwnerID:    pgUUID(userID),
+			InviteCode: code,
+		})
+		if err != nil {
+			return err
+		}
+		return q.AddGroupMember(ctx, store.AddGroupMemberParams{
+			GroupID: pgUUID(gid), UserID: pgUUID(userID), Role: "owner",
+		})
 	})
 	if err != nil {
 		return nil, err
 	}
-	_ = s.q.AddGroupMember(ctx, store.AddGroupMemberParams{
-		GroupID: pgUUID(gid), UserID: pgUUID(userID), Role: "owner",
-	})
 	return openapi.CreateGroup201JSONResponse(s.groupToAPI(ctx, g, userID, true)), nil
 }
 
@@ -83,13 +90,18 @@ func (s *Server) JoinGroup(ctx context.Context, request openapi.JoinGroupRequest
 	if err != nil {
 		return nil, errNotFound()
 	}
-	cnt, _ := s.q.CountGroupMembers(ctx, g.ID)
+	cnt, err := s.q.CountGroupMembers(ctx, g.ID)
+	if err != nil {
+		return nil, err
+	}
 	if cnt >= 100 {
 		return nil, errConflict("group is full")
 	}
-	_ = s.q.AddGroupMember(ctx, store.AddGroupMemberParams{
+	if err := s.q.AddGroupMember(ctx, store.AddGroupMemberParams{
 		GroupID: g.ID, UserID: pgUUID(userID), Role: "member",
-	})
+	}); err != nil {
+		return nil, err
+	}
 	return openapi.JoinGroup200JSONResponse(s.groupToAPI(ctx, g, userID, false)), nil
 }
 
@@ -120,8 +132,8 @@ func (s *Server) PatchGroup(ctx context.Context, request openapi.PatchGroupReque
 		return nil, errForbidden()
 	}
 	body := request.Body
-	if body == nil {
-		return nil, errValidation("name required")
+	if body == nil || !validLen(body.Name, 1, 60) {
+		return nil, errValidation("name must be 1 to 60 characters")
 	}
 	g, err := s.q.UpdateGroupName(ctx, store.UpdateGroupNameParams{ID: pgUUID(gid), Name: body.Name})
 	if err != nil {
@@ -136,8 +148,8 @@ func (s *Server) DeleteGroup(ctx context.Context, request openapi.DeleteGroupReq
 		return nil, errUnauthorized("Unauthorized")
 	}
 	gid := uuid.UUID(request.Id)
-	g, err := s.q.GetGroupByID(ctx, pgUUID(gid))
-	if err != nil || uuidFromPG(g.OwnerID) != userID {
+	m, err := s.q.GetGroupMember(ctx, store.GetGroupMemberParams{GroupID: pgUUID(gid), UserID: pgUUID(userID)})
+	if err != nil || m.Role != "owner" {
 		return nil, errForbidden()
 	}
 	return openapi.DeleteGroup204Response{}, s.q.DeleteGroup(ctx, pgUUID(gid))
@@ -193,19 +205,37 @@ func (s *Server) PatchGroupMember(ctx context.Context, request openapi.PatchGrou
 	if body == nil {
 		return nil, errValidation("role required")
 	}
+	role := string(body.Role)
+	if role != "owner" && role != "admin" && role != "member" {
+		return nil, errValidation("invalid role")
+	}
 	owner, err := s.q.GetGroupMember(ctx, store.GetGroupMemberParams{GroupID: pgUUID(gid), UserID: pgUUID(userID)})
 	if err != nil || owner.Role != "owner" {
 		return nil, errForbidden()
 	}
-	role := string(body.Role)
-	if role == "owner" {
-		_ = s.q.DemoteOwnerToAdmin(ctx, store.DemoteOwnerToAdminParams{GroupID: pgUUID(gid), UserID: pgUUID(userID)})
-		_ = s.q.PromoteMemberToOwner(ctx, store.PromoteMemberToOwnerParams{GroupID: pgUUID(gid), UserID: pgUUID(target)})
-		_ = s.q.SetGroupOwner(ctx, store.SetGroupOwnerParams{ID: pgUUID(gid), OwnerID: pgUUID(target)})
-	} else if role == "admin" || role == "member" {
-		_ = s.q.UpdateGroupMemberRole(ctx, store.UpdateGroupMemberRoleParams{
-			GroupID: pgUUID(gid), UserID: pgUUID(target), Role: role,
-		})
+	if target == userID {
+		// The owner can only hand ownership over, never demote themselves into an ownerless group.
+		return nil, errConflict("transfer ownership to another member instead")
+	}
+	if _, err := s.q.GetGroupMember(ctx, store.GetGroupMemberParams{GroupID: pgUUID(gid), UserID: pgUUID(target)}); err != nil {
+		return nil, errNotFound()
+	}
+	err = s.inTx(ctx, func(q *store.Queries) error {
+		if role != "owner" {
+			return q.UpdateGroupMemberRole(ctx, store.UpdateGroupMemberRoleParams{
+				GroupID: pgUUID(gid), UserID: pgUUID(target), Role: role,
+			})
+		}
+		if err := q.DemoteOwnerToAdmin(ctx, store.DemoteOwnerToAdminParams{GroupID: pgUUID(gid), UserID: pgUUID(userID)}); err != nil {
+			return err
+		}
+		if err := q.PromoteMemberToOwner(ctx, store.PromoteMemberToOwnerParams{GroupID: pgUUID(gid), UserID: pgUUID(target)}); err != nil {
+			return err
+		}
+		return q.SetGroupOwner(ctx, store.SetGroupOwnerParams{ID: pgUUID(gid), OwnerID: pgUUID(target)})
+	})
+	if err != nil {
+		return nil, err
 	}
 	m, err := s.q.GetGroupMember(ctx, store.GetGroupMemberParams{GroupID: pgUUID(gid), UserID: pgUUID(target)})
 	if err != nil {
@@ -269,7 +299,7 @@ func (s *Server) PutGroupPrivacy(ctx context.Context, request openapi.PutGroupPr
 		return nil, errValidation("overrides required")
 	}
 	o := body.Overrides
-	_, _ = s.q.UpsertGroupPrivacyOverride(ctx, store.UpsertGroupPrivacyOverrideParams{
+	_, err := s.q.UpsertGroupPrivacyOverride(ctx, store.UpsertGroupPrivacyOverrideParams{
 		GroupID:           pgUUID(gid),
 		UserID:            pgUUID(userID),
 		ShareLiveStatus:   pgBoolPtr(o.ShareLiveStatus),
@@ -278,6 +308,9 @@ func (s *Server) PutGroupPrivacy(ctx context.Context, request openapi.PutGroupPr
 		ShareDeviceStats:  pgBoolPtr(o.ShareDeviceStats),
 		ShowInLeaderboard: pgBoolPtr(o.ShowInLeaderboard),
 	})
+	if err != nil {
+		return nil, err
+	}
 	return openapi.PutGroupPrivacy200JSONResponse(s.groupPrivacy(ctx, gid, userID)), nil
 }
 
@@ -294,10 +327,16 @@ func (s *Server) GetGroupOverview(ctx context.Context, request openapi.GetGroupO
 	if err != nil {
 		return nil, errNotFound()
 	}
-	u, _ := s.q.GetUserByID(ctx, pgUUID(userID))
+	u, err := s.q.GetUserByID(ctx, pgUUID(userID))
+	if err != nil {
+		return nil, err
+	}
 	tz := u.Timezone
 	if request.Params.Tz != nil {
 		tz = *request.Params.Tz
+	}
+	if !validTimezone(tz) {
+		return nil, errValidation("invalid timezone")
 	}
 	now := time.Now().UTC()
 	from := startOfDay(now, tz)
@@ -308,7 +347,13 @@ func (s *Server) GetGroupOverview(ctx context.Context, request openapi.GetGroupO
 	if request.Params.To != nil {
 		to = request.Params.To.UTC()
 	}
-	members, _ := s.q.ListGroupMembers(ctx, g.ID)
+	if !validStatsRange(from, to) {
+		return nil, errValidation("from must be before to and the range at most 366 days")
+	}
+	members, err := s.q.ListGroupMembers(ctx, g.ID)
+	if err != nil {
+		return nil, err
+	}
 	memberIDs := make([]uuid.UUID, 0, len(members))
 	for _, m := range members {
 		memberIDs = append(memberIDs, uuidFromPG(m.UserID))
