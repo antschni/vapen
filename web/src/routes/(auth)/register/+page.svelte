@@ -8,11 +8,6 @@
 	import Button from '#lib/components/ui/button.svelte';
 	import Input from '#lib/components/ui/input.svelte';
 	import Label from '#lib/components/ui/label.svelte';
-	import Card from '#lib/components/ui/card.svelte';
-	import CardDescription from '#lib/components/ui/card-description.svelte';
-	import CardHeader from '#lib/components/ui/card-header.svelte';
-	import CardTitle from '#lib/components/ui/card-title.svelte';
-	import CardContent from '#lib/components/ui/card-content.svelte';
 	import type { PageData } from './$types';
 	import type { AuthFormState } from '#lib/types/form.js';
 
@@ -28,15 +23,13 @@
 	});
 </script>
 
-<Card class="shadow-raised">
-	<CardHeader class="pt-6">
-		<CardTitle class="text-lg">{de.auth.register}</CardTitle>
-		<CardDescription>{de.auth.registerSubtitle}</CardDescription>
-	</CardHeader>
-	<CardContent class="pb-6">
+<div>
+	<h1 class="text-[28px] leading-9 font-semibold tracking-[-0.025em]">{de.auth.register}</h1>
+	<p class="mt-1.5 text-[15px] text-muted-foreground">{de.auth.registerSubtitle}</p>
+	<div class="mt-8">
 		<form
 			method="POST"
-			class="space-y-4"
+			class="space-y-5"
 			use:enhance={() => {
 				timezone = readBrowserTimezone();
 				return async ({ update }) => {
@@ -50,7 +43,7 @@
 			{/if}
 			{#if form?.message}
 				<p
-					class="flex items-center gap-2 rounded-lg bg-destructive/[0.08] px-3 py-2 text-sm text-destructive"
+					class="flex items-center gap-2 rounded-xl bg-destructive/8 px-3.5 py-2.5 text-sm text-destructive ring-1 ring-destructive/20"
 					role="alert"
 				>
 					<CircleAlert class="size-4 shrink-0" />
@@ -108,12 +101,12 @@
 					<p class="text-xs text-muted-foreground">{de.validation.passwordMin}</p>
 				{/if}
 			</div>
-			<Button type="submit" class="w-full">{de.auth.submitRegister}</Button>
+			<Button type="submit" size="lg" class="w-full">{de.auth.submitRegister}</Button>
 		</form>
-	</CardContent>
-</Card>
+	</div>
+</div>
 
-<p class="mt-6 text-center text-sm text-muted-foreground">
+<p class="mt-8 text-sm text-muted-foreground">
 	{de.auth.hasAccount}
 	<a class="font-medium text-primary underline-offset-4 hover:underline" href={resolve('login')}>{de.auth.login}</a>
 </p>

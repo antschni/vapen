@@ -5,10 +5,13 @@
 	let {
 		showText = true,
 		size = 'md',
+		tone = 'default',
 		class: className
 	}: {
 		showText?: boolean;
 		size?: 'sm' | 'md' | 'lg';
+		/** `inverted` for placement on the dark brand panel. */
+		tone?: 'default' | 'inverted';
 		class?: string;
 	} = $props();
 
@@ -28,12 +31,14 @@
 		xmlns="http://www.w3.org/2000/svg"
 		aria-hidden="true"
 	>
-		<rect width="32" height="32" rx="8" class="fill-primary" />
-		<ellipse cx="16" cy="11" rx="5.5" ry="3" fill="white" opacity="0.65" />
-		<ellipse cx="16" cy="16" rx="4" ry="2.5" fill="white" opacity="0.85" />
-		<circle cx="16" cy="21" r="2.25" fill="white" />
+		<rect width="32" height="32" rx="9" class={tone === 'inverted' ? 'fill-white' : 'fill-primary'} />
+		<g class={tone === 'inverted' ? 'fill-brand-ink' : 'fill-white'}>
+			<ellipse cx="16" cy="11" rx="5.5" ry="3" opacity="0.65" />
+			<ellipse cx="16" cy="16" rx="4" ry="2.5" opacity="0.85" />
+			<circle cx="16" cy="21" r="2.25" />
+		</g>
 	</svg>
 	{#if showText}
-		<span class={cn('font-semibold tracking-tight text-foreground', textSize)}>{de.app.name}</span>
+		<span class={cn('font-semibold tracking-tight', tone === 'inverted' ? 'text-white' : 'text-foreground', textSize)}>{de.app.name}</span>
 	{/if}
 </span>

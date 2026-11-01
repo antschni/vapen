@@ -29,13 +29,13 @@
 		<p class="mt-0.5 text-xs text-muted-foreground">{meta.description}</p>
 	</div>
 	<div
-		class="inline-flex shrink-0 self-start rounded-lg bg-muted p-0.5 sm:self-center"
+		class="inline-flex shrink-0 self-start rounded-full bg-muted p-1 sm:self-center"
 		role="radiogroup"
 		aria-label={meta.label}
 	>
 		{#each options as option (option.value)}
 			<label
-				class="relative cursor-pointer rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground has-checked:bg-card has-checked:text-foreground has-checked:shadow-card has-focus-visible:ring-[3px] has-focus-visible:ring-ring/30"
+				class="relative cursor-pointer rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground has-checked:bg-card has-checked:text-foreground has-checked:shadow-card has-focus-visible:ring-[3px] has-focus-visible:ring-ring/30"
 			>
 				<input type="radio" class="sr-only" {name} value={option.value} bind:group={value} />
 				{option.label}

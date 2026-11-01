@@ -12,7 +12,7 @@
 	let { class: className, children, actions, ...rest }: Props = $props();
 </script>
 
-<div class={cn('flex items-start justify-between gap-3 px-5 pt-5 pb-4', className)} {...rest}>
+<div class={cn('flex items-start justify-between gap-3 px-5 pt-5 pb-3 sm:px-6 sm:pt-6', className)} {...rest}>
 	<div class="min-w-0 flex-1 space-y-1">
 		{@render children?.()}
 	</div>

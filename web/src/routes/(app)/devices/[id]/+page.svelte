@@ -53,7 +53,7 @@
 	back={{ href: resolve('devices'), label: de.pages.devices.title }}
 />
 
-<div class="space-y-6">
+<div class="space-y-4">
 	{#if data.stats}
 		<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 			<KpiCard
@@ -124,10 +124,10 @@
 				</form>
 
 				{#if tokenPlain}
-					<div class="rounded-lg border border-amber-500/30 bg-amber-500/[0.06] p-3.5">
-						<p class="text-sm text-amber-800 dark:text-amber-200">{de.pages.devices.tokenCreatedWarning}</p>
+					<div class="rounded-xl bg-warning/10 p-4 ring-1 ring-warning/30">
+						<p class="text-sm text-[color-mix(in_oklch,var(--warning)_45%,var(--foreground))]">{de.pages.devices.tokenCreatedWarning}</p>
 						<div class="mt-3 flex items-center gap-2">
-							<code class="min-w-0 flex-1 truncate rounded-md bg-background px-2.5 py-1.5 font-mono text-xs">
+							<code class="min-w-0 flex-1 truncate rounded-lg bg-card px-3 py-2 font-mono text-xs">
 								{tokenPlain}
 							</code>
 							<Button type="button" size="sm" variant="outline" onclick={copyToken}>
@@ -141,10 +141,12 @@
 				{#if data.tokens.length === 0}
 					<p class="py-4 text-center text-sm text-muted-foreground">{de.pages.devices.noTokens}</p>
 				{:else}
-					<ul class="divide-y divide-border/60 rounded-lg border border-border/70">
+					<ul class="divide-y divide-border overflow-hidden rounded-xl bg-surface ring-1 ring-border">
 						{#each data.tokens as token (token.id)}
-							<li class="flex items-center gap-3 px-3.5 py-2.5">
-								<KeyRound class="size-4 shrink-0 text-muted-foreground" />
+							<li class="flex items-center gap-3 px-4 py-3">
+								<span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-card text-muted-foreground shadow-card">
+									<KeyRound class="size-4" />
+								</span>
 								<div class="min-w-0 flex-1">
 									<p class={['truncate text-sm font-medium', token.revoked_at && 'text-muted-foreground line-through']}>
 										{token.name}
@@ -171,10 +173,10 @@
 		</Card>
 	</div>
 
-	<Card class="border-destructive/25">
-		<div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+	<Card class="bg-destructive/[0.03] shadow-[0_0_0_1px_color-mix(in_oklch,var(--destructive)_25%,transparent)]">
+		<div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
 			<div>
-				<p class="text-[15px] font-semibold">{de.common.dangerZone}</p>
+				<p class="text-[15px] font-semibold text-destructive">{de.common.dangerZone}</p>
 				<p class="mt-1 text-sm text-muted-foreground">{de.pages.devices.deleteConfirm}</p>
 			</div>
 			<form method="POST" action="?/delete" use:enhance>

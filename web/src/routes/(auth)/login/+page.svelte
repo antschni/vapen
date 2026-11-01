@@ -6,11 +6,6 @@
 	import Button from '#lib/components/ui/button.svelte';
 	import Input from '#lib/components/ui/input.svelte';
 	import Label from '#lib/components/ui/label.svelte';
-	import Card from '#lib/components/ui/card.svelte';
-	import CardDescription from '#lib/components/ui/card-description.svelte';
-	import CardHeader from '#lib/components/ui/card-header.svelte';
-	import CardTitle from '#lib/components/ui/card-title.svelte';
-	import CardContent from '#lib/components/ui/card-content.svelte';
 	import type { PageData } from './$types';
 	import type { AuthFormState } from '#lib/types/form.js';
 
@@ -20,19 +15,17 @@
 	let password = $state('');
 </script>
 
-<Card class="shadow-raised">
-	<CardHeader class="pt-6">
-		<CardTitle class="text-lg">{de.auth.login}</CardTitle>
-		<CardDescription>{de.auth.loginSubtitle}</CardDescription>
-	</CardHeader>
-	<CardContent class="pb-6">
-		<form method="POST" class="space-y-4" use:enhance>
+<div>
+	<h1 class="text-[28px] leading-9 font-semibold tracking-[-0.025em]">{de.auth.login}</h1>
+	<p class="mt-1.5 text-[15px] text-muted-foreground">{de.auth.loginSubtitle}</p>
+	<div class="mt-8">
+		<form method="POST" class="space-y-5" use:enhance>
 			{#if data.redirectTo}
 				<input type="hidden" name="redirectTo" value={data.redirectTo} />
 			{/if}
 			{#if form?.message}
 				<p
-					class="flex items-center gap-2 rounded-lg bg-destructive/[0.08] px-3 py-2 text-sm text-destructive"
+					class="flex items-center gap-2 rounded-xl bg-destructive/8 px-3.5 py-2.5 text-sm text-destructive ring-1 ring-destructive/20"
 					role="alert"
 				>
 					<CircleAlert class="size-4 shrink-0" />
@@ -69,12 +62,12 @@
 					<p class="text-xs text-destructive">{form.fieldErrors.password[0]}</p>
 				{/if}
 			</div>
-			<Button type="submit" class="w-full">{de.auth.submitLogin}</Button>
+			<Button type="submit" size="lg" class="w-full">{de.auth.submitLogin}</Button>
 		</form>
-	</CardContent>
-</Card>
+	</div>
+</div>
 
-<p class="mt-6 text-center text-sm text-muted-foreground">
+<p class="mt-8 text-sm text-muted-foreground">
 	{de.auth.noAccount}
 	<a class="font-medium text-primary underline-offset-4 hover:underline" href={resolve('register')}>{de.auth.register}</a>
 </p>

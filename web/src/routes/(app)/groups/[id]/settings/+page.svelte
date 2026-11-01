@@ -37,7 +37,7 @@
 
 {#if form?.error}
 	<div
-		class="mb-6 flex items-center gap-2.5 rounded-xl border border-destructive/20 bg-destructive/[0.06] px-4 py-3 text-sm text-destructive"
+		class="mb-6 flex items-center gap-2.5 rounded-2xl bg-destructive/8 px-4 py-3 text-sm text-destructive ring-1 ring-destructive/20"
 		role="alert"
 	>
 		<CircleAlert class="size-4 shrink-0" />
@@ -45,8 +45,8 @@
 	</div>
 {/if}
 
-<div class="space-y-6">
-	<div class="grid items-start gap-6 lg:grid-cols-2">
+<div class="space-y-4">
+	<div class="grid items-start gap-4 lg:grid-cols-2">
 		<Card>
 			<CardHeader>
 				<CardTitle>{de.pages.groups.groupName}</CardTitle>
@@ -67,7 +67,7 @@
 				<CardContent>
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-start">
 						<div class="min-w-0 flex-1 space-y-3">
-							<code class="block rounded-lg bg-muted px-3 py-2 font-mono text-xs break-all">{data.inviteUrl}</code>
+							<code class="block rounded-xl bg-surface px-3.5 py-2.5 font-mono text-xs break-all ring-1 ring-border">{data.inviteUrl}</code>
 							<div class="flex flex-wrap gap-2">
 								<Button type="button" size="sm" variant="outline" onclick={copyLink}>
 									<Copy />
@@ -85,7 +85,7 @@
 							<img
 								src={data.qrDataUrl}
 								alt={de.pages.groups.qrAlt}
-								class="size-32 shrink-0 self-center rounded-lg border border-border/70 bg-white p-1.5"
+								class="size-32 shrink-0 self-center rounded-2xl bg-white p-2 shadow-card"
 							/>
 						{/if}
 					</div>
@@ -99,7 +99,7 @@
 			<CardTitle>{de.pages.groups.members}</CardTitle>
 		</CardHeader>
 		<CardContent>
-			<ul class="divide-y divide-border/60">
+			<ul class="divide-y divide-border">
 				{#each data.group.members as member (member.user_id)}
 					<li class="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
 						<Avatar name={member.display_name} size="sm" />
@@ -138,10 +138,10 @@
 		</CardContent>
 	</Card>
 
-	<Card class="border-destructive/25">
-		<div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+	<Card class="bg-destructive/[0.03] shadow-[0_0_0_1px_color-mix(in_oklch,var(--destructive)_25%,transparent)]">
+		<div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
 			<div>
-				<p class="text-[15px] font-semibold">{de.common.dangerZone}</p>
+				<p class="text-[15px] font-semibold text-destructive">{de.common.dangerZone}</p>
 				<p class="mt-1 text-sm text-muted-foreground">
 					{data.role === 'owner' ? de.pages.groups.deleteGroupConfirm : de.pages.groups.leaveHint}
 				</p>

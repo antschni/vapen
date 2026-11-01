@@ -26,23 +26,23 @@
 
 <PageHeader title={de.pages.groups.title} />
 
-<div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+<div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6">
 	<section>
 		{#if data.groups.length === 0}
 			<EmptyState icon={Users} title={de.pages.groups.empty} description={de.empty.noData} />
 		{:else}
 			<Card class="overflow-hidden">
-				<ul class="divide-y divide-border/60">
+				<ul class="divide-y divide-border">
 					{#each data.groups as group (group.id)}
 						<li>
 							<a
 								href={resolve('/(app)/groups/[id]', { id: group.id })}
-								class="group flex items-center gap-3.5 px-5 py-4 transition-colors outline-none hover:bg-muted/40 focus-visible:bg-muted/40"
+								class="group flex items-center gap-4 px-5 py-4 transition-colors outline-none hover:bg-muted/50 focus-visible:bg-muted/50 sm:px-6"
 							>
-								<Avatar name={group.name} class="rounded-lg" />
+								<Avatar name={group.name} size="lg" class="rounded-2xl" />
 								<div class="min-w-0 flex-1">
-									<p class="truncate font-medium">{group.name}</p>
-									<p class="text-xs text-muted-foreground">
+									<p class="truncate font-semibold tracking-tight">{group.name}</p>
+									<p class="text-sm text-muted-foreground">
 										{group.member_count}
 										{de.pages.groups.members}
 									</p>

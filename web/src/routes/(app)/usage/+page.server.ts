@@ -3,7 +3,15 @@ import type { Actions, PageServerLoad } from "./$types";
 import { messageFromApiProblem } from "#lib/server/api-problem.js";
 import { parseUsageFilters } from "#lib/server/usage-params.js";
 import { de } from "#lib/i18n/de.js";
+
 const PUFF_LIMIT = 50;
+const HTTP_BAD_REQUEST = 400;
+
+function parseDurationField(value: FormDataEntryValue | null): number | undefined {
+  if (typeof value !== "string" || value === "") return undefined;
+  const n = Number.parseInt(value, 10);
+  return Number.isFinite(n) ? n : undefined;
+}
 
 export const load: PageServerLoad = async ({ locals, parent, url }) => {
   const { user, groups } = await parent();
@@ -47,14 +55,12 @@ export const load: PageServerLoad = async ({ locals, parent, url }) => {
       ),
     ]);
 
-  const detailMembers = new Map<string, string>();
-  for (const res of overviewResults) {
-    for (const m of res.data?.members ?? []) {
-      if (m.visibility.usage_detail && m.user_id !== user.id) {
-        detailMembers.set(m.user_id, m.display_name);
-      }
-    }
-  }
+  const detailMembers = new Map<string, string>(
+    overviewResults
+      .flatMap((res) => res.data?.members ?? [])
+      .filter((m) => m.visibility.usage_detail && m.user_id !== user.id)
+      .map((m) => [m.user_id, m.display_name]),
+  );
 
   const series =
     statsRes.data?.series.map((s) => ({
@@ -84,13 +90,15 @@ export const actions: Actions = {
     const form = await request.formData();
     const cursor = form.get("cursor")?.toString();
     if (!cursor) {
-      return fail(400, { message: "missing cursor" });
+      return fail(HTTP_BAD_REQUEST, { message: "missing cursor" });
     }
 
     const from = form.get("from")?.toString();
     const to = form.get("to")?.toString();
     const deviceId = form.get("device_id")?.toString();
     const userId = form.get("user_id")?.toString();
+    const minDurationMs = parseDurationField(form.get("min_duration_ms"));
+    const maxDurationMs = parseDurationField(form.get("max_duration_ms"));
 
     const { data, error } = await locals.api!.GET("/puffs", {
       query: {
@@ -101,11 +109,17 @@ export const actions: Actions = {
         cursor,
         ...(deviceId ? { device_id: deviceId } : {}),
         ...(userId && userId !== user.id ? { user_id: userId } : {}),
+        ...(minDurationMs !== undefined
+          ? { min_duration_ms: minDurationMs }
+          : {}),
+        ...(maxDurationMs !== undefined
+          ? { max_duration_ms: maxDurationMs }
+          : {}),
       },
     });
 
     if (error || !data) {
-      return fail(400, { message: messageFromApiProblem(error, de.errors.generic) });
+      return fail(HTTP_BAD_REQUEST, { message: messageFromApiProblem(error, de.errors.generic) });
     }
 
     return {

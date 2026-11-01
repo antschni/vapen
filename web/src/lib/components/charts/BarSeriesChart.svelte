@@ -12,26 +12,30 @@
 		ariaLabel,
 		animateLive = false,
 		formatValue = (point: BarPoint) => `${formatDurationMs(point.durationMs)} · ${point.puffCount} Züge`,
-		height = 'h-52'
+		height = 'h-52',
+		tone = 'default'
 	}: {
 		points: BarPoint[];
 		ariaLabel: string;
 		animateLive?: boolean;
 		formatValue?: (point: BarPoint) => string;
 		height?: string;
+		/** `inverted` renders light bars for the dark brand panel. */
+		tone?: 'default' | 'inverted';
 	} = $props();
 
 	const maxDuration = $derived(points.reduce((m, p) => Math.max(m, p.durationMs), 0) || 1);
 	const labelEvery = $derived(Math.max(1, Math.ceil(points.length / 12)));
+	const inverted = $derived(tone === 'inverted');
 </script>
 
 <div class="w-full" role="img" aria-label={ariaLabel}>
 	<div class="relative {height}">
 		<div class="pointer-events-none absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between" aria-hidden="true">
-			<div class="border-t border-dashed border-border/70"></div>
-			<div class="border-t border-dashed border-border/70"></div>
-			<div class="border-t border-dashed border-border/70"></div>
-			<div class="border-t border-border"></div>
+			{#each [0, 1, 2] as line (line)}
+				<div class={['border-t border-dashed', inverted ? 'border-white/10' : 'border-border']}></div>
+			{/each}
+			<div class={['border-t', inverted ? 'border-white/20' : 'border-border']}></div>
 		</div>
 		<div class="relative flex h-full gap-1 sm:gap-1.5">
 			{#each points as point, i (i)}
@@ -39,22 +43,26 @@
 				<div class="group flex min-w-0 flex-1 flex-col">
 					<div class="relative flex-1">
 						<div
-							class="pointer-events-none absolute left-1/2 z-10 mb-1.5 hidden -translate-x-1/2 rounded-md bg-foreground px-2 py-1 text-[11px] whitespace-nowrap text-background shadow-raised group-hover:block"
+							class="pointer-events-none absolute left-1/2 z-10 mb-2 hidden -translate-x-1/2 rounded-lg bg-foreground px-2.5 py-1.5 text-[11px] whitespace-nowrap text-background shadow-raised group-hover:block"
 							style:bottom="{pct}%"
 						>
-							<span class="font-medium">{point.label}</span> · {formatValue(point)}
+							<span class="font-semibold">{point.label}</span> · {formatValue(point)}
 						</div>
 						<div
 							class={[
-								'absolute inset-x-0 bottom-0 mx-auto max-w-10 rounded-t-[5px] bg-primary/70 group-hover:bg-primary',
-								animateLive ? 'transition-[height,background-color] duration-700 ease-out' : 'transition-colors'
+								'absolute inset-x-0 bottom-0 mx-auto max-w-9 rounded-t-md rounded-b-[2px] bg-linear-to-t',
+								inverted
+									? 'from-white/35 to-white/70 group-hover:from-white/60 group-hover:to-white'
+									: 'from-primary/55 to-primary group-hover:from-primary/80',
+								animateLive ? 'transition-[height,opacity] duration-700 ease-out' : 'transition-opacity'
 							]}
 							style:height="{point.durationMs > 0 ? Math.max(2, pct) : 0}%"
 						></div>
 					</div>
 					<span
 						class={[
-							'mt-2 h-4 truncate text-center text-[11px] text-muted-foreground tabular-nums',
+							'mt-2 h-4 truncate text-center text-[11px] tabular-nums',
+							inverted ? 'text-white/60' : 'text-muted-foreground',
 							i % labelEvery !== 0 && 'invisible'
 						]}
 					>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { LivePresence } from '#lib/live/presence.svelte.js';
 	import LiveMemberCard from '#lib/components/LiveMemberCard.svelte';
 	import { de } from '#lib/i18n/de.js';
@@ -8,7 +7,9 @@
 
 	let presence = $state<LivePresence | null>(null);
 
-	onMount(() => {
+	// Re-runs when groupId changes (same route, different group) and tears
+	// down the previous stream first.
+	$effect(() => {
 		const p = new LivePresence(groupId);
 		presence = p;
 		p.connect();

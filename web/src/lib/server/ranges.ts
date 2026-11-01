@@ -3,36 +3,50 @@ import { startOfDay, startOfYear, subDays } from "date-fns";
 
 export type RangePreset = "today" | "7d" | "30d" | "90d" | "year" | "custom";
 
+type Range = { from: Date; to: Date };
+
+// Days to subtract from today so the range covers N calendar days incl. today.
+const DAYS_BACK_7D = 6;
+const DAYS_BACK_30D = 29;
+const DAYS_BACK_90D = 89;
+
+/** Parses a user-supplied date, or null when it is missing or invalid. */
+function parseDate(value: string | undefined): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function daysBack(now: TZDate, days: number): Range {
+  return { from: startOfDay(subDays(now, days)), to: now };
+}
+
+const PRESET_RANGES: Record<
+  RangePreset,
+  (now: TZDate, customFrom?: string, customTo?: string) => Range
+> = {
+  today: (now) => ({ from: startOfDay(now), to: now }),
+  "7d": (now) => daysBack(now, DAYS_BACK_7D),
+  "30d": (now) => daysBack(now, DAYS_BACK_30D),
+  "90d": (now) => daysBack(now, DAYS_BACK_90D),
+  year: (now) => ({ from: startOfYear(now), to: now }),
+  custom: (now, customFrom, customTo) => {
+    const from = parseDate(customFrom) ?? daysBack(now, DAYS_BACK_7D).from;
+    const to = parseDate(customTo) ?? now;
+    // Swap a reversed range instead of sending from > to to the API.
+    return from <= to ? { from, to } : { from: to, to: from };
+  },
+};
+
 export function rangeFromPreset(
   preset: RangePreset,
   tz: string,
   customFrom?: string,
   customTo?: string,
-): { from: Date; to: Date } {
+): Range {
   const now = new TZDate(new Date(), tz);
-  const to = now;
-
-  switch (preset) {
-    case "today":
-      return { from: startOfDay(now), to };
-    case "7d":
-      return { from: startOfDay(subDays(now, 6)), to };
-    case "30d":
-      return { from: startOfDay(subDays(now, 29)), to };
-    case "90d":
-      return { from: startOfDay(subDays(now, 89)), to };
-    case "year":
-      return { from: startOfYear(now), to };
-    case "custom": {
-      const from = customFrom
-        ? new Date(customFrom)
-        : startOfDay(subDays(now, 6));
-      const customEnd = customTo ? new Date(customTo) : to;
-      return { from, to: customEnd };
-    }
-    default:
-      return { from: startOfDay(subDays(now, 6)), to };
-  }
+  const build = PRESET_RANGES[preset] ?? PRESET_RANGES["7d"];
+  return build(now, customFrom, customTo);
 }
 
 export function toIso(d: Date): string {

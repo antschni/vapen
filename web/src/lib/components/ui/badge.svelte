@@ -5,15 +5,15 @@
 	import { tv, type VariantProps } from 'tailwind-variants';
 
 	const badgeVariants = tv({
-		base: 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] leading-4 font-medium whitespace-nowrap [&_svg]:size-3',
+		base: 'inline-flex h-5.5 items-center gap-1 rounded-full px-2.5 text-[11px] font-medium whitespace-nowrap [&_svg]:size-3',
 		variants: {
 			variant: {
 				default: 'bg-primary/10 text-primary dark:bg-primary/15',
 				solid: 'bg-primary text-primary-foreground',
 				secondary: 'bg-muted text-muted-foreground',
 				outline: 'border border-border text-muted-foreground',
-				success: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-				warning: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+				success: 'bg-success/12 text-[color-mix(in_oklch,var(--success)_75%,var(--foreground))]',
+				warning: 'bg-warning/15 text-[color-mix(in_oklch,var(--warning)_60%,var(--foreground))]',
 				destructive: 'bg-destructive/10 text-destructive'
 			}
 		},

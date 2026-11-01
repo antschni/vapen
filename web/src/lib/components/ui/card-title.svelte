@@ -11,6 +11,6 @@
 	let { class: className, children, ...rest }: Props = $props();
 </script>
 
-<h3 class={cn('text-[15px] leading-6 font-semibold tracking-tight', className)} {...rest}>
+<h3 class={cn('text-[15px] leading-6 font-semibold tracking-[-0.01em]', className)} {...rest}>
 	{@render children?.()}
 </h3>

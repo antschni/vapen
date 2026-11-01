@@ -11,6 +11,7 @@
 	import { de } from '#lib/i18n/de.js';
 	import { notify } from '#lib/notifications.svelte.js';
 	import PageHeader from '#lib/components/PageHeader.svelte';
+	import SettingsNav from '#lib/components/SettingsNav.svelte';
 	import { cn } from '#lib/utils.js';
 	import type { PageData, ActionData } from './$types';
 
@@ -25,7 +26,12 @@
 			<h2 class={cn('text-[15px] font-semibold', danger && 'text-destructive')}>{title}</h2>
 			<p class="mt-1 text-sm text-muted-foreground">{description}</p>
 		</div>
-		<Card class={cn('p-5', danger && 'border-destructive/25')}>
+		<Card
+			class={cn(
+				'p-5 sm:p-6',
+				danger && 'bg-destructive/[0.03] shadow-[0_0_0_1px_color-mix(in_oklch,var(--destructive)_25%,transparent)]'
+			)}
+		>
 			{@render body()}
 		</Card>
 	</section>
@@ -35,10 +41,11 @@
 	<title>{de.pages.account.title} · {de.app.name}</title>
 </svelte:head>
 
-<PageHeader title={de.pages.account.title} description={de.pages.account.subtitle} />
+<PageHeader title={de.nav.settings} description={de.pages.account.subtitle} />
+<SettingsNav />
 
 {#if data.profile}
-	<div class="divide-y divide-border/70">
+	<div class="divide-y divide-border">
 		{#snippet profileBody()}
 			<form
 				method="POST"

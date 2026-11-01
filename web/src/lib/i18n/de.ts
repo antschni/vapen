@@ -30,6 +30,12 @@ export const de = {
     submitLogin: "Anmelden",
     submitRegister: "Konto erstellen",
     redirecting: "Weiterleitung …",
+    panelHeadline: "Behalte deinen Konsum im Blick.",
+    panelFeatures: [
+      "Züge und Vape-Zeit nach Tag und Stunde",
+      "Live-Status deiner Gruppe",
+      "Du entscheidest, was geteilt wird",
+    ],
   },
   errors: {
     generic: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
@@ -57,7 +63,11 @@ export const de = {
   pages: {
     overview: {
       title: "Übersicht",
+      greeting: (name: string) => `Hallo, ${name}`,
       kpiPuffsToday: "Züge heute",
+      puffsUnit: "Züge",
+      noDevice: "Noch kein Gerät verbunden.",
+      vsYesterday: "vs. gestern",
       kpiTimeToday: "Vape-Zeit heute",
       kpiAvg7: "7-Tage-Schnitt",
       puffsPerDay: "Züge/Tag",

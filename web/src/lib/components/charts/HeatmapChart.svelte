@@ -25,7 +25,7 @@
 </script>
 
 <div class="overflow-x-auto" role="img" aria-label={ariaLabel}>
-	<div class="grid min-w-[30rem] grid-cols-[1.75rem_repeat(24,minmax(0,1fr))] gap-[3px] text-[10px]">
+	<div class="grid min-w-[30rem] grid-cols-[1.75rem_repeat(24,minmax(0,1fr))] gap-1 text-[10px]">
 		<div></div>
 		{#each hours as hour (`h-${hour}`)}
 			<div class="text-center text-muted-foreground tabular-nums">{hour % 3 === 0 ? hour : ''}</div>
@@ -36,7 +36,7 @@
 				{@const cell = grid.map[`${wd}-${hour}`]}
 				{@const count = cell?.puff_count ?? 0}
 				<div
-					class="aspect-square rounded-[3px] bg-muted transition-transform hover:scale-110"
+					class="aspect-square rounded-[4px] bg-muted transition-transform hover:scale-125 hover:shadow-raised"
 					style:background-color={count > 0
 						? `color-mix(in oklab, var(--color-primary) ${intensity(count) * 100}%, var(--color-muted))`
 						: undefined}
@@ -45,11 +45,11 @@
 			{/each}
 		{/each}
 	</div>
-	<div class="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground" aria-hidden="true">
+	<div class="mt-4 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground" aria-hidden="true">
 		<span>weniger</span>
 		{#each [0, 0.25, 0.5, 0.75, 1] as step (step)}
 			<span
-				class="size-2.5 rounded-[2px] bg-muted"
+				class="size-3 rounded-[3px] bg-muted"
 				style:background-color={step > 0
 					? `color-mix(in oklab, var(--color-primary) ${(0.18 + step * 0.82) * 100}%, var(--color-muted))`
 					: undefined}

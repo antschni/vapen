@@ -6,15 +6,17 @@
 
 	let { storedTimezone }: { storedTimezone: string } = $props();
 
-	let syncing = $state(false);
+	// Not reactive on purpose: remembers which timezone we already tried so a
+	// failed sync is not retried in a loop every time the effect re-runs.
+	let attemptedTimezone: string | null = null;
 
 	$effect(() => {
-		if (!browser || syncing) return;
+		if (!browser) return;
 		const tz = readBrowserTimezone();
-		if (!tz || tz === storedTimezone) return;
+		if (!tz || tz === storedTimezone || tz === attemptedTimezone) return;
 
-		syncing = true;
-		fetch(resolve('timezone/sync'), {
+		attemptedTimezone = tz;
+		void fetch(resolve('timezone/sync'), {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ timezone: tz })
@@ -22,8 +24,6 @@
 			.then((res) => {
 				if (res.ok) return invalidateAll();
 			})
-			.finally(() => {
-				syncing = false;
-			});
+			.catch(() => {});
 	});
 </script>

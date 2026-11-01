@@ -28,8 +28,8 @@
 
 <div
 	class={cn(
-		'live-kpi-flash rounded-xl border border-border/70 bg-card text-card-foreground shadow-card',
-		flash && 'ring-2 ring-primary/20',
+		'live-kpi-flash rounded-2xl bg-card text-card-foreground shadow-card',
+		flash && 'shadow-[0_0_0_2px_color-mix(in_oklch,var(--primary)_30%,transparent)]',
 		className
 	)}
 	{...rest}

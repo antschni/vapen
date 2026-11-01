@@ -4,6 +4,7 @@
 	import LivePresenceGrid from '#lib/components/LivePresenceGrid.svelte';
 	import LiveRefresh from '#lib/components/LiveRefresh.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
+	import SegmentedNav from '#lib/components/SegmentedNav.svelte';
 	import Avatar from '#lib/components/ui/avatar.svelte';
 	import Badge from '#lib/components/ui/badge.svelte';
 	import { buttonVariants } from '#lib/components/ui/button-variants.js';
@@ -35,6 +36,10 @@
 		return Boolean(member.visibility.usage_summary && member.usage && 'puff_count' in member.usage);
 	}
 
+	const leaderMax = $derived(
+		data.overview.leaderboard.reduce((m, e) => Math.max(m, e.puff_count), 0) || 1
+	);
+
 	function rankClass(rank: number): string {
 		if (rank === 1) return 'bg-amber-400/20 text-amber-700 dark:text-amber-300';
 		if (rank === 2) return 'bg-slate-400/20 text-slate-700 dark:text-slate-300';
@@ -63,7 +68,7 @@
 	{/snippet}
 </PageHeader>
 
-<div class="space-y-6">
+<div class="space-y-4">
 	<Card>
 		<CardHeader>
 			<CardTitle>{de.pages.groups.liveGrid}</CardTitle>
@@ -73,28 +78,21 @@
 		</CardContent>
 	</Card>
 
-	<div class="grid items-start gap-6 lg:grid-cols-5">
+	<div class="grid items-start gap-4 lg:grid-cols-5">
 		<div class="lg:col-span-3">
 			<Card animateLive={liveCards}>
 				<CardHeader>
 					<CardTitle>{de.pages.groups.leaderboard}</CardTitle>
 					{#snippet actions()}
-						<nav class="inline-flex rounded-lg bg-muted p-0.5" aria-label={de.pages.groups.leaderboard}>
-							{#each ranges as range (range.value)}
-								<a
-									href={rangeHref(range.value)}
-									aria-current={data.range === range.value ? 'page' : undefined}
-									class={cn(
-										'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
-										data.range === range.value
-											? 'bg-card text-foreground shadow-card'
-											: 'text-muted-foreground hover:text-foreground'
-									)}
-								>
-									{range.label}
-								</a>
-							{/each}
-						</nav>
+						<SegmentedNav
+							size="sm"
+							label={de.pages.groups.leaderboard}
+							items={ranges.map((range) => ({
+								href: rangeHref(range.value),
+								label: range.label,
+								active: data.range === range.value
+							}))}
+						/>
 					{/snippet}
 				</CardHeader>
 				<CardContent>
@@ -103,7 +101,7 @@
 					{:else}
 						<ol class="space-y-1">
 							{#each data.overview.leaderboard as entry (entry.user_id)}
-								<li class="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/40">
+								<li class="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-muted/50">
 									<span
 										class={cn(
 											'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums',
@@ -113,8 +111,16 @@
 										{entry.rank}
 									</span>
 									<Avatar name={entry.display_name} size="sm" />
-									<span class="min-w-0 flex-1 truncate text-sm font-medium">{entry.display_name}</span>
-									<span class="text-right text-sm tabular-nums">
+									<div class="min-w-0 flex-1">
+										<p class="truncate text-sm font-medium">{entry.display_name}</p>
+										<div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+											<div
+												class="h-full rounded-full bg-linear-to-r from-primary/60 to-primary"
+												style:width="{(entry.puff_count / leaderMax) * 100}%"
+											></div>
+										</div>
+									</div>
+									<span class="w-24 shrink-0 text-right text-sm tabular-nums">
 										<span class="font-medium">{formatNumber(entry.puff_count)}</span>
 										<span class="text-muted-foreground"> Züge</span>
 										<span class="block text-xs text-muted-foreground">{formatDurationMs(entry.total_duration_ms)}</span>
@@ -132,7 +138,7 @@
 				<CardTitle>{de.pages.groups.members}</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<ul class="divide-y divide-border/60">
+				<ul class="divide-y divide-border">
 					{#each data.overview.members as member (member.user_id)}
 						<li class="flex gap-3 py-3 first:pt-0 last:pb-0">
 							<Avatar name={member.display_name} size="sm" class="mt-0.5" />

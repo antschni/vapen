@@ -27,10 +27,16 @@ export function getServerEnv() {
   return {
     apiInternalUrl: API_INTERNAL_URL || "http://localhost:8080",
     origin: ORIGIN || "http://localhost:5173",
-    cookieSecure: parseBool(COOKIE_SECURE || undefined, false),
+    // Default to Secure cookies whenever the public origin is HTTPS.
+    cookieSecure: parseBool(
+      COOKIE_SECURE || undefined,
+      (ORIGIN || "").startsWith("https://"),
+    ),
     protocolHeader: PROTOCOL_HEADER || "x-forwarded-proto",
     hostHeader: HOST_HEADER || "x-forwarded-host",
-    addressHeader: ADDRESS_HEADER || "x-forwarded-for",
+    // Only trust a forwarding header when one is configured explicitly;
+    // otherwise clients could spoof their IP to dodge login rate limits.
+    addressHeader: ADDRESS_HEADER || undefined,
     xffDepth: parseIntEnv(XFF_DEPTH || undefined, 1),
     androidPackageName: ANDROID_PACKAGE_NAME || "dev.vapen.app",
     androidCertSha256Fingerprints: (ANDROID_CERT_SHA256_FINGERPRINTS || "")
@@ -43,6 +49,9 @@ export function getServerEnv() {
 /** Client IP for API rate limiting (login), forwarded as X-Forwarded-For. */
 export function getClientAddress(event: RequestEvent): string | undefined {
   const { addressHeader, xffDepth } = getServerEnv();
+  if (!addressHeader) {
+    return event.getClientAddress();
+  }
   const raw = event.request.headers.get(addressHeader);
   if (!raw) {
     return event.getClientAddress();

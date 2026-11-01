@@ -14,7 +14,7 @@
 
 <div class={cn('relative', className)}>
 	<select
-		class="flex h-9 w-full appearance-none rounded-lg border border-input bg-background pr-9 pl-3 text-sm shadow-card transition-[border-color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+		class="flex h-10 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3.5 text-sm transition-[border-color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
 		bind:value
 		{...rest}
 	>

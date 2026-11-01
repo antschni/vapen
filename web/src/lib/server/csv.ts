@@ -1,8 +1,15 @@
+const FORMULA_PREFIXES = ["=", "+", "-", "@", "\t", "\r"];
+const QUOTE_TRIGGERS = ['"', ",", "\n", "\r"];
+
 export function csvEscape(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // Spreadsheet apps evaluate cells starting with these as formulas.
+  const safe = FORMULA_PREFIXES.some((p) => value.startsWith(p))
+    ? `'${value}`
+    : value;
+  if (QUOTE_TRIGGERS.some((c) => safe.includes(c))) {
+    return `"${safe.replaceAll('"', '""')}"`;
   }
-  return value;
+  return safe;
 }
 
 export function puffRowToCsv(

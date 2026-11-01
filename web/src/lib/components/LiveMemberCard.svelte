@@ -43,17 +43,17 @@
 <div
 	class={cn(
 		'flex items-center gap-3',
-		variant === 'card' && 'rounded-lg border border-border/70 bg-surface p-3',
+		variant === 'card' && 'rounded-xl bg-surface p-3 ring-1 ring-border/60',
 		variant === 'row' && 'py-2.5',
-		status === 'vaping' && variant === 'card' && 'border-emerald-500/30 bg-emerald-500/[0.05]'
+		status === 'vaping' && variant === 'card' && 'bg-success/8 ring-success/30'
 	)}
 >
 	<Avatar name={displayName}>
 		<span
 			class={cn(
 				'absolute -right-0.5 -bottom-0.5 size-3 rounded-full ring-2 ring-card',
-				status === 'vaping' && 'bg-emerald-500 motion-safe:animate-pulse',
-				status === 'active' && 'bg-amber-400',
+				status === 'vaping' && 'bg-success motion-safe:animate-pulse',
+				status === 'active' && 'bg-warning',
 				status === 'idle' && 'bg-muted-foreground/40'
 			)}
 		></span>

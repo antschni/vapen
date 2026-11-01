@@ -34,7 +34,7 @@
 		'dark:bg-[oklch(0.3_0.05_var(--avatar-hue))] dark:text-[oklch(0.88_0.05_var(--avatar-hue))]',
 		size === 'sm' && 'size-7 text-[11px]',
 		size === 'md' && 'size-9 text-xs',
-		size === 'lg' && 'size-11 text-sm',
+		size === 'lg' && 'size-12 text-base',
 		className
 	)}
 	style:--avatar-hue={hue}

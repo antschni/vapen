@@ -108,6 +108,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
       : 0;
 
   return {
+    todayLabel: format(now, "EEEE, d. MMMM", { locale: dateFnsDe }),
     todayTotals: today?.totals ?? null,
     puffDelta,
     durationDelta,
@@ -115,6 +116,9 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
     lastPuffAt: today?.series.at(-1)?.bucket_start ?? null,
     battery: primaryDevice?.latest_status?.battery_percent ?? null,
     isCharging: primaryDevice?.latest_status?.is_charging ?? false,
+    primaryDevice: primaryDevice
+      ? { id: primaryDevice.id, name: primaryDevice.name }
+      : null,
     barPoints,
     hourlyToday,
     firstGroupId: firstGroup?.id ?? null,

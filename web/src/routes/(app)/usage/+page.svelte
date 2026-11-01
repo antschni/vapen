@@ -42,14 +42,18 @@
 	let userId = $state('');
 	let seenFilterKey = $state<string | null>(null);
 
+	// Rolling presets end at "now", so their from/to change on every live refresh;
+	// only custom ranges belong in the key, otherwise loaded pages get wiped.
 	const filterKey = $derived(
 		[
 			data.filters.preset,
 			data.filters.bucket,
 			data.filters.deviceId ?? '',
 			data.filters.userId ?? '',
-			data.filters.fromIso,
-			data.filters.toIso
+			data.filters.minDurationMs ?? '',
+			data.filters.maxDurationMs ?? '',
+			data.filters.preset === 'custom' ? data.filters.fromIso : '',
+			data.filters.preset === 'custom' ? data.filters.toIso : ''
 		].join('|')
 	);
 
@@ -88,7 +92,20 @@
 		void goto(query ? `${resolve('usage')}?${query}` : resolve('usage'));
 	}
 
-	const allPuffs = $derived([...data.puffs, ...extraPuffs]);
+	const presets = [
+		{ value: 'today', label: de.pages.usage.presetToday },
+		{ value: '7d', label: de.pages.usage.preset7d },
+		{ value: '30d', label: de.pages.usage.preset30d },
+		{ value: '90d', label: de.pages.usage.preset90d },
+		{ value: 'year', label: de.pages.usage.presetYear }
+	] as const;
+
+	// Live refreshes can shift rows between the first page and loaded pages;
+	// drop duplicates so the keyed #each never sees the same id twice.
+	const allPuffs = $derived.by(() => {
+		const firstPageIds = new Set(data.puffs.map((p) => p.id));
+		return [...data.puffs, ...extraPuffs.filter((p) => !firstPageIds.has(p.id))];
+	});
 
 	const chartPoints = $derived(
 		data.series.map((s) => ({
@@ -109,6 +126,12 @@
 		if (data.filters.preset === 'custom') {
 			q.set('from', data.filters.fromIso);
 			q.set('to', data.filters.toIso);
+		}
+		if (data.filters.minDurationMs !== undefined) {
+			q.set('min_duration_ms', String(data.filters.minDurationMs));
+		}
+		if (data.filters.maxDurationMs !== undefined) {
+			q.set('max_duration_ms', String(data.filters.maxDurationMs));
 		}
 		return resolve(`usage/export.csv?${q}`);
 	});
@@ -157,50 +180,51 @@
 </PageHeader>
 
 <div class="space-y-6">
-	<Card class="p-4">
-		<form
-			method="GET"
-			class="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
-			onsubmit={applyFilters}
-		>
-			<div class="space-y-1.5">
-				<Label for="preset" class="text-xs text-muted-foreground">{de.pages.usage.preset}</Label>
-				<Select id="preset" name="preset" bind:value={preset}>
-					<option value="today">{de.pages.usage.presetToday}</option>
-					<option value="7d">{de.pages.usage.preset7d}</option>
-					<option value="30d">{de.pages.usage.preset30d}</option>
-					<option value="90d">{de.pages.usage.preset90d}</option>
-					<option value="year">{de.pages.usage.presetYear}</option>
-				</Select>
-			</div>
-			<div class="space-y-1.5">
-				<Label for="bucket" class="text-xs text-muted-foreground">{de.pages.usage.bucket}</Label>
-				<Select id="bucket" name="bucket" bind:value={bucket}>
-					<option value="hour">{de.pages.usage.bucketHour}</option>
-					<option value="day">{de.pages.usage.bucketDay}</option>
-					<option value="week">{de.pages.usage.bucketWeek}</option>
-					<option value="month">{de.pages.usage.bucketMonth}</option>
-				</Select>
-			</div>
-			<div class="space-y-1.5">
-				<Label for="device_id" class="text-xs text-muted-foreground">{de.pages.usage.device}</Label>
-				<Select id="device_id" name="device_id" bind:value={deviceId}>
-					<option value="">{de.pages.usage.deviceAll}</option>
-					{#each data.devices as device (device.id)}
-						<option value={device.id}>{device.name}</option>
+	<Card class="p-4 sm:p-5">
+		<form method="GET" class="space-y-4" onsubmit={applyFilters}>
+			<fieldset class="-mx-1 overflow-x-auto px-1">
+				<legend class="sr-only">{de.pages.usage.preset}</legend>
+				<div class="inline-flex rounded-full bg-muted p-1">
+					{#each presets as option (option.value)}
+						<label
+							class="cursor-pointer rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground has-checked:bg-card has-checked:text-foreground has-checked:shadow-card has-focus-visible:ring-[3px] has-focus-visible:ring-ring/30"
+						>
+							<input type="radio" class="sr-only" name="preset" value={option.value} bind:group={preset} />
+							{option.label}
+						</label>
 					{/each}
-				</Select>
+				</div>
+			</fieldset>
+			<div class="grid items-end gap-3 sm:grid-cols-3 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+				<div class="space-y-1.5">
+					<Label for="bucket" class="text-xs text-muted-foreground">{de.pages.usage.bucket}</Label>
+					<Select id="bucket" name="bucket" bind:value={bucket}>
+						<option value="hour">{de.pages.usage.bucketHour}</option>
+						<option value="day">{de.pages.usage.bucketDay}</option>
+						<option value="week">{de.pages.usage.bucketWeek}</option>
+						<option value="month">{de.pages.usage.bucketMonth}</option>
+					</Select>
+				</div>
+				<div class="space-y-1.5">
+					<Label for="device_id" class="text-xs text-muted-foreground">{de.pages.usage.device}</Label>
+					<Select id="device_id" name="device_id" bind:value={deviceId}>
+						<option value="">{de.pages.usage.deviceAll}</option>
+						{#each data.devices as device (device.id)}
+							<option value={device.id}>{device.name}</option>
+						{/each}
+					</Select>
+				</div>
+				<div class="space-y-1.5">
+					<Label for="user_id" class="text-xs text-muted-foreground">{de.pages.usage.person}</Label>
+					<Select id="user_id" name="user_id" bind:value={userId}>
+						<option value="">{de.pages.usage.personSelf}</option>
+						{#each data.detailMembers as member (member.id)}
+							<option value={member.id}>{member.name}</option>
+						{/each}
+					</Select>
+				</div>
+				<Button type="submit" class="sm:col-span-3 lg:col-span-1">{de.pages.usage.applyFilters}</Button>
 			</div>
-			<div class="space-y-1.5">
-				<Label for="user_id" class="text-xs text-muted-foreground">{de.pages.usage.person}</Label>
-				<Select id="user_id" name="user_id" bind:value={userId}>
-					<option value="">{de.pages.usage.personSelf}</option>
-					{#each data.detailMembers as member (member.id)}
-						<option value={member.id}>{member.name}</option>
-					{/each}
-				</Select>
-			</div>
-			<Button type="submit" class="sm:col-span-2 lg:col-span-1">{de.pages.usage.applyFilters}</Button>
 		</form>
 	</Card>
 
@@ -216,7 +240,8 @@
 						? {
 								label: `${puffDelta >= 0 ? '+' : ''}${formatNumber(puffDelta)} ${de.pages.usage.vsPrevious}`,
 								positive: puffDelta <= 0,
-								up: puffDelta > 0
+								up: puffDelta > 0,
+								flat: puffDelta === 0
 							}
 						: undefined}
 				/>
@@ -229,7 +254,8 @@
 						? {
 								label: `${durationDelta >= 0 ? '+' : '−'}${formatDurationMs(Math.abs(durationDelta))} ${de.pages.usage.vsPrevious}`,
 								positive: durationDelta <= 0,
-								up: durationDelta > 0
+								up: durationDelta > 0,
+								flat: durationDelta === 0
 							}
 						: undefined}
 				/>
@@ -277,23 +303,23 @@
 					<p class="py-8 text-center text-sm text-muted-foreground">{de.pages.usage.noPuffs}</p>
 				</CardContent>
 			{:else}
-				<div class="max-h-[28rem] overflow-auto border-t border-border/70">
+				<div class="max-h-[28rem] overflow-auto border-t border-border">
 					<table class="w-full text-sm">
-						<thead class="sticky top-0 bg-card/95 backdrop-blur">
+						<thead class="sticky top-0 z-10 bg-surface/95 backdrop-blur">
 							<tr class="text-left text-xs font-medium text-muted-foreground">
-								<th class="px-5 py-2.5 font-medium">{de.pages.usage.startedAt}</th>
-								<th class="px-5 py-2.5 font-medium">{de.pages.usage.duration}</th>
-								<th class="px-5 py-2.5 text-right font-medium">{de.pages.usage.source}</th>
+								<th class="px-5 py-3 font-medium sm:px-6">{de.pages.usage.startedAt}</th>
+								<th class="px-5 py-3 font-medium sm:px-6">{de.pages.usage.duration}</th>
+								<th class="px-5 py-3 text-right font-medium sm:px-6">{de.pages.usage.source}</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-border/60">
+						<tbody class="divide-y divide-border">
 							{#each allPuffs as puff (puff.id)}
 								<tr class="transition-colors hover:bg-muted/40">
-									<td class="px-5 py-2.5 whitespace-nowrap tabular-nums">
+									<td class="px-5 py-3 whitespace-nowrap tabular-nums sm:px-6">
 										{format(new Date(puff.started_at), 'dd.MM.yyyy · HH:mm:ss', { locale: dateFnsDe })}
 									</td>
-									<td class="px-5 py-2.5 tabular-nums">{formatDurationMs(puff.duration_ms)}</td>
-									<td class="px-5 py-2.5 text-right">
+									<td class="px-5 py-3 font-medium tabular-nums sm:px-6">{formatDurationMs(puff.duration_ms)}</td>
+									<td class="px-5 py-3 text-right sm:px-6">
 										<Badge variant={puff.source === 'live' ? 'success' : 'secondary'}>
 											{puff.source === 'live' ? de.pages.usage.sourceLive : de.pages.usage.sourceHistory}
 										</Badge>
@@ -307,7 +333,7 @@
 					<form
 						method="POST"
 						action="?/loadMore"
-						class="flex justify-center border-t border-border/70 p-3"
+						class="flex justify-center border-t border-border p-3"
 						use:enhance={() => {
 							loadingMore = true;
 							return async ({ result }) => {
@@ -335,6 +361,12 @@
 						{#if data.filters.userId}
 							<input type="hidden" name="user_id" value={data.filters.userId} />
 						{/if}
+						{#if data.filters.minDurationMs !== undefined}
+							<input type="hidden" name="min_duration_ms" value={data.filters.minDurationMs} />
+						{/if}
+						{#if data.filters.maxDurationMs !== undefined}
+							<input type="hidden" name="max_duration_ms" value={data.filters.maxDurationMs} />
+						{/if}
 						<Button type="submit" variant="ghost" size="sm" disabled={loadingMore}>
 							{loadingMore ? de.common.loading : de.pages.usage.loadMore}
 						</Button>
@@ -359,9 +391,9 @@
 									</span>
 									<span class="font-medium tabular-nums">{bin.count}</span>
 								</div>
-								<div class="h-1.5 overflow-hidden rounded-full bg-muted">
+								<div class="h-2 overflow-hidden rounded-full bg-muted">
 									<div
-										class="h-full rounded-full bg-primary/70"
+										class="h-full rounded-full bg-linear-to-r from-primary/60 to-primary"
 										style:width="{(bin.count / histogramMax) * 100}%"
 									></div>
 								</div>

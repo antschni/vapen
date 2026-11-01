@@ -16,11 +16,11 @@
 
 {#if $needRefresh && !dismissed}
 	<div
-		class="fixed right-4 bottom-4 left-4 z-50 flex items-start gap-3 rounded-xl border border-border/70 bg-popover p-4 text-popover-foreground shadow-raised sm:left-auto sm:max-w-sm"
+		class="fixed right-4 bottom-24 left-4 z-50 flex items-start gap-3 rounded-2xl bg-popover md:bottom-6 p-4 text-popover-foreground shadow-raised sm:left-auto sm:max-w-sm"
 		role="status"
 		aria-live="polite"
 	>
-		<span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+		<span class="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
 			<RefreshCw class="size-4" />
 		</span>
 		<div class="flex-1">

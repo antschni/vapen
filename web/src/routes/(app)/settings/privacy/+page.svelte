@@ -4,6 +4,7 @@
 	import { Check, X } from '@lucide/svelte';
 	import PrivacyTriState from '#lib/components/PrivacyTriState.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
+	import SettingsNav from '#lib/components/SettingsNav.svelte';
 	import Card from '#lib/components/ui/card.svelte';
 	import CardContent from '#lib/components/ui/card-content.svelte';
 	import CardDescription from '#lib/components/ui/card-description.svelte';
@@ -112,10 +113,11 @@
 	<title>{de.pages.privacy.title} · {de.app.name}</title>
 </svelte:head>
 
-<PageHeader title={de.pages.privacy.title} description={de.pages.privacy.subtitle} />
+<PageHeader title={de.nav.settings} description={de.pages.privacy.subtitle} />
+<SettingsNav />
 
-<div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-	<div class="space-y-6">
+<div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6">
+	<div class="space-y-4">
 		<Card>
 			<CardHeader>
 				<CardTitle>{de.pages.privacy.defaults}</CardTitle>
@@ -126,7 +128,7 @@
 					<form
 						method="POST"
 						action="?/defaults"
-						class="divide-y divide-border/60"
+						class="divide-y divide-border"
 						onchange={(event) => saveForm(event.currentTarget)}
 					>
 						{#each PRIVACY_FLAGS as flag (flag)}
@@ -154,7 +156,7 @@
 						<form
 							method="POST"
 							action="?/group"
-							class="divide-y divide-border/60"
+							class="divide-y divide-border"
 							onchange={(event) => saveForm(event.currentTarget)}
 						>
 							<input type="hidden" name="group_id" value={gp.groupId} />
@@ -171,7 +173,7 @@
 	</div>
 
 	{#if preview && previewName}
-		<Card class="lg:sticky lg:top-10">
+		<Card class="lg:sticky lg:top-24">
 			<CardHeader>
 				<CardTitle>{de.pages.privacy.previewTitle(previewName)}</CardTitle>
 			</CardHeader>
@@ -190,7 +192,7 @@
 					{#each PRIVACY_FLAGS as flag (flag)}
 						<li class="flex items-center gap-2.5">
 							{#if preview[flag]}
-								<span class="flex size-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+								<span class="flex size-5 items-center justify-center rounded-full bg-success/15 text-success">
 									<Check class="size-3" />
 								</span>
 								<span>{flagLabel(flag)}</span>
