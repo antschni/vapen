@@ -161,7 +161,9 @@ type DeviceStatsBucket string
 
 // DeviceStatus defines model for DeviceStatus.
 type DeviceStatus struct {
-	BatteryPercent   *int       `json:"battery_percent,omitempty"`
+	BatteryPercent *int `json:"battery_percent,omitempty"`
+
+	// BleConnected Mobile app has an active BLE session to the Elfbar (bridge heartbeat).
 	BleConnected     *bool      `json:"ble_connected,omitempty"`
 	ChildLock        *bool      `json:"child_lock,omitempty"`
 	FirmwareVersion  *string    `json:"firmware_version,omitempty"`
