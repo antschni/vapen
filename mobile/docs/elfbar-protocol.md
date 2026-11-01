@@ -1,6 +1,6 @@
 # ELFA MASTER / InnoGate BLE protocol
 
-Status: **derived from static analysis of the InnoGate Android app** (`com.innogate.igate`, internal project name `rd05`), October 2026, for interoperability. Implemented in `ElfbarMasterProtocol.kt`; covered by `ElfbarMasterProtocolTest`. Not yet verified against a live HCI capture — if something misbehaves, capture with the BLE Explorer and compare with this document.
+Status: **derived from static analysis of the InnoGate Android app** (`com.innogate.igate`, internal project name `rd05`), October 2026, for interoperability. Implemented in `ElfbarMasterProtocol.kt` (Android) and `ios/Runner/Protocol/ElfbarMasterProtocol.swift` (iOS); covered by `ElfbarMasterProtocolTest` and its XCTest port `ElfbarMasterProtocolTests`. Not yet verified against a live HCI capture — if something misbehaves, capture with the BLE Explorer and compare with this document.
 
 ## Device & app context
 
@@ -45,7 +45,7 @@ Most payload results use `payload[0] == 0` for success.
 1. `connectGatt(autoConnect = false, TRANSPORT_LE)`, discover services.
 2. Request MTU 517.
 3. Enable notifications on `…ff02` (CCCD `01 00`), then on the OTA notify characteristic.
-4. `FIRST_LINK_INFO` (`0x2A`): `[0x02 = Android][len][phone name UTF-8][len][phone id UTF-8]`. Result `0` = accepted. InnoGate waits up to 60 s on first pairing (device-side confirmation possible) and 5 s on reconnect. Phone name = `Settings.Global.device_name`, falling back to `Build.BRAND`; id = `ANDROID_ID`.
+4. `FIRST_LINK_INFO` (`0x2A`): `[0x02 = Android][len][phone name UTF-8][len][phone id UTF-8]`. Result `0` = accepted. InnoGate waits up to 60 s on first pairing (device-side confirmation possible) and 5 s on reconnect. Phone name = `Settings.Global.device_name`, falling back to `Build.BRAND`; id = `ANDROID_ID`. iOS sends `UIDevice.name` / `identifierForVendor` and, until the InnoGate iOS value is confirmed, also platform byte `0x02`.
 5. `READ_ACTIVE_STATE` (`0x0A`) → `payload[0] == 1` activated.
 6. `READ_FIRMWARE_VERSION` (`0x06`) → ASCII.
 7. `READ_IDENTIFIER` (`0x05`) → raw bytes (device serial).
@@ -110,10 +110,11 @@ Namespace UUID: `6ba7b810-9dad-11d1-80b4-00c04fd430c8` (UUIDv5).
 - **Status**: `hardware_id:status:{recorded_at minute}`
 - **Puff started**: `hardware_id:puff_started:{epoch second}`
 
-Implemented in `EventIdFactory.kt`.
+Implemented in `EventIdFactory.kt` and `EventIdFactory.swift` (identical, lower-case UUID strings).
 
 ## Open questions
 
 - [ ] Confirm on hardware that offset 0 is the oldest record (the rescan logic tolerates either order).
 - [ ] Whether `FIRST_LINK_INFO` shows a confirmation prompt on the device for a new phone id.
 - [ ] Charging state (no dedicated command found).
+- [ ] Platform byte InnoGate iOS sends in `FIRST_LINK_INFO` (Vapen iOS currently sends the Android value `0x02`).

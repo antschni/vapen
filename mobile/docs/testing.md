@@ -8,3 +8,10 @@
 - [ ] InnoGate parallel — hint shown when connection fails (when real BLE wired)
 - [ ] Group live SSE updates on simulated ingest
 - [ ] Battery drain target: &lt; 3 % / day from Vapen (8 h sample)
+
+## iOS additions
+
+- [ ] Pairing sheet lists the Elfbar; cancel returns "Kopplung abgebrochen"
+- [ ] App in background (not force-quit) — puffs still upload within ~10 s
+- [ ] Elfbar out of range and back — reconnects without opening the app
+- [ ] Bluetooth off/on in Control Center — tracking resumes on its own

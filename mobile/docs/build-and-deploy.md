@@ -118,6 +118,28 @@ The mobile app needs a reachable Vapen instance (API + web on the same origin fo
 - [ ] `version` in `pubspec.yaml` bumped
 - [ ] Manual: [`testing.md`](testing.md)
 
-## iOS (optional)
+## iOS
 
-A Flutter iOS target lives under `ios/` with no dedicated release pipeline. BLE background behavior is Android-first.
+The native layer under `ios/Runner/` is a Swift port of the Android Kotlin code (no release pipeline yet; build with Xcode on macOS):
+
+| Folder | Content |
+|--------|---------|
+| `Protocol/` | `InnogateFrameCodec`, `ElfbarMasterProtocol`, history cursor, simulation |
+| `BLE/` | CoreBluetooth connection manager, device picker (replaces Companion Device Manager), BLE Explorer |
+| `Data/`, `Upload/` | Keychain credentials, SQLite upload queue, ingest uploader, `BGAppRefreshTask` retry |
+| `Service/`, `Bridge/` | `TrackingController`, Pigeon host API (`VapenNativePigeon.swift` is generated) |
+
+Differences from Android:
+
+- **Device id**: iOS hides the BLE MAC. The paired "address" is the CoreBluetooth peripheral identifier (stable per phone), so the same Elfbar gets a different `hardware_id` on iOS than on Android.
+- **Background**: no foreground service. The app uses the `bluetooth-central` background mode and CoreBluetooth state restoration; a dropped link is re-requested as a pending connection that iOS completes when the Elfbar is back in range. Puff pushes wake the app for a short time to sync and upload. Force-quitting the app from the app switcher stops tracking until it is opened again.
+- **Upload retry**: failed uploads are retried on the next BLE wake-up, app resume, or an opportunistic `BGAppRefreshTask` (`dev.vapen.vapen.upload`).
+- **Battery optimization** has no iOS equivalent; the bridge reports it as already granted.
+
+Run the Swift unit tests (protocol, framing, event ids) from Xcode or:
+
+```bash
+xcodebuild test -workspace ios/Runner.xcworkspace -scheme Runner -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+After changing `pigeons/vapen_native.dart`, regenerate all bindings with `dart run pigeon --input pigeons/vapen_native.dart`.

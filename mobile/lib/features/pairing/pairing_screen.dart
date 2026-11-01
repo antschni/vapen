@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +62,7 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
       final device = created = await api.createDevice(
         CreateDeviceRequest(model: 'elfbar_master', name: 'Meine Elfbar', hardwareId: hardwareId),
       );
-      final token = await api.createIngestToken(device.id, 'Android Vapen');
+      final token = await api.createIngestToken(device.id, Platform.isIOS ? 'iOS Vapen' : 'Android Vapen');
       await bridge.host.setCredentials(
         NativeCredentials(
           baseUrl: baseUrl,

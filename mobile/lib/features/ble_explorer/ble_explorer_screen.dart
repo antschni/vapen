@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -29,6 +31,8 @@ class _BleExplorerScreenState extends ConsumerState<BleExplorerScreen> {
   }
 
   Future<bool> _ensureBlePermissions() async {
+    // iOS asks for Bluetooth itself when the native explorer starts scanning.
+    if (!Platform.isAndroid) return true;
     final statuses = await [
       Permission.bluetoothScan,
       Permission.bluetoothConnect,

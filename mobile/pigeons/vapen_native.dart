@@ -8,6 +8,8 @@ import 'package:pigeon/pigeon.dart';
     kotlinOut:
         'android/app/src/main/kotlin/dev/vapen/app/bridge/VapenNativePigeon.kt',
     kotlinOptions: KotlinOptions(package: 'dev.vapen.app.bridge'),
+    swiftOut: 'ios/Runner/Bridge/VapenNativePigeon.swift',
+    swiftOptions: SwiftOptions(),
   ),
 )
 class NativeCredentials {

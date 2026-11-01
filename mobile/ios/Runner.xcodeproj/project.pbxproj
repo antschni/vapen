@@ -16,6 +16,29 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		DA7A0E000000000000000003 /* VapenNativePigeon.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000002 /* VapenNativePigeon.swift */; };
+		DA7A0E000000000000000005 /* TrackingHostApiImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000004 /* TrackingHostApiImpl.swift */; };
+		DA7A0E000000000000000008 /* AsyncPrimitives.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000007 /* AsyncPrimitives.swift */; };
+		DA7A0E00000000000000000A /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000009 /* BackgroundActivity.swift */; };
+		DA7A0E00000000000000000C /* BleConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000000B /* BleConnectionManager.swift */; };
+		DA7A0E00000000000000000E /* BleConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000000D /* BleConstants.swift */; };
+		DA7A0E000000000000000010 /* BleExplorerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000000F /* BleExplorerManager.swift */; };
+		DA7A0E000000000000000012 /* BleProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000011 /* BleProfile.swift */; };
+		DA7A0E000000000000000014 /* DevicePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000013 /* DevicePicker.swift */; };
+		DA7A0E000000000000000016 /* GattSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000015 /* GattSession.swift */; };
+		DA7A0E000000000000000019 /* DeviceMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000018 /* DeviceMessage.swift */; };
+		DA7A0E00000000000000001B /* ElfbarMasterProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000001A /* ElfbarMasterProtocol.swift */; };
+		DA7A0E00000000000000001D /* HistoryCursorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000001C /* HistoryCursorStore.swift */; };
+		DA7A0E00000000000000001F /* InnogateFrameCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000001E /* InnogateFrameCodec.swift */; };
+		DA7A0E000000000000000021 /* SimulatedProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000020 /* SimulatedProtocol.swift */; };
+		DA7A0E000000000000000024 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000023 /* CredentialStore.swift */; };
+		DA7A0E000000000000000026 /* PendingEventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000025 /* PendingEventStore.swift */; };
+		DA7A0E000000000000000029 /* EventIdFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000028 /* EventIdFactory.swift */; };
+		DA7A0E00000000000000002B /* IngestUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000002A /* IngestUploader.swift */; };
+		DA7A0E00000000000000002D /* UploadScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000002C /* UploadScheduler.swift */; };
+		DA7A0E000000000000000030 /* TrackingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E00000000000000002F /* TrackingController.swift */; };
+		DA7A0E000000000000000032 /* ElfbarMasterProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000031 /* ElfbarMasterProtocolTests.swift */; };
+		DA7A0E000000000000000034 /* InnogateFrameCodecTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7A0E000000000000000033 /* InnogateFrameCodecTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +82,29 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DA7A0E000000000000000002 /* VapenNativePigeon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VapenNativePigeon.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000004 /* TrackingHostApiImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingHostApiImpl.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000007 /* AsyncPrimitives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncPrimitives.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000009 /* BackgroundActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundActivity.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000000B /* BleConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BleConnectionManager.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000000D /* BleConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BleConstants.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000000F /* BleExplorerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BleExplorerManager.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000011 /* BleProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BleProfile.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000013 /* DevicePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicePicker.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000015 /* GattSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GattSession.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000018 /* DeviceMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMessage.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000001A /* ElfbarMasterProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElfbarMasterProtocol.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000001C /* HistoryCursorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCursorStore.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000001E /* InnogateFrameCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InnogateFrameCodec.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000020 /* SimulatedProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatedProtocol.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000023 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000025 /* PendingEventStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingEventStore.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000028 /* EventIdFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventIdFactory.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000002A /* IngestUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngestUploader.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000002C /* UploadScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadScheduler.swift; sourceTree = "<group>"; };
+		DA7A0E00000000000000002F /* TrackingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingController.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000031 /* ElfbarMasterProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElfbarMasterProtocolTests.swift; sourceTree = "<group>"; };
+		DA7A0E000000000000000033 /* InnogateFrameCodecTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InnogateFrameCodecTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +123,8 @@
 			isa = PBXGroup;
 			children = (
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
+				DA7A0E000000000000000031 /* ElfbarMasterProtocolTests.swift */,
+				DA7A0E000000000000000033 /* InnogateFrameCodecTests.swift */,
 			);
 			path = RunnerTests;
 			sourceTree = "<group>";
@@ -124,8 +172,77 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				DA7A0E000000000000000001 /* Bridge */,
+				DA7A0E000000000000000006 /* BLE */,
+				DA7A0E000000000000000017 /* Protocol */,
+				DA7A0E000000000000000022 /* Data */,
+				DA7A0E000000000000000027 /* Upload */,
+				DA7A0E00000000000000002E /* Service */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		DA7A0E000000000000000001 /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				DA7A0E000000000000000002 /* VapenNativePigeon.swift */,
+				DA7A0E000000000000000004 /* TrackingHostApiImpl.swift */,
+			);
+			path = Bridge;
+			sourceTree = "<group>";
+		};
+		DA7A0E000000000000000006 /* BLE */ = {
+			isa = PBXGroup;
+			children = (
+				DA7A0E000000000000000007 /* AsyncPrimitives.swift */,
+				DA7A0E000000000000000009 /* BackgroundActivity.swift */,
+				DA7A0E00000000000000000B /* BleConnectionManager.swift */,
+				DA7A0E00000000000000000D /* BleConstants.swift */,
+				DA7A0E00000000000000000F /* BleExplorerManager.swift */,
+				DA7A0E000000000000000011 /* BleProfile.swift */,
+				DA7A0E000000000000000013 /* DevicePicker.swift */,
+				DA7A0E000000000000000015 /* GattSession.swift */,
+			);
+			path = BLE;
+			sourceTree = "<group>";
+		};
+		DA7A0E000000000000000017 /* Protocol */ = {
+			isa = PBXGroup;
+			children = (
+				DA7A0E000000000000000018 /* DeviceMessage.swift */,
+				DA7A0E00000000000000001A /* ElfbarMasterProtocol.swift */,
+				DA7A0E00000000000000001C /* HistoryCursorStore.swift */,
+				DA7A0E00000000000000001E /* InnogateFrameCodec.swift */,
+				DA7A0E000000000000000020 /* SimulatedProtocol.swift */,
+			);
+			path = Protocol;
+			sourceTree = "<group>";
+		};
+		DA7A0E000000000000000022 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				DA7A0E000000000000000023 /* CredentialStore.swift */,
+				DA7A0E000000000000000025 /* PendingEventStore.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		DA7A0E000000000000000027 /* Upload */ = {
+			isa = PBXGroup;
+			children = (
+				DA7A0E000000000000000028 /* EventIdFactory.swift */,
+				DA7A0E00000000000000002A /* IngestUploader.swift */,
+				DA7A0E00000000000000002C /* UploadScheduler.swift */,
+			);
+			path = Upload;
+			sourceTree = "<group>";
+		};
+		DA7A0E00000000000000002E /* Service */ = {
+			isa = PBXGroup;
+			children = (
+				DA7A0E00000000000000002F /* TrackingController.swift */,
+			);
+			path = Service;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -274,6 +391,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */,
+				DA7A0E000000000000000032 /* ElfbarMasterProtocolTests.swift in Sources */,
+				DA7A0E000000000000000034 /* InnogateFrameCodecTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,6 +403,27 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
+				DA7A0E000000000000000003 /* VapenNativePigeon.swift in Sources */,
+				DA7A0E000000000000000005 /* TrackingHostApiImpl.swift in Sources */,
+				DA7A0E000000000000000008 /* AsyncPrimitives.swift in Sources */,
+				DA7A0E00000000000000000A /* BackgroundActivity.swift in Sources */,
+				DA7A0E00000000000000000C /* BleConnectionManager.swift in Sources */,
+				DA7A0E00000000000000000E /* BleConstants.swift in Sources */,
+				DA7A0E000000000000000010 /* BleExplorerManager.swift in Sources */,
+				DA7A0E000000000000000012 /* BleProfile.swift in Sources */,
+				DA7A0E000000000000000014 /* DevicePicker.swift in Sources */,
+				DA7A0E000000000000000016 /* GattSession.swift in Sources */,
+				DA7A0E000000000000000019 /* DeviceMessage.swift in Sources */,
+				DA7A0E00000000000000001B /* ElfbarMasterProtocol.swift in Sources */,
+				DA7A0E00000000000000001D /* HistoryCursorStore.swift in Sources */,
+				DA7A0E00000000000000001F /* InnogateFrameCodec.swift in Sources */,
+				DA7A0E000000000000000021 /* SimulatedProtocol.swift in Sources */,
+				DA7A0E000000000000000024 /* CredentialStore.swift in Sources */,
+				DA7A0E000000000000000026 /* PendingEventStore.swift in Sources */,
+				DA7A0E000000000000000029 /* EventIdFactory.swift in Sources */,
+				DA7A0E00000000000000002B /* IngestUploader.swift in Sources */,
+				DA7A0E00000000000000002D /* UploadScheduler.swift in Sources */,
+				DA7A0E000000000000000030 /* TrackingController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
