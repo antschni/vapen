@@ -13,11 +13,6 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import dev.vapen.app.MainActivity
 import dev.vapen.app.upload.UploadWorker
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -52,8 +47,7 @@ class VapenTrackingService : Service() {
             if (TrackingController.credentials.trackingEnabled) {
                 TrackingController.resumeBleIfConfigured()
             }
-            runCatching { TrackingController.uploader.flush() }
-            enqueueUploadWorker()
+            UploadWorker.enqueue(applicationContext)
         }
         return START_STICKY
     }
@@ -68,21 +62,6 @@ class VapenTrackingService : Service() {
         )
         val nm = getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(channel)
-    }
-
-    private fun enqueueUploadWorker() {
-        val request = OneTimeWorkRequestBuilder<UploadWorker>()
-            .setConstraints(
-                androidx.work.Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build(),
-            )
-            .build()
-        WorkManager.getInstance(this).enqueueUniqueWork(
-            "vapen_upload",
-            ExistingWorkPolicy.KEEP,
-            request,
-        )
     }
 
     companion object {

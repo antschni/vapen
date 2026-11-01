@@ -49,7 +49,8 @@ class BleConnectionManager(
     private var connectTimeoutJob: Job? = null
     private var linkJob: Job? = null
     @Volatile private var syncRequests: Channel<Unit>? = null
-    private var backoffMs = 1_000L
+    @Volatile private var backoffMs = 1_000L
+    @Volatile private var state = TrackingConnectionState.IDLE
     private val targetAddress = AtomicReference<String?>(null)
     private var simulation = false
 
@@ -70,32 +71,52 @@ class BleConnectionManager(
         targetAddress.set(address)
     }
 
+    private fun publish(newState: TrackingConnectionState, error: String?) {
+        state = newState
+        onState(newState, error)
+    }
+
+    /**
+     * Connects unless a link is already up or being set up. App start and the foreground service both
+     * call this; a plain [connect] would tear down a working link and force a new handshake.
+     */
+    @Synchronized
+    fun ensureConnected() {
+        if (state in ACTIVE_STATES) return
+        backoffMs = 1_000L
+        connect()
+    }
+
+    @Synchronized
     @SuppressLint("MissingPermission")
     fun connect() {
         if (simulation) {
-            onState(TrackingConnectionState.LIVE, null)
+            publish(TrackingConnectionState.LIVE, null)
             startSimulationFeed()
             return
         }
         val address = targetAddress.get()
         if (address == null) {
-            onState(TrackingConnectionState.WAITING, "Kein Gerät gekoppelt — unter Geräte erneut koppeln.")
+            publish(TrackingConnectionState.WAITING, "Kein Gerät gekoppelt — unter Geräte erneut koppeln.")
             return
         }
         BlePermissions.missingConnectMessage(context)?.let { msg ->
-            onState(TrackingConnectionState.DISCONNECTED, msg)
+            publish(TrackingConnectionState.DISCONNECTED, msg)
+            scheduleReconnect()
             return
         }
         val adapter = BluetoothAdapter.getDefaultAdapter()
         if (adapter == null || !adapter.isEnabled) {
-            onState(TrackingConnectionState.DISCONNECTED, "Bluetooth aus")
+            // Keep retrying: Bluetooth is often toggled off briefly and tracking must resume on its own.
+            publish(TrackingConnectionState.DISCONNECTED, "Bluetooth aus")
+            scheduleReconnect()
             return
         }
         val device = adapter.getRemoteDevice(address)
         reconnectJob?.cancel()
         stopLinkJobs()
         protocol.bindDevice(address.uppercase())
-        onState(TrackingConnectionState.CONNECTING, null)
+        publish(TrackingConnectionState.CONNECTING, null)
         gatt?.close()
         gatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
@@ -117,7 +138,7 @@ class BleConnectionManager(
         gatt?.close()
         gatt = null
         queue.failAll()
-        onState(TrackingConnectionState.DISCONNECTED, null)
+        publish(TrackingConnectionState.DISCONNECTED, null)
     }
 
     /** Aborts the current attempt if it does not reach LIVE in time (connect, discovery or handshake can hang). */
@@ -136,7 +157,7 @@ class BleConnectionManager(
         gatt?.close()
         gatt = null
         queue.failAll()
-        onState(TrackingConnectionState.DISCONNECTED, message)
+        publish(TrackingConnectionState.DISCONNECTED, message)
         if (reconnect) scheduleReconnect()
     }
 
@@ -175,6 +196,12 @@ class BleConnectionManager(
                 while (isActive && gatt === link) {
                     delay(STATUS_POLL_MS)
                     emit(runCatching { protocol.requestStatus(sess, p) }.getOrDefault(emptyList()))
+                    // Android does not always report a dropped link; a silent device means a dead link.
+                    val silentMs = System.currentTimeMillis() - protocol.lastFrameAtMillis
+                    if (protocol.lastFrameAtMillis > 0 && silentMs > LINK_STALE_MS && gatt === link) {
+                        failAndReconnect("Elfbar antwortet nicht mehr — Verbindung wird neu aufgebaut.")
+                        return@launch
+                    }
                     if (++tick % HISTORY_POLL_EVERY_N_STATUS == 0) syncRequests?.trySend(Unit)
                 }
             }
@@ -197,7 +224,7 @@ class BleConnectionManager(
                     return
                 }
                 armWatchdog(DISCOVERY_TIMEOUT_MS, "Dienstsuche hängt — Elfbar wach halten (Display an).")
-                onState(TrackingConnectionState.DISCOVERING, null)
+                publish(TrackingConnectionState.DISCOVERING, null)
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED || status != BluetoothGatt.GATT_SUCCESS) {
                 failAndReconnect(disconnectHint(status))
             }
@@ -219,7 +246,7 @@ class BleConnectionManager(
                 HANDSHAKE_TIMEOUT_MS,
                 "Elfbar antwortet nicht — InnoGate schließen und Kopplung am Gerät bestätigen.",
             )
-            onState(TrackingConnectionState.INITIALIZING, null)
+            publish(TrackingConnectionState.INITIALIZING, null)
             scope.launch {
                 val sess = session ?: return@launch
                 try {
@@ -227,7 +254,7 @@ class BleConnectionManager(
                     if (gatt !== this@BleConnectionManager.gatt) return@launch
                     connectTimeoutJob?.cancel()
                     backoffMs = 1_000
-                    onState(TrackingConnectionState.LIVE, null)
+                    publish(TrackingConnectionState.LIVE, null)
                     emit(initial)
                     startLinkJobs(sess, p, gatt)
                 } catch (e: Exception) {
@@ -337,5 +364,12 @@ class BleConnectionManager(
         private const val HISTORY_POLL_EVERY_N_STATUS = 5
         private const val PUFF_SYNC_DELAY_MS = 1_500L
         private const val PUFF_SYNC_RETRY_MS = 4_000L
+        private const val LINK_STALE_MS = 3 * STATUS_POLL_MS + 30_000L
+        private val ACTIVE_STATES = setOf(
+            TrackingConnectionState.CONNECTING,
+            TrackingConnectionState.DISCOVERING,
+            TrackingConnectionState.INITIALIZING,
+            TrackingConnectionState.LIVE,
+        )
     }
 }

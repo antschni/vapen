@@ -75,9 +75,9 @@ class IngestUploader(
         val rejectedIds = rejected.mapNotNull {
             it.jsonObject["client_event_id"]?.jsonPrimitive?.content
         }.toSet()
-        val acceptedCount = parsed["accepted"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
-        val duplicateCount = parsed["duplicates"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
-        val toRemove = batch.take(acceptedCount + duplicateCount).map { it.clientEventId }
+        // A 200 means the server processed the whole batch; everything not rejected is stored or a
+        // duplicate. Counting from the front would keep events whenever a rejection sits mid-batch.
+        val toRemove = batch.map { it.clientEventId }.filterNot { it in rejectedIds }
         if (toRemove.isNotEmpty()) {
             pendingDao.deleteByIds(toRemove)
         }
@@ -114,5 +114,6 @@ sealed class UploadResult {
     data object AuthError : UploadResult()
     data object ServerError : UploadResult()
     data class RateLimited(val retryAfterSeconds: Long?) : UploadResult()
+    data class NetworkError(val message: String) : UploadResult()
     data class OtherError(val code: Int, val body: String) : UploadResult()
 }

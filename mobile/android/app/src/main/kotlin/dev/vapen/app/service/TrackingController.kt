@@ -21,6 +21,7 @@ import dev.vapen.app.protocol.DeviceMessage
 import dev.vapen.app.upload.EventIdFactory
 import dev.vapen.app.upload.IngestUploader
 import dev.vapen.app.upload.UploadResult
+import dev.vapen.app.upload.UploadWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.time.Instant
+import java.time.LocalDate
 
 object TrackingController {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -40,6 +42,7 @@ object TrackingController {
 
     @Volatile private var connectionState = TrackingConnectionState.IDLE
     @Volatile private var todayPuffCount = 0
+    @Volatile private var todayPuffDate: LocalDate = LocalDate.now()
     @Volatile private var batteryPercent: Int? = null
     @Volatile private var liquidPercent: Int? = null
     @Volatile private var isCharging: Boolean? = null
@@ -118,7 +121,7 @@ object TrackingController {
         if (!TrackingServiceLauncher.tryStart(context)) {
             lastError = "Hintergrund-Tracking benötigt Bluetooth-Berechtigung."
         }
-        bleManager?.connect()
+        bleManager?.ensureConnected()
         publishState(true)
         requestFlush()
     }
@@ -126,8 +129,9 @@ object TrackingController {
     /** Foreground service / boot: reconnect BLE without toggling the tracking flag. */
     fun resumeBleIfConfigured() {
         if (!credentials.trackingEnabled) return
-        if (credentials.pairedBleAddress == null) return
-        bleManager?.connect()
+        if (credentials.pairedBleAddress == null && !credentials.simulationEnabled) return
+        bleManager?.ensureConnected()
+        requestFlush()
     }
 
     fun stopTracking(context: Context) {
@@ -149,7 +153,7 @@ object TrackingController {
             batteryPercent = batteryPercent?.toLong(),
             liquidPercent = liquidPercent?.toLong(),
             isCharging = isCharging,
-            todayPuffCount = todayPuffCount.toLong(),
+            todayPuffCount = currentTodayPuffCount().toLong(),
             pendingUploads = 0,
             lastError = lastError,
             simulationEnabled = credentials.simulationEnabled,
@@ -175,7 +179,8 @@ object TrackingController {
             is DeviceMessage.PuffStarted, is DeviceMessage.PuffDetected, is DeviceMessage.Unknown -> {}
             is DeviceMessage.PuffCompleted -> {
                 persistPuff(hardwareId, msg.startedAt, msg.durationMs, msg.deviceIndex, msg.raw, source = "live")
-                todayPuffCount++
+                todayPuffCount = currentTodayPuffCount() + 1
+                todayPuffDate = LocalDate.now()
                 val puff = PuffInfo(
                     startedAtEpochMs = msg.startedAt.toEpochMilli(),
                     durationMs = msg.durationMs.toLong(),
@@ -190,6 +195,7 @@ object TrackingController {
             }
             is DeviceMessage.DailyPuffCount -> {
                 todayPuffCount = msg.today
+                todayPuffDate = LocalDate.now()
                 publishState(credentials.trackingEnabled)
             }
             is DeviceMessage.Status -> {
@@ -223,6 +229,10 @@ object TrackingController {
         }
     }
 
+    /** The counter belongs to a calendar day; after midnight it starts at 0 until the device reports again. */
+    private fun currentTodayPuffCount(): Int =
+        if (todayPuffDate == LocalDate.now()) todayPuffCount else 0
+
     private fun shouldPersist(status: DeviceMessage.Status): Boolean {
         val last = lastPersistedStatus ?: return true
         val changed = status.battery != last.battery ||
@@ -253,12 +263,22 @@ object TrackingController {
                 flushPending = false
                 delay(FLUSH_DEBOUNCE_MS)
                 repeat(MAX_FLUSH_BATCHES) {
-                    val result = runCatching { uploader.flush() }.getOrNull() ?: return@launch
+                    val result = runCatching { uploader.flush() }.getOrElse { e ->
+                        UploadResult.NetworkError(e.message ?: e::class.simpleName.orEmpty())
+                    }
                     when (result) {
-                        UploadResult.Success -> Unit
-                        UploadResult.NothingToSend -> return@launch
+                        UploadResult.Success -> {
+                            if (lastError?.startsWith(UPLOAD_ERROR_PREFIX) == true) lastError = null
+                        }
+                        UploadResult.NothingToSend -> {
+                            publishState(credentials.trackingEnabled)
+                            return@launch
+                        }
                         else -> {
                             noteUploadFailure(result)
+                            // Nothing else triggers a flush until the next puff; hand off to WorkManager,
+                            // which retries with backoff once the network is back.
+                            appContext?.let { UploadWorker.enqueue(it) }
                             return@launch
                         }
                     }
@@ -276,6 +296,7 @@ object TrackingController {
                 "Upload abgelehnt (Token ungültig). Gerät in der App erneut koppeln."
             UploadResult.ServerError -> "Upload: Server-Fehler — später erneut versuchen."
             is UploadResult.RateLimited -> "Upload: Rate-Limit — bitte kurz warten."
+            is UploadResult.NetworkError -> "Upload: keine Verbindung zum Server — wird automatisch wiederholt."
             is UploadResult.OtherError ->
                 "Upload fehlgeschlagen (HTTP ${result.code}): ${result.body.take(120)}"
             else -> null
@@ -369,7 +390,7 @@ object TrackingController {
 
     private fun notificationText(): String = when (connectionState) {
         TrackingConnectionState.LIVE -> buildString {
-            append("Verbunden · heute $todayPuffCount Züge")
+            append("Verbunden · heute ${currentTodayPuffCount()} Züge")
             batteryPercent?.let { append(" · Akku $it %") }
         }
         TrackingConnectionState.CONNECTING -> "Verbinde mit Elfbar…"
@@ -402,4 +423,5 @@ object TrackingController {
     private const val STATUS_HEARTBEAT_S = 15 * 60L
     private const val FLUSH_DEBOUNCE_MS = 500L
     private const val MAX_FLUSH_BATCHES = 50
+    private const val UPLOAD_ERROR_PREFIX = "Upload"
 }

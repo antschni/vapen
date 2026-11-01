@@ -16,6 +16,9 @@ data class DeviceInfo(val serialNumber: String?, val bleMac: String)
 
 interface VapeProtocol {
     val model: String
+
+    /** Wall-clock time of the last frame received from the device; 0 if unknown. */
+    val lastFrameAtMillis: Long get() = 0L
     fun matches(advertisement: Advertisement): Boolean
 
     /** Selects per-device persisted state (history cursor, link flag). */

@@ -49,6 +49,10 @@ class ElfbarMasterProtocol(
     @Volatile private var childLock: Boolean? = null
     @Volatile private var firmware: String? = null
 
+    @Volatile
+    override var lastFrameAtMillis: Long = 0L
+        private set
+
     override fun matches(advertisement: Advertisement): Boolean {
         val name = advertisement.name?.lowercase() ?: return false
         return BleConstants.NAME_HINTS.any { name.contains(it) }
@@ -65,6 +69,7 @@ class ElfbarMasterProtocol(
     }
 
     override suspend fun initialize(session: GattSession, profile: BleProfile): List<DeviceMessage> {
+        lastFrameAtMillis = 0L
         mtu = runCatching { session.requestMtu(BleConstants.MTU_REQUEST) }.getOrDefault(DEFAULT_MTU)
         session.setNotify(profile.serviceUuid, profile.rxUuid, true)
         profile.otaNotify?.let { (service, characteristic) ->
@@ -111,6 +116,7 @@ class ElfbarMasterProtocol(
     override fun onNotification(characteristic: UUID, value: ByteArray, receivedAtMillis: Long): List<DeviceMessage> {
         if (characteristic != BleConstants.CIG_NOTIFY) return emptyList()
         val frame = InnogateFrameCodec.decode(value) ?: return listOf(DeviceMessage.Unknown(characteristic, value))
+        lastFrameAtMillis = receivedAtMillis
         val waiting = pending
         if (waiting != null && frame.command == waiting.responseCommand && waiting.deferred.complete(frame)) {
             return emptyList()
@@ -152,8 +158,13 @@ class ElfbarMasterProtocol(
         var tail = cursor.tailDeviceSeconds
         var newest = cursor.newestDeviceSeconds
         var pages = 0
+        var aborted = false
         while (pages < MAX_PAGES) {
-            val page = readPuffPage(session, profile, offset, pageSize) ?: break
+            val page = readPuffPage(session, profile, offset, pageSize)
+            if (page == null) {
+                aborted = true
+                break
+            }
             pages++
             if (page.records.isEmpty()) break
             var newInPage = 0
@@ -172,7 +183,11 @@ class ElfbarMasterProtocol(
             val newestFirst = page.records.first().deviceSeconds > page.records.last().deviceSeconds
             if (rescan && newestFirst && newInPage == 0) break
         }
-        cursorStore.save(key, cursor.copy(nextOffset = offset, tailDeviceSeconds = tail, newestDeviceSeconds = newest))
+        // An interrupted rescan must not advance `newest`: records it did not reach would be filtered
+        // out forever. Keeping the old cursor rescans next time; event ids dedupe what was already sent.
+        if (!(rescan && aborted)) {
+            cursorStore.save(key, cursor.copy(nextOffset = offset, tailDeviceSeconds = tail, newestDeviceSeconds = newest))
+        }
         out
     }
 
